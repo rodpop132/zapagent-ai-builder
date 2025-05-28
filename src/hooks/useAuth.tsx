@@ -100,7 +100,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(null);
       setUser(null);
     }
-    return { error };
+    if (error) {
+      throw error;
+    }
   };
 
   return (
