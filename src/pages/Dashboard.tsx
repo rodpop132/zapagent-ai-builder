@@ -3,11 +3,13 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Bot, MessageCircle, Settings, BarChart3 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Bot, MessageCircle, Settings, BarChart3, Crown, LogOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import AgentCard from '@/components/AgentCard';
 import CreateAgentModal from '@/components/CreateAgentModal';
+import PlanUpgradeModal from '@/components/PlanUpgradeModal';
 
 interface Agent {
   id: string;
@@ -32,6 +34,7 @@ const Dashboard = () => {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -96,12 +99,30 @@ const Dashboard = () => {
     setShowCreateModal(false);
   };
 
+  const getPlanBadgeColor = (planType: string) => {
+    switch (planType) {
+      case 'free': return 'bg-gray-100 text-gray-700';
+      case 'pro': return 'bg-blue-100 text-blue-700';
+      case 'ultra': return 'bg-purple-100 text-purple-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  const getPlanDisplayName = (planType: string) => {
+    switch (planType) {
+      case 'free': return 'Gratuito';
+      case 'pro': return 'Pro';
+      case 'ultra': return 'Ultra';
+      default: return 'Gratuito';
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center animate-in fade-in-50 duration-500">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando...</p>
+          <p className="text-gray-600">Carregando dashboard...</p>
         </div>
       </div>
     );
@@ -110,7 +131,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white shadow-sm border-b border-gray-200 animate-in slide-in-from-top-4 duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-3">
@@ -119,9 +140,33 @@ const Dashboard = () => {
               </div>
               <h1 className="text-xl font-bold text-brand-dark">ZapAgent AI</h1>
             </div>
+            
             <div className="flex items-center space-x-4">
+              {/* Plan Badge */}
+              <div className="flex items-center space-x-2">
+                <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-medium animate-in scale-in-50 duration-200`}>
+                  {getPlanDisplayName(subscription?.plan_type || 'free')}
+                </Badge>
+                {subscription?.plan_type === 'free' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowUpgradeModal(true)}
+                    className="text-brand-green border-brand-green hover:bg-brand-green hover:text-white transition-all duration-200 hover:scale-105"
+                  >
+                    <Crown className="h-4 w-4 mr-1" />
+                    Atualizar Plano
+                  </Button>
+                )}
+              </div>
+              
               <span className="text-sm text-gray-600">Olá, {user?.email}</span>
-              <Button variant="outline" onClick={signOut}>
+              <Button 
+                variant="outline" 
+                onClick={signOut}
+                className="hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all duration-200"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
                 Sair
               </Button>
             </div>
@@ -132,68 +177,55 @@ const Dashboard = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Bot className="h-8 w-8 text-brand-green" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Agentes</p>
-                  <p className="text-2xl font-bold text-gray-900">{agents.length}</p>
+          {[
+            { icon: Bot, label: 'Agentes', value: agents.length, color: 'text-brand-green', delay: 0 },
+            { 
+              icon: MessageCircle, 
+              label: 'Mensagens', 
+              value: `${subscription?.messages_used || 0}/${subscription?.messages_limit || 30}`, 
+              color: 'text-blue-600',
+              delay: 100 
+            },
+            { 
+              icon: BarChart3, 
+              label: 'Plano', 
+              value: getPlanDisplayName(subscription?.plan_type || 'free'), 
+              color: 'text-purple-600',
+              delay: 200 
+            },
+            { 
+              icon: Settings, 
+              label: 'Ativos', 
+              value: agents.filter(agent => agent.is_active).length, 
+              color: 'text-orange-600',
+              delay: 300 
+            }
+          ].map((stat, index) => (
+            <Card 
+              key={index} 
+              className="animate-in slide-in-from-bottom-4 duration-300 hover:shadow-lg transition-all hover:scale-105"
+              style={{ animationDelay: `${stat.delay}ms` }}
+            >
+              <CardContent className="p-6">
+                <div className="flex items-center">
+                  <stat.icon className={`h-8 w-8 ${stat.color}`} />
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">{stat.label}</p>
+                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <MessageCircle className="h-8 w-8 text-blue-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Mensagens</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {subscription?.messages_used || 0}/{subscription?.messages_limit || 30}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <BarChart3 className="h-8 w-8 text-purple-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Plano</p>
-                  <p className="text-2xl font-bold text-gray-900 capitalize">
-                    {subscription?.plan_type || 'Free'}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Settings className="h-8 w-8 text-orange-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Ativos</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {agents.filter(agent => agent.is_active).length}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* Agents Section */}
-        <div className="mb-8">
+        <div className="mb-8 animate-in fade-in-50 duration-500 delay-400">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-gray-900">Meus Agentes</h2>
             <Button 
               onClick={handleCreateAgent}
-              className="bg-brand-green hover:bg-brand-green/90 text-white"
+              className="bg-brand-green hover:bg-brand-green/90 text-white transition-all duration-200 hover:scale-105"
             >
               <Plus className="h-4 w-4 mr-2" />
               Criar Agente
@@ -201,7 +233,7 @@ const Dashboard = () => {
           </div>
 
           {agents.length === 0 ? (
-            <Card>
+            <Card className="animate-in scale-in-50 duration-500">
               <CardContent className="p-12 text-center">
                 <Bot className="h-16 w-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -212,7 +244,7 @@ const Dashboard = () => {
                 </p>
                 <Button 
                   onClick={handleCreateAgent}
-                  className="bg-brand-green hover:bg-brand-green/90 text-white"
+                  className="bg-brand-green hover:bg-brand-green/90 text-white transition-all duration-200 hover:scale-105"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Criar Primeiro Agente
@@ -221,23 +253,34 @@ const Dashboard = () => {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {agents.map((agent) => (
-                <AgentCard
+              {agents.map((agent, index) => (
+                <div
                   key={agent.id}
-                  agent={agent}
-                  onUpdate={fetchAgents}
-                />
+                  className="animate-in slide-in-from-bottom-4 duration-300"
+                  style={{ animationDelay: `${500 + (index * 100)}ms` }}
+                >
+                  <AgentCard
+                    agent={agent}
+                    onUpdate={fetchAgents}
+                  />
+                </div>
               ))}
             </div>
           )}
         </div>
       </div>
 
-      {/* Create Agent Modal */}
+      {/* Modals */}
       <CreateAgentModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onAgentCreated={onAgentCreated}
+      />
+
+      <PlanUpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        currentPlan={subscription?.plan_type || 'free'}
       />
     </div>
   );
