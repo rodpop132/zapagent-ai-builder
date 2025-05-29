@@ -45,7 +45,7 @@ const HowItWorks = () => {
               style={{ animationDelay: `${500 + (index * 200)}ms` }}
             >
               <div className="text-center group-hover:transform group-hover:-translate-y-2 transition-all duration-500">
-                <div className="w-20 h-20 bg-brand-green/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-brand-green/20 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 animate-pulse">
+                <div className="w-20 h-20 bg-brand-green/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-brand-green/20 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
                   <span className="text-3xl group-hover:scale-125 transition-transform duration-300">{step.icon}</span>
                 </div>
                 
@@ -65,7 +65,7 @@ const HowItWorks = () => {
               
               {index < steps.length - 1 && (
                 <div className="hidden md:block absolute top-10 left-full w-8 h-0.5 bg-brand-green/30 transform -translate-y-1/2 z-10 group-hover:bg-brand-green/60 transition-colors duration-300">
-                  <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-brand-green rounded-full animate-pulse"></div>
+                  <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-2 h-2 bg-brand-green rounded-full"></div>
                 </div>
               )}
               

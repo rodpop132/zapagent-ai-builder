@@ -3,8 +3,8 @@ const Dashboard = () => {
   return (
     <section id="dashboard-demo" className="py-20 px-4 bg-gradient-to-br from-gray-50 to-white relative overflow-hidden">
       {/* Background decorative elements */}
-      <div className="absolute top-20 left-10 w-20 h-20 bg-brand-green/5 rounded-full animate-pulse"></div>
-      <div className="absolute bottom-20 right-10 w-16 h-16 bg-blue-500/5 rounded-full animate-pulse delay-500"></div>
+      <div className="absolute top-20 left-10 w-20 h-20 bg-brand-green/5 rounded-full"></div>
+      <div className="absolute bottom-20 right-10 w-16 h-16 bg-blue-500/5 rounded-full"></div>
       <div className="absolute top-1/2 left-1/4 w-12 h-12 bg-purple-500/5 rounded-full animate-bounce delay-1000"></div>
       
       <div className="container mx-auto max-w-6xl relative">
@@ -47,7 +47,7 @@ const Dashboard = () => {
                   style={{ animationDelay: `${1300 + (index * 150)}ms` }}
                 >
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-brand-green rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300 animate-pulse">
+                    <div className="w-10 h-10 bg-brand-green rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                       <span className="text-white font-bold text-sm">
                         {conversation.name.charAt(0)}
                       </span>

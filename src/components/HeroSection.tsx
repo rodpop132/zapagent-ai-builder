@@ -56,15 +56,15 @@ const HeroSection = () => {
             
             <div className="mt-8 flex items-center justify-center lg:justify-start space-x-6 text-sm text-brand-gray animate-in fade-in-50 duration-700 delay-1000">
               <div className="flex items-center group hover:scale-105 transition-transform duration-200">
-                <div className="w-2 h-2 bg-brand-green rounded-full mr-2 animate-pulse"></div>
+                <div className="w-2 h-2 bg-brand-green rounded-full mr-2"></div>
                 Criação gratuita
               </div>
               <div className="flex items-center group hover:scale-105 transition-transform duration-200">
-                <div className="w-2 h-2 bg-brand-green rounded-full mr-2 animate-pulse delay-150"></div>
+                <div className="w-2 h-2 bg-brand-green rounded-full mr-2"></div>
                 Sem código necessário
               </div>
               <div className="flex items-center group hover:scale-105 transition-transform duration-200">
-                <div className="w-2 h-2 bg-brand-green rounded-full mr-2 animate-pulse delay-300"></div>
+                <div className="w-2 h-2 bg-brand-green rounded-full mr-2"></div>
                 24h por dia
               </div>
             </div>
@@ -74,13 +74,13 @@ const HeroSection = () => {
             <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-md mx-auto hover:shadow-3xl transition-all duration-500 hover:scale-105 group">
               <div className="bg-gray-100 rounded-lg p-4 mb-4 group-hover:bg-gray-50 transition-colors duration-300">
                 <div className="flex items-center mb-3">
-                  <div className="w-10 h-10 bg-brand-green rounded-full flex items-center justify-center mr-3 animate-pulse">
+                  <div className="w-10 h-10 bg-brand-green rounded-full flex items-center justify-center mr-3">
                     <span className="text-white font-bold">AI</span>
                   </div>
                   <div>
                     <p className="font-semibold text-brand-dark">Agente IA</p>
                     <p className="text-xs text-brand-gray flex items-center">
-                      <span className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span>
+                      <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
                       online agora
                     </p>
                   </div>
