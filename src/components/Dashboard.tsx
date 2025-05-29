@@ -1,7 +1,7 @@
 
 const Dashboard = () => {
   return (
-    <section className="py-20 px-4 bg-gradient-to-br from-gray-50 to-white">
+    <section id="dashboard-demo" className="py-20 px-4 bg-gradient-to-br from-gray-50 to-white">
       <div className="container mx-auto max-w-6xl">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-brand-dark mb-4">

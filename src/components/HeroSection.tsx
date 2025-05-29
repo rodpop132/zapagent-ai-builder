@@ -1,8 +1,23 @@
 
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+
+  const handleCreateAgent = () => {
+    navigate('/auth');
+  };
+
+  const handleSimulateConversation = () => {
+    // Scroll to the dashboard demo section
+    const dashboardSection = document.getElementById('dashboard-demo');
+    if (dashboardSection) {
+      dashboardSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section className="bg-gradient-to-br from-white to-gray-50 py-20 px-4">
       <div className="container mx-auto max-w-6xl">
@@ -22,7 +37,8 @@ const HeroSection = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Button 
                 size="lg" 
-                className="bg-brand-green hover:bg-brand-green/90 text-white px-8 py-4 text-lg font-semibold"
+                onClick={handleCreateAgent}
+                className="bg-brand-green hover:bg-brand-green/90 text-white px-8 py-4 text-lg font-semibold transition-all duration-200 hover:scale-105"
               >
                 Criar agente grátis
                 <ArrowRight className="ml-2 h-5 w-5" />
@@ -31,7 +47,8 @@ const HeroSection = () => {
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="border-brand-green text-brand-green hover:bg-brand-green/10 px-8 py-4 text-lg"
+                onClick={handleSimulateConversation}
+                className="border-brand-green text-brand-green hover:bg-brand-green/10 px-8 py-4 text-lg transition-all duration-200 hover:scale-105"
               >
                 <Play className="mr-2 h-5 w-5" />
                 Simular conversa
@@ -59,7 +76,7 @@ const HeroSection = () => {
               <div className="bg-gray-100 rounded-lg p-4 mb-4">
                 <div className="flex items-center mb-3">
                   <div className="w-10 h-10 bg-brand-green rounded-full flex items-center justify-center mr-3">
-                    <span className="text-white font-bold">🤖</span>
+                    <span className="text-white font-bold">AI</span>
                   </div>
                   <div>
                     <p className="font-semibold text-brand-dark">Agente IA</p>

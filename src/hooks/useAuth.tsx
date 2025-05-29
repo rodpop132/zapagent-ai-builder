@@ -22,10 +22,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
+    let sessionCheckCount = 0;
+    const maxSessionChecks = 3;
 
     const initializeAuth = async () => {
+      sessionCheckCount++;
+      
       try {
-        // Check for existing session first
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -34,19 +37,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         if (!mounted) return;
         
-        if (initialSession?.user) {
-          setSession(initialSession);
-          setUser(initialSession.user);
-        } else {
-          setSession(null);
-          setUser(null);
-        }
+        // Set the session state regardless of whether it exists or not
+        setSession(initialSession);
+        setUser(initialSession?.user || null);
         
-        setInitialized(true);
-        setLoading(false);
+        if (!initialized) {
+          setInitialized(true);
+          setLoading(false);
+        }
       } catch (error) {
         console.error('Session initialization failed:', error);
-        if (mounted) {
+        if (mounted && !initialized) {
           setLoading(false);
           setInitialized(true);
         }
@@ -55,36 +56,60 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
         
-        if (!mounted || !initialized) return;
+        if (!mounted) return;
         
-        // Only handle specific events to avoid infinite loops
-        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'INITIAL_SESSION') {
-          if (session?.user) {
+        // Handle all auth events properly
+        switch (event) {
+          case 'SIGNED_IN':
             setSession(session);
-            setUser(session.user);
-          } else {
+            setUser(session?.user || null);
+            setLoading(false);
+            break;
+          case 'SIGNED_OUT':
             setSession(null);
             setUser(null);
-          }
+            setLoading(false);
+            break;
+          case 'TOKEN_REFRESHED':
+            // Only update if we have a valid session
+            if (session?.user && session.access_token) {
+              setSession(session);
+              setUser(session.user);
+            }
+            break;
+          case 'INITIAL_SESSION':
+            if (initialized) {
+              setSession(session);
+              setUser(session?.user || null);
+            }
+            break;
+          default:
+            // Handle any other events without causing state changes
+            break;
         }
-        
-        // Don't update state on TOKEN_REFRESHED to avoid loops
-        // The session will be automatically updated by Supabase
-        
-        setLoading(false);
       }
     );
 
-    initializeAuth();
+    // Initialize auth with retry logic
+    const initWithRetry = async () => {
+      await initializeAuth();
+      
+      // If we still don't have a clear state and haven't exceeded max checks, try again
+      if (!initialized && sessionCheckCount < maxSessionChecks) {
+        setTimeout(initWithRetry, 500);
+      }
+    };
+
+    initWithRetry();
 
     return () => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [initialized]);
 
   const signUp = async (email: string, password: string, fullName: string) => {
     const { data, error } = await supabase.auth.signUp({

@@ -7,6 +7,14 @@ const Header = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
+  const handleAuthClick = () => {
+    navigate('/auth');
+  };
+
+  const handleDashboardClick = () => {
+    navigate('/dashboard');
+  };
+
   return (
     <header className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-50 animate-in slide-in-from-top-4 duration-300">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -43,14 +51,14 @@ const Header = () => {
             <>
               <Button 
                 variant="outline" 
-                onClick={() => navigate('/dashboard')}
+                onClick={handleDashboardClick}
                 className="transition-all duration-200 hover:scale-105 hover:border-brand-green hover:text-brand-green"
               >
                 Dashboard
               </Button>
               <Button 
                 className="bg-brand-green hover:bg-brand-green/90 text-white transition-all duration-200 hover:scale-105"
-                onClick={() => navigate('/dashboard')}
+                onClick={handleDashboardClick}
               >
                 Acessar Painel
               </Button>
@@ -60,13 +68,13 @@ const Header = () => {
               <Button 
                 variant="outline" 
                 className="hidden md:block transition-all duration-200 hover:scale-105 hover:border-brand-green hover:text-brand-green" 
-                onClick={() => navigate('/auth')}
+                onClick={handleAuthClick}
               >
                 Entrar
               </Button>
               <Button 
                 className="bg-brand-green hover:bg-brand-green/90 text-white transition-all duration-200 hover:scale-105"
-                onClick={() => navigate('/auth')}
+                onClick={handleAuthClick}
               >
                 Criar agente grátis
               </Button>
