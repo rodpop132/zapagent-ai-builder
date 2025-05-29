@@ -1,10 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Bot, MessageCircle, Settings, BarChart3, Crown, LogOut } from 'lucide-react';
+import { Plus, Bot, MessageCircle, Settings, BarChart3, Crown, LogOut, Menu } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import AgentCard from '@/components/AgentCard';
@@ -35,6 +34,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -138,11 +138,11 @@ const Dashboard = () => {
               <div className="w-8 h-8 bg-brand-green rounded-lg flex items-center justify-center">
                 <span className="text-white font-bold text-sm">ZA</span>
               </div>
-              <h1 className="text-xl font-bold text-brand-dark">ZapAgent AI</h1>
+              <h1 className="text-lg md:text-xl font-bold text-brand-dark">ZapAgent AI</h1>
             </div>
             
-            <div className="flex items-center space-x-4">
-              {/* Plan Badge */}
+            {/* Desktop Header Content */}
+            <div className="hidden md:flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-medium animate-in scale-in-50 duration-200`}>
                   {getPlanDisplayName(subscription?.plan_type || 'free')}
@@ -160,7 +160,7 @@ const Dashboard = () => {
                 )}
               </div>
               
-              <span className="text-sm text-gray-600">Olá, {user?.email}</span>
+              <span className="text-sm text-gray-600 hidden lg:block">Olá, {user?.email}</span>
               <Button 
                 variant="outline" 
                 onClick={signOut}
@@ -170,13 +170,57 @@ const Dashboard = () => {
                 Sair
               </Button>
             </div>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="md:hidden p-2 text-gray-600 hover:text-gray-900 transition-colors"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              <Menu className="h-6 w-6" />
+            </button>
           </div>
+
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-gray-200 py-4 animate-in slide-in-from-top-4 duration-200">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-medium`}>
+                    {getPlanDisplayName(subscription?.plan_type || 'free')}
+                  </Badge>
+                  {subscription?.plan_type === 'free' && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setShowUpgradeModal(true);
+                        setMobileMenuOpen(false);
+                      }}
+                      className="text-brand-green border-brand-green hover:bg-brand-green hover:text-white"
+                    >
+                      <Crown className="h-4 w-4 mr-1" />
+                      Upgrade
+                    </Button>
+                  )}
+                </div>
+                <p className="text-sm text-gray-600">Olá, {user?.email}</p>
+                <Button 
+                  variant="outline" 
+                  onClick={signOut}
+                  className="w-full justify-center hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sair
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
           {[
             { icon: Bot, label: 'Agentes', value: agents.length, color: 'text-brand-green', delay: 0 },
             { 
@@ -206,12 +250,12 @@ const Dashboard = () => {
               className="animate-in slide-in-from-bottom-4 duration-300 hover:shadow-lg transition-all hover:scale-105"
               style={{ animationDelay: `${stat.delay}ms` }}
             >
-              <CardContent className="p-6">
+              <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
-                  <stat.icon className={`h-8 w-8 ${stat.color}`} />
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-600">{stat.label}</p>
-                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                  <stat.icon className={`h-6 w-6 md:h-8 md:w-8 ${stat.color}`} />
+                  <div className="ml-3 md:ml-4 min-w-0 flex-1">
+                    <p className="text-xs md:text-sm font-medium text-gray-600 truncate">{stat.label}</p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-900 truncate">{stat.value}</p>
                   </div>
                 </div>
               </CardContent>
@@ -221,11 +265,11 @@ const Dashboard = () => {
 
         {/* Agents Section */}
         <div className="mb-8 animate-in fade-in-50 duration-500 delay-400">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Meus Agentes</h2>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900">Meus Agentes</h2>
             <Button 
               onClick={handleCreateAgent}
-              className="bg-brand-green hover:bg-brand-green/90 text-white transition-all duration-200 hover:scale-105"
+              className="bg-brand-green hover:bg-brand-green/90 text-white transition-all duration-200 hover:scale-105 w-full sm:w-auto"
             >
               <Plus className="h-4 w-4 mr-2" />
               Criar Agente
@@ -234,12 +278,12 @@ const Dashboard = () => {
 
           {agents.length === 0 ? (
             <Card className="animate-in scale-in-50 duration-500">
-              <CardContent className="p-12 text-center">
-                <Bot className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <CardContent className="p-8 md:p-12 text-center">
+                <Bot className="h-12 w-12 md:h-16 md:w-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
                   Nenhum agente criado ainda
                 </h3>
-                <p className="text-gray-600 mb-6">
+                <p className="text-gray-600 mb-6 text-sm md:text-base px-4">
                   Crie seu primeiro agente de IA para começar a automatizar seu atendimento no WhatsApp
                 </p>
                 <Button 
@@ -252,7 +296,7 @@ const Dashboard = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
               {agents.map((agent, index) => (
                 <div
                   key={agent.id}
