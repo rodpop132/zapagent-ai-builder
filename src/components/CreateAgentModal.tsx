@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -67,19 +66,37 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     setUploadedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result as string;
+        resolve(result.split(',')[1]); // Remove data:mime;base64, prefix
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   const processFiles = async () => {
     let trainingContent = formData.training_data;
+    let fileBase64 = '';
     
-    for (const file of uploadedFiles) {
-      if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
-        const text = await file.text();
-        trainingContent += `\n\n=== ${file.name} ===\n${text}`;
-      } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-        trainingContent += `\n\n=== ${file.name} ===\n[PDF content - implement PDF parsing]`;
+    if (uploadedFiles.length > 0) {
+      const file = uploadedFiles[0]; // Pega o primeiro arquivo
+      fileBase64 = await convertFileToBase64(file);
+      
+      for (const file of uploadedFiles) {
+        if (file.type === 'text/plain' || file.name.endsWith('.txt')) {
+          const text = await file.text();
+          trainingContent += `\n\n=== ${file.name} ===\n${text}`;
+        } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+          trainingContent += `\n\n=== ${file.name} ===\n[PDF content - will be processed by backend]`;
+        }
       }
     }
     
-    return trainingContent;
+    return { trainingContent, fileBase64 };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -87,22 +104,53 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     setLoading(true);
 
     try {
-      const finalTrainingData = await processFiles();
+      const { trainingContent, fileBase64 } = await processFiles();
       
+      // Enviar para API Flask
+      const apiPayload = {
+        nome: formData.name,
+        negocio: formData.business_type,
+        descricao: formData.description,
+        numero: formData.phone_number,
+        arquivo_base64: fileBase64,
+        contexto_extra: trainingContent,
+        personalidade: formData.personality_prompt || `Você é um assistente virtual para ${formData.business_type}. Seja sempre educado, prestativo e responda de forma clara e objetiva.`
+      };
+
+      // TODO: Substituir pela URL real da API Flask
+      const apiUrl = 'https://your-flask-api-url.com/criar-agente';
+      
+      const apiResponse = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(apiPayload)
+      });
+
+      if (!apiResponse.ok) {
+        throw new Error('Erro ao criar agente na API');
+      }
+
+      const apiResult = await apiResponse.json();
+      console.log('Agente criado na API:', apiResult);
+
+      // Salvar no Supabase para persistência local
       const { error } = await supabase
         .from('agents')
         .insert({
           ...formData,
-          training_data: finalTrainingData,
+          training_data: trainingContent,
           user_id: user?.id,
-          personality_prompt: formData.personality_prompt || `Você é um assistente virtual para ${formData.business_type}. Seja sempre educado, prestativo e responda de forma clara e objetiva.`
+          personality_prompt: formData.personality_prompt || `Você é um assistente virtual para ${formData.business_type}. Seja sempre educado, prestativo e responda de forma clara e objetiva.`,
+          whatsapp_status: 'pending' // Status inicial
         });
 
       if (error) throw error;
 
       toast({
         title: "Agente criado com sucesso!",
-        description: "Seu agente de IA foi configurado e está pronto para uso"
+        description: "Seu agente foi configurado e enviado para o backend"
       });
 
       onAgentCreated();
@@ -122,7 +170,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       console.error('Error creating agent:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível criar o agente",
+        description: error instanceof Error ? error.message : "Não foi possível criar o agente",
         variant: "destructive"
       });
     } finally {
@@ -190,13 +238,14 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
           <div className="animate-in fade-in-50 duration-300 delay-400">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Número do WhatsApp
+              Número do WhatsApp *
             </label>
             <Input
               value={formData.phone_number}
               onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })}
               placeholder="Ex: +5511999999999"
               type="tel"
+              required
               className="transition-all duration-200 focus:scale-[1.01]"
             />
           </div>
@@ -292,7 +341,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
             </Button>
             <Button
               type="submit"
-              disabled={loading || !formData.name || !formData.business_type}
+              disabled={loading || !formData.name || !formData.business_type || !formData.phone_number}
               className="flex-1 bg-brand-green hover:bg-brand-green/90 text-white transition-all duration-200 hover:scale-105 disabled:hover:scale-100"
             >
               {loading ? (
