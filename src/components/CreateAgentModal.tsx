@@ -73,10 +73,17 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
   const checkConnectionStatus = async (phoneNumber: string) => {
     try {
+      console.log('Verificando status de conexão para:', phoneNumber);
       const response = await fetch(`https://zapagent-api.onrender.com/status?numero=${encodeURIComponent(phoneNumber)}`);
-      if (!response.ok) throw new Error('Erro ao verificar status');
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Erro na resposta do status:', response.status, errorText);
+        throw new Error(`Erro ${response.status}: Servidor de status indisponível`);
+      }
       
       const data = await response.json();
+      console.log('Status recebido:', data);
       const status = data.connected ? 'connected' : 'pending';
       setConnectionStatus(status);
       
@@ -87,32 +94,58 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       return status;
     } catch (error) {
       console.error('Erro ao verificar status:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível verificar o status de conexão",
-        variant: "destructive"
-      });
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        toast({
+          title: "Erro de Conexão",
+          description: "Não foi possível conectar ao servidor de status. Verifique sua internet.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Erro no Status",
+          description: error instanceof Error ? error.message : "Falha ao verificar status de conexão",
+          variant: "destructive"
+        });
+      }
       return 'pending';
     }
   };
 
   const fetchQrCode = async (phoneNumber: string) => {
     try {
+      console.log('Buscando QR code para:', phoneNumber);
       const response = await fetch(`https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(phoneNumber)}`);
-      if (!response.ok) throw new Error('Erro ao buscar QR code');
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Erro na resposta do QR code:', response.status, errorText);
+        throw new Error(`Erro ${response.status}: Servidor de QR code indisponível`);
+      }
       
       const data = await response.json();
+      console.log('QR code recebido:', data.qr ? 'Sim' : 'Não');
+      
       if (data.qr) {
         setQrCodeUrl(`data:image/png;base64,${data.qr}`);
         setShowQrModal(true);
+      } else {
+        throw new Error('QR code não encontrado na resposta');
       }
     } catch (error) {
       console.error('Erro ao buscar QR code:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível obter o QR code",
-        variant: "destructive"
-      });
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        toast({
+          title: "Erro de Conexão",
+          description: "Não foi possível conectar ao servidor de QR code. Verifique sua internet.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Erro no QR Code",
+          description: error instanceof Error ? error.message : "Falha ao gerar QR code",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -121,6 +154,19 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     setLoading(true);
 
     try {
+      console.log('Iniciando criação do agente...');
+      
+      // Validação dos dados obrigatórios
+      if (!formData.name.trim()) {
+        throw new Error('Nome do agente é obrigatório');
+      }
+      if (!formData.business_type) {
+        throw new Error('Tipo de negócio é obrigatório');
+      }
+      if (!formData.phone_number.trim()) {
+        throw new Error('Número do WhatsApp é obrigatório');
+      }
+
       // Preparar FormData para envio
       const apiFormData = new FormData();
       apiFormData.append('nome', formData.name);
@@ -133,23 +179,38 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       // Adicionar arquivo se houver
       if (uploadedFiles.length > 0) {
         apiFormData.append('arquivo', uploadedFiles[0]);
+        console.log('Arquivo anexado:', uploadedFiles[0].name);
       }
 
-      // Enviar para a API
+      console.log('Enviando dados para API externa...');
+      // Enviar para a API externa
       const apiResponse = await fetch('https://zapagent-api.onrender.com/create', {
         method: 'POST',
         body: apiFormData
       });
 
       if (!apiResponse.ok) {
-        throw new Error('Erro ao criar agente na API');
+        const errorText = await apiResponse.text();
+        console.error('Erro na API externa:', apiResponse.status, errorText);
+        
+        let errorMessage = 'Erro desconhecido na API';
+        if (apiResponse.status === 400) {
+          errorMessage = 'Dados inválidos enviados para a API';
+        } else if (apiResponse.status === 500) {
+          errorMessage = 'Erro interno da API de criação';
+        } else if (apiResponse.status === 503) {
+          errorMessage = 'Servidor de criação temporariamente indisponível';
+        }
+        
+        throw new Error(`${errorMessage} (${apiResponse.status})`);
       }
 
       const apiResult = await apiResponse.json();
-      console.log('Agente criado na API:', apiResult);
+      console.log('Agente criado na API externa com sucesso:', apiResult);
 
+      console.log('Salvando no banco de dados local...');
       // Salvar no Supabase para persistência local
-      const { error } = await supabase
+      const { error: supabaseError } = await supabase
         .from('agents')
         .insert({
           ...formData,
@@ -159,13 +220,19 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
           whatsapp_status: 'pending'
         });
 
-      if (error) throw error;
+      if (supabaseError) {
+        console.error('Erro no Supabase:', supabaseError);
+        throw new Error(`Erro ao salvar no banco de dados: ${supabaseError.message}`);
+      }
+
+      console.log('Agente salvo no banco local com sucesso');
 
       toast({
         title: "Agente criado com sucesso!",
-        description: "Verificando status de conexão..."
+        description: "Verificando status de conexão do WhatsApp..."
       });
 
+      console.log('Verificando status de conexão...');
       // Verificar status de conexão
       await checkConnectionStatus(formData.phone_number);
 
@@ -184,11 +251,29 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
     } catch (error) {
       console.error('Error creating agent:', error);
-      toast({
-        title: "Erro ao criar agente",
-        description: "Verifique a conexão ou os dados preenchidos.",
-        variant: "destructive"
-      });
+      
+      // Tratamento específico por tipo de erro
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        toast({
+          title: "Erro de Conexão",
+          description: "Não foi possível conectar aos servidores. Verifique sua conexão com a internet.",
+          variant: "destructive"
+        });
+      } else if (error instanceof Error) {
+        // Erro conhecido com mensagem específica
+        toast({
+          title: "Erro na Criação do Agente",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        // Erro genérico
+        toast({
+          title: "Erro Inesperado",
+          description: "Ocorreu um erro inesperado. Tente novamente em alguns minutos.",
+          variant: "destructive"
+        });
+      }
     } finally {
       setLoading(false);
     }
