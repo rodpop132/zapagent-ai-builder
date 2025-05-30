@@ -15,8 +15,7 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
 
   const checkStatus = async () => {
     try {
-      // TODO: Substituir pela URL real da API Flask
-      const apiUrl = `https://your-flask-api-url.com/status?numero=${encodeURIComponent(phoneNumber)}`;
+      const apiUrl = `https://zapagent-api.onrender.com/status?numero=${encodeURIComponent(phoneNumber)}`;
       
       const response = await fetch(apiUrl);
       if (!response.ok) throw new Error('Erro ao verificar status');
@@ -38,8 +37,7 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
 
   const fetchQrCode = async () => {
     try {
-      // TODO: Substituir pela URL real do bot
-      const botUrl = `https://your-bot-url.com/qrcode?numero=${encodeURIComponent(phoneNumber)}`;
+      const botUrl = `https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(phoneNumber)}`;
       
       const response = await fetch(botUrl);
       if (!response.ok) throw new Error('Erro ao buscar QR code');
