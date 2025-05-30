@@ -22,6 +22,7 @@ export type Database = {
           training_data: string | null
           updated_at: string
           user_id: string
+          whatsapp_status: string | null
         }
         Insert: {
           business_type?: string | null
@@ -35,6 +36,7 @@ export type Database = {
           training_data?: string | null
           updated_at?: string
           user_id: string
+          whatsapp_status?: string | null
         }
         Update: {
           business_type?: string | null
@@ -48,6 +50,7 @@ export type Database = {
           training_data?: string | null
           updated_at?: string
           user_id?: string
+          whatsapp_status?: string | null
         }
         Relationships: [
           {

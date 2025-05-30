@@ -16,7 +16,7 @@ interface Agent {
   phone_number: string;
   is_active: boolean;
   created_at: string;
-  whatsapp_status?: 'connected' | 'pending';
+  whatsapp_status?: string;
 }
 
 interface AgentCardProps {
@@ -27,7 +27,7 @@ interface AgentCardProps {
 const AgentCard = ({ agent, onUpdate }: AgentCardProps) => {
   const [loading, setLoading] = useState(false);
   const [whatsappStatus, setWhatsappStatus] = useState<'connected' | 'pending'>(
-    agent.whatsapp_status || 'pending'
+    (agent.whatsapp_status as 'connected' | 'pending') || 'pending'
   );
   const { toast } = useToast();
 
@@ -94,10 +94,14 @@ const AgentCard = ({ agent, onUpdate }: AgentCardProps) => {
     
     // Atualizar no banco de dados
     try {
-      await supabase
+      const { error } = await supabase
         .from('agents')
         .update({ whatsapp_status: status })
         .eq('id', agent.id);
+
+      if (error) {
+        console.error('Error updating WhatsApp status:', error);
+      }
     } catch (error) {
       console.error('Error updating WhatsApp status:', error);
     }
