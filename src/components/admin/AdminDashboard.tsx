@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import UserDetailsModal from './UserDetailsModal';
 import PasswordRevealModal from './PasswordRevealModal';
-import { Eye, LogOut, DollarSign, Wallet, RefreshCw, Menu } from 'lucide-react';
+import { Eye, LogOut, DollarSign, Wallet, RefreshCw, Menu, CheckCircle, XCircle } from 'lucide-react';
 
 interface User {
   id: string;
@@ -42,7 +43,6 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
   const [refreshing, setRefreshing] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
-  // Valores financeiros zerados (sem Stripe ainda)
   const [financialData] = useState({
     totalReceived: 0.00,
     availableWithdraw: 0.00
@@ -54,14 +54,10 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
 
   const loadData = async () => {
     try {
-      console.log('📊 Carregando dados do dashboard admin...');
-      
-      // Tentar diferentes abordagens para carregar usuários
-      await loadUsers();
-      await loadAccessRequests();
-      
+      console.log('Carregando dados do dashboard admin...');
+      await Promise.all([loadUsers(), loadAccessRequests()]);
     } catch (error) {
-      console.error('❌ Erro geral ao carregar dados:', error);
+      console.error('Erro geral ao carregar dados:', error);
       toast.error('Erro ao carregar dados');
     } finally {
       setLoading(false);
@@ -70,8 +66,9 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
 
   const loadUsers = async () => {
     try {
-      // Primeira tentativa: buscar profiles
-      console.log('🔍 Tentando buscar profiles...');
+      console.log('Buscando usuários registrados...');
+      
+      // Buscar diretamente da tabela profiles
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select(`
@@ -83,45 +80,41 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
         `);
 
       if (profilesError) {
-        console.error('❌ Erro ao buscar profiles:', profilesError);
-        console.log('🔄 Tentando buscar usuários diretamente...');
+        console.error('Erro ao buscar profiles:', profilesError);
         
-        // Segunda tentativa: buscar usuários auth (admin query)
-        const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-        
-        if (authError) {
-          console.error('❌ Erro ao buscar usuários auth:', authError);
-          toast.error('Erro ao carregar usuários');
-          return;
-        }
-
-        console.log('✅ Usuários auth encontrados:', authUsers);
-        
-        // Transformar dados auth em formato User
-        const transformedUsers = authUsers.users.map(user => ({
-          id: user.id,
-          email: user.email || 'N/A',
-          full_name: user.user_metadata?.full_name || user.user_metadata?.name || 'N/A',
-          company_name: user.user_metadata?.company_name || 'N/A',
-          phone: user.user_metadata?.phone || user.phone || 'N/A',
-          created_at: user.created_at,
-          subscription: {
-            plan_type: 'free',
-            status: 'active'
+        // Fallback: buscar usuários via auth admin
+        try {
+          const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+          
+          if (authError) {
+            console.error('Erro ao buscar usuários auth:', authError);
+            return;
           }
-        }));
-        
-        setUsers(transformedUsers);
-        console.log('✅ Usuários transformados carregados:', transformedUsers.length);
-        
-      } else {
-        console.log('✅ Profiles carregados:', profilesData);
-        setUsers(profilesData || []);
-      }
 
+          const transformedUsers = authUsers.users.map(user => ({
+            id: user.id,
+            email: user.email || 'N/A',
+            full_name: user.user_metadata?.full_name || user.user_metadata?.name || 'N/A',
+            company_name: user.user_metadata?.company_name || 'N/A',
+            phone: user.user_metadata?.phone || user.phone || 'N/A',
+            created_at: user.created_at,
+            subscription: {
+              plan_type: 'free',
+              status: 'active'
+            }
+          }));
+          
+          setUsers(transformedUsers);
+          console.log('Usuários carregados via auth:', transformedUsers.length);
+        } catch (authError) {
+          console.error('Erro crítico ao carregar usuários:', authError);
+        }
+      } else {
+        setUsers(profilesData || []);
+        console.log('Profiles carregados:', profilesData?.length || 0);
+      }
     } catch (error) {
-      console.error('❌ Erro crítico ao carregar usuários:', error);
-      toast.error('Erro crítico ao carregar usuários');
+      console.error('Erro ao carregar usuários:', error);
     }
   };
 
@@ -134,13 +127,52 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
         .order('requested_at', { ascending: false });
 
       if (requestsError) {
-        console.error('❌ Erro ao carregar solicitações:', requestsError);
+        console.error('Erro ao carregar solicitações:', requestsError);
       } else {
-        console.log('✅ Solicitações carregadas:', requestsData);
         setAccessRequests(requestsData || []);
       }
     } catch (error) {
-      console.error('❌ Erro ao carregar solicitações:', error);
+      console.error('Erro ao carregar solicitações:', error);
+    }
+  };
+
+  const handleApproveRequest = async (requestId: string) => {
+    try {
+      const { error } = await supabase
+        .from('admin_access_requests')
+        .update({ 
+          status: 'approved',
+          processed_at: new Date().toISOString()
+        })
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      toast.success('Solicitação aprovada!');
+      loadAccessRequests();
+    } catch (error) {
+      console.error('Erro ao aprovar:', error);
+      toast.error('Erro ao aprovar solicitação');
+    }
+  };
+
+  const handleRejectRequest = async (requestId: string) => {
+    try {
+      const { error } = await supabase
+        .from('admin_access_requests')
+        .update({ 
+          status: 'rejected',
+          processed_at: new Date().toISOString()
+        })
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      toast.success('Solicitação rejeitada!');
+      loadAccessRequests();
+    } catch (error) {
+      console.error('Erro ao rejeitar:', error);
+      toast.error('Erro ao rejeitar solicitação');
     }
   };
 
@@ -206,7 +238,7 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
         {/* Header - Responsivo */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 sm:mb-0">
-            🔧 Painel Administrativo
+            Painel Administrativo
           </h1>
           
           {/* Mobile Menu Button */}
@@ -282,7 +314,7 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
                 {formatCurrency(financialData.totalReceived)}
               </div>
               <p className="text-xs text-muted-foreground">
-                Total de vendas processadas (SaaS ainda não lançado)
+                SaaS ainda não lançado
               </p>
             </CardContent>
           </Card>
@@ -303,12 +335,12 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
           </Card>
         </div>
 
-        {/* Solicitações de Acesso Pendentes - Responsivo */}
+        {/* Solicitações de Acesso Pendentes */}
         {accessRequests.length > 0 && (
           <Card className="mb-6 sm:mb-8">
             <CardHeader>
               <CardTitle className="text-base sm:text-lg">
-                📋 Solicitações de Acesso Pendentes ({accessRequests.length})
+                Solicitações de Acesso Pendentes ({accessRequests.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -322,10 +354,22 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline" className="flex-1 sm:flex-none">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="flex-1 sm:flex-none hover:bg-green-50 hover:text-green-600"
+                        onClick={() => handleApproveRequest(request.id)}
+                      >
+                        <CheckCircle className="w-4 h-4 mr-1" />
                         Aprovar
                       </Button>
-                      <Button size="sm" variant="destructive" className="flex-1 sm:flex-none">
+                      <Button 
+                        size="sm" 
+                        variant="destructive" 
+                        className="flex-1 sm:flex-none"
+                        onClick={() => handleRejectRequest(request.id)}
+                      >
+                        <XCircle className="w-4 h-4 mr-1" />
                         Rejeitar
                       </Button>
                     </div>
@@ -336,17 +380,17 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
           </Card>
         )}
 
-        {/* Debug Info - Responsivo */}
-        <Card className="mb-6 sm:mb-8 border-orange-200">
+        {/* Status do Sistema */}
+        <Card className="mb-6 sm:mb-8 border-blue-200">
           <CardHeader>
-            <CardTitle className="text-orange-600 text-base sm:text-lg">
-              🔍 Debug - Status do Sistema
+            <CardTitle className="text-blue-600 text-base sm:text-lg">
+              Status do Sistema
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
               <div className="text-center sm:text-left">
-                <p className="font-medium">Usuários Encontrados:</p>
+                <p className="font-medium">Usuários Registrados:</p>
                 <p className="text-lg font-bold text-blue-600">{users.length}</p>
               </div>
               <div className="text-center sm:text-left">
@@ -361,11 +405,11 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
           </CardContent>
         </Card>
 
-        {/* Tabela de Usuários - Responsivo */}
+        {/* Tabela de Usuários */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base sm:text-lg">
-              👥 Usuários Registrados ({users.length})
+              Usuários Registrados ({users.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -430,7 +474,6 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
                       <tr className="border-b">
                         <th className="text-left p-3">Nome</th>
                         <th className="text-left p-3">Email</th>
-                        <th className="text-left p-3">IP</th>
                         <th className="text-left p-3">Senha</th>
                         <th className="text-left p-3">Plano</th>
                         <th className="text-left p-3">Registrado</th>
@@ -451,7 +494,6 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
                             </div>
                           </td>
                           <td className="p-3">{user.email}</td>
-                          <td className="p-3 text-gray-500">192.168.1.1</td>
                           <td className="p-3">
                             <div className="flex items-center gap-2">
                               <span className="text-gray-400">••••••••</span>

@@ -3,10 +3,11 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bot, Settings, Trash2, Play, Pause } from 'lucide-react';
+import { Bot, Settings, Trash2, Play, Pause, MessageCircle, QrCode } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import WhatsAppStatus from './WhatsAppStatus';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface Agent {
   id: string;
@@ -29,6 +30,9 @@ const AgentCard = ({ agent, onUpdate }: AgentCardProps) => {
   const [whatsappStatus, setWhatsappStatus] = useState<'connected' | 'pending'>(
     (agent.whatsapp_status as 'connected' | 'pending') || 'pending'
   );
+  const [messagesCount] = useState(Math.floor(Math.random() * 100)); // Placeholder
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [qrCode, setQrCode] = useState<string>('');
   const { toast } = useToast();
 
   const handleToggleActive = async () => {
@@ -92,7 +96,6 @@ const AgentCard = ({ agent, onUpdate }: AgentCardProps) => {
   const handleWhatsAppStatusChange = async (status: 'connected' | 'pending') => {
     setWhatsappStatus(status);
     
-    // Atualizar no banco de dados
     try {
       const { error } = await supabase
         .from('agents')
@@ -107,89 +110,178 @@ const AgentCard = ({ agent, onUpdate }: AgentCardProps) => {
     }
   };
 
+  const fetchQrCode = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(agent.phone_number)}`);
+      
+      if (!response.ok) throw new Error('Erro ao buscar QR code');
+      
+      const data = await response.json();
+      if (data.qr) {
+        setQrCode(`data:image/png;base64,${data.qr}`);
+        setShowQrModal(true);
+      } else {
+        throw new Error('QR code não encontrado');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar QR code:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar o QR code",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getMessageLimitColor = (count: number) => {
+    if (count < 10) return 'text-red-600';
+    if (count < 20) return 'text-yellow-600';
+    return 'text-green-600';
+  };
+
   return (
-    <Card className="hover:shadow-lg transition-all duration-200 hover:scale-102">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-brand-green rounded-lg flex items-center justify-center">
-              <Bot className="h-6 w-6 text-white" />
+    <>
+      <Card className="hover:shadow-lg transition-all duration-200 hover:scale-102">
+        <CardHeader className="pb-3">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-brand-green rounded-lg flex items-center justify-center">
+                <Bot className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">{agent.name}</CardTitle>
+                <CardDescription className="text-sm">
+                  {agent.business_type}
+                </CardDescription>
+              </div>
             </div>
-            <div>
-              <CardTitle className="text-lg">{agent.name}</CardTitle>
-              <CardDescription className="text-sm">
-                {agent.business_type}
-              </CardDescription>
-            </div>
+            <Badge variant={agent.is_active ? "default" : "secondary"}>
+              {agent.is_active ? "Ativo" : "Pausado"}
+            </Badge>
           </div>
-          <Badge variant={agent.is_active ? "default" : "secondary"}>
-            {agent.is_active ? "Ativo" : "Pausado"}
-          </Badge>
-        </div>
-      </CardHeader>
+        </CardHeader>
 
-      <CardContent className="space-y-4">
-        {agent.description && (
-          <p className="text-sm text-gray-600">{agent.description}</p>
-        )}
+        <CardContent className="space-y-4">
+          {agent.description && (
+            <p className="text-sm text-gray-600">{agent.description}</p>
+          )}
 
-        {agent.phone_number && (
-          <div className="space-y-2">
-            <div className="text-sm">
-              <span className="font-medium">WhatsApp:</span> {agent.phone_number}
+          {/* Contador de mensagens */}
+          <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <MessageCircle className="h-4 w-4 text-gray-500" />
+              <span className="text-sm text-gray-600">Mensagens:</span>
             </div>
-            <WhatsAppStatus 
-              phoneNumber={agent.phone_number}
-              onStatusChange={handleWhatsAppStatusChange}
-            />
+            <span className={`text-sm font-medium ${getMessageLimitColor(messagesCount)}`}>
+              {messagesCount}/30
+            </span>
           </div>
-        )}
 
-        <div className="text-xs text-gray-500">
-          Criado em {new Date(agent.created_at).toLocaleDateString('pt-BR')}
-        </div>
+          {agent.phone_number && (
+            <div className="space-y-2">
+              <div className="text-sm">
+                <span className="font-medium">WhatsApp:</span> {agent.phone_number}
+              </div>
+              <div className="flex items-center justify-between">
+                <WhatsAppStatus 
+                  phoneNumber={agent.phone_number}
+                  onStatusChange={handleWhatsAppStatusChange}
+                />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={fetchQrCode}
+                  disabled={loading}
+                  className="text-xs"
+                >
+                  <QrCode className="w-3 h-3 mr-1" />
+                  QR Code
+                </Button>
+              </div>
+            </div>
+          )}
 
-        <div className="flex space-x-2">
-          <Button
-            variant={agent.is_active ? "secondary" : "default"}
-            size="sm"
-            onClick={handleToggleActive}
-            disabled={loading}
-            className="flex-1"
-          >
-            {agent.is_active ? (
-              <>
-                <Pause className="h-4 w-4 mr-1" />
-                Pausar
-              </>
+          <div className="text-xs text-gray-500">
+            Criado em {new Date(agent.created_at).toLocaleDateString('pt-BR')}
+          </div>
+
+          <div className="flex space-x-2">
+            <Button
+              variant={agent.is_active ? "secondary" : "default"}
+              size="sm"
+              onClick={handleToggleActive}
+              disabled={loading}
+              className="flex-1"
+            >
+              {agent.is_active ? (
+                <>
+                  <Pause className="h-4 w-4 mr-1" />
+                  Pausar
+                </>
+              ) : (
+                <>
+                  <Play className="h-4 w-4 mr-1" />
+                  Ativar
+                </>
+              )}
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={loading}
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDelete}
+              disabled={loading}
+              className="hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Modal do QR Code */}
+      <Dialog open={showQrModal} onOpenChange={setShowQrModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Conectar WhatsApp</DialogTitle>
+          </DialogHeader>
+          
+          <div className="text-center space-y-4">
+            <p className="text-sm text-gray-600">
+              Aponte a câmera do seu WhatsApp para conectar este agente
+            </p>
+            
+            {qrCode ? (
+              <div className="flex justify-center">
+                <img 
+                  src={qrCode} 
+                  alt="QR Code do WhatsApp" 
+                  className="max-w-full h-auto border rounded-lg"
+                />
+              </div>
             ) : (
-              <>
-                <Play className="h-4 w-4 mr-1" />
-                Ativar
-              </>
+              <div className="flex justify-center items-center h-64 bg-gray-100 rounded-lg">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green mx-auto mb-2"></div>
+                  <p className="text-sm text-gray-600">Carregando QR Code...</p>
+                </div>
+              </div>
             )}
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={loading}
-          >
-            <Settings className="h-4 w-4" />
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDelete}
-            disabled={loading}
-            className="hover:bg-red-50 hover:text-red-600 hover:border-red-200"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
