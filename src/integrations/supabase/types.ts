@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_access_requests: {
+        Row: {
+          email: string
+          id: string
+          ip_address: string | null
+          processed_at: string | null
+          requested_at: string
+          status: string | null
+        }
+        Insert: {
+          email: string
+          id?: string
+          ip_address?: string | null
+          processed_at?: string | null
+          requested_at?: string
+          status?: string | null
+        }
+        Update: {
+          email?: string
+          id?: string
+          ip_address?: string | null
+          processed_at?: string | null
+          requested_at?: string
+          status?: string | null
+        }
+        Relationships: []
+      }
       agents: {
         Row: {
           business_type: string | null
@@ -171,12 +198,80 @@ export type Database = {
           },
         ]
       }
+      user_actions: {
+        Row: {
+          action_type: string
+          active: boolean | null
+          admin_note: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          reason: string
+          user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          active?: boolean | null
+          admin_note?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          reason: string
+          user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          active?: boolean | null
+          admin_note?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          reason?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_activity_logs: {
+        Row: {
+          activity_type: string
+          created_at: string
+          description: string | null
+          id: string
+          ip_address: string | null
+          user_id: string | null
+        }
+        Insert: {
+          activity_type: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          activity_type?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          ip_address?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      log_user_activity: {
+        Args: {
+          p_user_id: string
+          p_activity_type: string
+          p_description: string
+          p_ip_address?: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
