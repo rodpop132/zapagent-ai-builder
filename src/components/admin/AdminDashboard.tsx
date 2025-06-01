@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import UserDetailsModal from './UserDetailsModal';
 import PasswordRevealModal from './PasswordRevealModal';
-import { Eye, LogOut, DollarSign, Wallet, RefreshCw } from 'lucide-react';
+import { Eye, LogOut, DollarSign, Wallet, RefreshCw, Menu } from 'lucide-react';
 
 interface User {
   id: string;
@@ -29,7 +28,11 @@ interface AccessRequest {
   requested_at: string;
 }
 
-const AdminDashboard = () => {
+interface AdminDashboardProps {
+  onLogout: () => void;
+}
+
+const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
   const [users, setUsers] = useState<User[]>([]);
   const [accessRequests, setAccessRequests] = useState<AccessRequest[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -37,6 +40,7 @@ const AdminDashboard = () => {
   const [passwordRevealUser, setPasswordRevealUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   // Valores financeiros zerados (sem Stripe ainda)
   const [financialData] = useState({
@@ -154,7 +158,7 @@ const AdminDashboard = () => {
 
   const handleLogout = () => {
     if (confirm('Tem certeza que deseja sair?')) {
-      window.location.reload();
+      onLogout();
     }
   };
 
@@ -197,41 +201,84 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-gray-100 p-2 sm:p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">🔧 Painel Administrativo</h1>
-          <div className="flex gap-2">
-            <Button 
-              onClick={handleRefresh}
-              disabled={refreshing}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-              Atualizar
-            </Button>
-            <Button 
-              onClick={handleLogout}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              <LogOut className="w-4 h-4" />
-              Sair
-            </Button>
+        {/* Header - Responsivo */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 sm:mb-0">
+            🔧 Painel Administrativo
+          </h1>
+          
+          {/* Mobile Menu Button */}
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="sm:hidden flex-1">
+              <Button 
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                variant="outline"
+                className="w-full flex items-center justify-center gap-2"
+              >
+                <Menu className="w-4 h-4" />
+                Menu
+              </Button>
+            </div>
+            
+            {/* Desktop Buttons */}
+            <div className="hidden sm:flex gap-2">
+              <Button 
+                onClick={handleRefresh}
+                disabled={refreshing}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                Atualizar
+              </Button>
+              <Button 
+                onClick={handleLogout}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                Sair
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Métricas Financeiras - Valores Reais */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Mobile Menu */}
+        {showMobileMenu && (
+          <div className="sm:hidden mb-6 p-4 bg-white rounded-lg shadow-sm border">
+            <div className="flex flex-col gap-2">
+              <Button 
+                onClick={handleRefresh}
+                disabled={refreshing}
+                variant="outline"
+                className="flex items-center justify-center gap-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                Atualizar
+              </Button>
+              <Button 
+                onClick={handleLogout}
+                variant="outline"
+                className="flex items-center justify-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                Sair
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Métricas Financeiras - Responsivo */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Valor Recebido</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">
+              <div className="text-xl sm:text-2xl font-bold text-green-600">
                 {formatCurrency(financialData.totalReceived)}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -246,7 +293,7 @@ const AdminDashboard = () => {
               <Wallet className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">
+              <div className="text-xl sm:text-2xl font-bold text-blue-600">
                 {formatCurrency(financialData.availableWithdraw)}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -256,27 +303,29 @@ const AdminDashboard = () => {
           </Card>
         </div>
 
-        {/* Solicitações de Acesso Pendentes */}
+        {/* Solicitações de Acesso Pendentes - Responsivo */}
         {accessRequests.length > 0 && (
-          <Card className="mb-8">
+          <Card className="mb-6 sm:mb-8">
             <CardHeader>
-              <CardTitle>📋 Solicitações de Acesso Pendentes ({accessRequests.length})</CardTitle>
+              <CardTitle className="text-base sm:text-lg">
+                📋 Solicitações de Acesso Pendentes ({accessRequests.length})
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 {accessRequests.map((request) => (
-                  <div key={request.id} className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                    <div>
-                      <p className="font-medium">{request.email}</p>
+                  <div key={request.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-yellow-50 rounded-lg gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{request.email}</p>
                       <p className="text-sm text-gray-500">
                         Solicitado em {formatDate(request.requested_at)}
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" className="flex-1 sm:flex-none">
                         Aprovar
                       </Button>
-                      <Button size="sm" variant="destructive">
+                      <Button size="sm" variant="destructive" className="flex-1 sm:flex-none">
                         Rejeitar
                       </Button>
                     </div>
@@ -287,22 +336,24 @@ const AdminDashboard = () => {
           </Card>
         )}
 
-        {/* Debug Info */}
-        <Card className="mb-8 border-orange-200">
+        {/* Debug Info - Responsivo */}
+        <Card className="mb-6 sm:mb-8 border-orange-200">
           <CardHeader>
-            <CardTitle className="text-orange-600">🔍 Debug - Status do Sistema</CardTitle>
+            <CardTitle className="text-orange-600 text-base sm:text-lg">
+              🔍 Debug - Status do Sistema
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+              <div className="text-center sm:text-left">
                 <p className="font-medium">Usuários Encontrados:</p>
                 <p className="text-lg font-bold text-blue-600">{users.length}</p>
               </div>
-              <div>
+              <div className="text-center sm:text-left">
                 <p className="font-medium">Solicitações Pendentes:</p>
                 <p className="text-lg font-bold text-yellow-600">{accessRequests.length}</p>
               </div>
-              <div>
+              <div className="text-center sm:text-left">
                 <p className="font-medium">Status Stripe:</p>
                 <p className="text-lg font-bold text-gray-600">Não Configurado</p>
               </div>
@@ -310,10 +361,12 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Tabela de Usuários */}
+        {/* Tabela de Usuários - Responsivo */}
         <Card>
           <CardHeader>
-            <CardTitle>👥 Usuários Registrados ({users.length})</CardTitle>
+            <CardTitle className="text-base sm:text-lg">
+              👥 Usuários Registrados ({users.length})
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {users.length === 0 ? (
@@ -325,73 +378,120 @@ const AdminDashboard = () => {
                 </Button>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-3">Nome</th>
-                      <th className="text-left p-3">Email</th>
-                      <th className="text-left p-3">IP</th>
-                      <th className="text-left p-3">Senha</th>
-                      <th className="text-left p-3">Plano</th>
-                      <th className="text-left p-3">Registrado</th>
-                      <th className="text-left p-3">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map((user) => (
-                      <tr 
-                        key={user.id} 
-                        className="border-b hover:bg-gray-50 cursor-pointer"
-                        onClick={() => setSelectedUser(user)}
-                      >
-                        <td className="p-3">
+              <div className="space-y-4 sm:space-y-0">
+                {/* Mobile Cards */}
+                <div className="sm:hidden space-y-4">
+                  {users.map((user) => (
+                    <Card key={user.id} className="p-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-start">
                           <div>
                             <p className="font-medium">{user.full_name || 'N/A'}</p>
-                            <p className="text-sm text-gray-500">{user.company_name || 'Sem empresa'}</p>
+                            <p className="text-sm text-gray-500">{user.email}</p>
                           </div>
-                        </td>
-                        <td className="p-3">{user.email}</td>
-                        <td className="p-3 text-gray-500">192.168.1.1</td>
-                        <td className="p-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-gray-400">••••••••</span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handlePasswordReveal(user);
-                              }}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </td>
-                        <td className="p-3">
                           <Badge className={getPlanColor(user.subscription?.plan_type || 'free')}>
                             {user.subscription?.plan_type || 'free'}
                           </Badge>
-                        </td>
-                        <td className="p-3 text-gray-500">
-                          {formatDate(user.created_at)}
-                        </td>
-                        <td className="p-3">
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-500">Senha:</span>
+                          <span className="text-gray-400">••••••••</span>
                           <Button
                             size="sm"
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedUser(user);
-                            }}
+                            variant="ghost"
+                            onClick={() => handlePasswordReveal(user)}
                           >
-                            Detalhes
+                            <Eye className="w-4 h-4" />
                           </Button>
-                        </td>
+                        </div>
+                        
+                        <div className="text-xs text-gray-500">
+                          Registrado: {formatDate(user.created_at)}
+                        </div>
+                        
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSelectedUser(user)}
+                          className="w-full"
+                        >
+                          Ver Detalhes
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Desktop Table */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left p-3">Nome</th>
+                        <th className="text-left p-3">Email</th>
+                        <th className="text-left p-3">IP</th>
+                        <th className="text-left p-3">Senha</th>
+                        <th className="text-left p-3">Plano</th>
+                        <th className="text-left p-3">Registrado</th>
+                        <th className="text-left p-3">Ações</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {users.map((user) => (
+                        <tr 
+                          key={user.id} 
+                          className="border-b hover:bg-gray-50 cursor-pointer"
+                          onClick={() => setSelectedUser(user)}
+                        >
+                          <td className="p-3">
+                            <div>
+                              <p className="font-medium">{user.full_name || 'N/A'}</p>
+                              <p className="text-sm text-gray-500">{user.company_name || 'Sem empresa'}</p>
+                            </div>
+                          </td>
+                          <td className="p-3">{user.email}</td>
+                          <td className="p-3 text-gray-500">192.168.1.1</td>
+                          <td className="p-3">
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-400">••••••••</span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handlePasswordReveal(user);
+                                }}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <Badge className={getPlanColor(user.subscription?.plan_type || 'free')}>
+                              {user.subscription?.plan_type || 'free'}
+                            </Badge>
+                          </td>
+                          <td className="p-3 text-gray-500">
+                            {formatDate(user.created_at)}
+                          </td>
+                          <td className="p-3">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedUser(user);
+                              }}
+                            >
+                              Detalhes
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </CardContent>
