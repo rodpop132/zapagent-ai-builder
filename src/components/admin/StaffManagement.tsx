@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,8 +35,8 @@ const StaffManagement = () => {
 
       if (error) throw error;
       
-      // Filter to only include staff and admin members
-      const filteredData = (data || []).filter(member => 
+      // Filter to only include staff and admin members and ensure type safety
+      const filteredData = (data || []).filter((member): member is StaffMember => 
         member.user_type === 'staff' || member.user_type === 'admin'
       );
       
