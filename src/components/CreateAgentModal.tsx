@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -131,27 +132,107 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         plano: planValue
       };
 
-      console.log('Enviando para API:', payload);
+      console.log('🚀 DEBUG: Iniciando requisição para API externa');
+      console.log('🔗 URL:', 'https://zapagent-bot.onrender.com/zapagent');
+      console.log('📦 Payload completo:', JSON.stringify(payload, null, 2));
+      console.log('📡 Headers:', { 'Content-Type': 'application/json' });
+      console.log('🌐 User Agent:', navigator.userAgent);
+      console.log('🔒 Protocolo:', window.location.protocol);
 
+      // Teste de conectividade básica primeiro
+      console.log('🔍 Testando conectividade básica...');
+      try {
+        const pingResponse = await fetch('https://zapagent-bot.onrender.com/zapagent', {
+          method: 'HEAD',
+          mode: 'cors'
+        });
+        console.log('✅ Teste HEAD concluído:', pingResponse.status, pingResponse.statusText);
+      } catch (pingError) {
+        console.error('❌ Teste HEAD falhou:', pingError);
+        console.error('❌ Tipo do erro ping:', pingError.name);
+        console.error('❌ Mensagem do erro ping:', pingError.message);
+      }
+
+      // Requisição principal
+      console.log('📤 Enviando requisição POST...');
+      
+      const startTime = performance.now();
+      
       const response = await fetch('https://zapagent-bot.onrender.com/zapagent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'User-Agent': 'Lovable-App/1.0',
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        mode: 'cors',
+        credentials: 'omit'
       });
+
+      const endTime = performance.now();
+      const requestTime = endTime - startTime;
+
+      console.log(`⏱️ Tempo de resposta: ${requestTime.toFixed(2)}ms`);
+      console.log('📊 Status da resposta:', response.status);
+      console.log('📊 Status text:', response.statusText);
+      console.log('📊 Headers da resposta:', Object.fromEntries(response.headers.entries()));
+      console.log('📊 Response OK:', response.ok);
+      console.log('📊 Response redirected:', response.redirected);
+      console.log('📊 Response type:', response.type);
+      console.log('📊 Response URL:', response.url);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Erro na API:', response.status, errorText);
-        throw new Error(`Erro ${response.status}: Falha na criação do agente`);
+        console.error('❌ Erro na resposta da API:', response.status, response.statusText);
+        console.error('❌ Corpo da resposta de erro:', errorText);
+        
+        // Análise específica do erro
+        if (response.status === 0) {
+          throw new Error('Erro de CORS ou bloqueio de rede - Status 0');
+        } else if (response.status >= 500) {
+          throw new Error(`Erro do servidor externo (${response.status}): ${response.statusText}`);
+        } else if (response.status >= 400) {
+          throw new Error(`Erro de requisição (${response.status}): ${errorText || response.statusText}`);
+        } else {
+          throw new Error(`Erro ${response.status}: ${response.statusText}`);
+        }
       }
 
-      const result = await response.json();
-      console.log('Agente criado na API:', result);
+      const responseText = await response.text();
+      console.log('📥 Resposta bruta:', responseText);
+      
+      let result;
+      try {
+        result = JSON.parse(responseText);
+        console.log('✅ JSON parseado com sucesso:', result);
+      } catch (parseError) {
+        console.error('❌ Erro ao parsear JSON:', parseError);
+        console.error('❌ Resposta que falhou no parse:', responseText);
+        throw new Error(`Resposta inválida do servidor: ${responseText.substring(0, 100)}`);
+      }
+
       return result;
     } catch (error) {
-      console.error('Erro ao criar agente na API:', error);
+      console.error('🚨 ERRO COMPLETO na createAgentAPI:');
+      console.error('🚨 Tipo:', error.constructor.name);
+      console.error('🚨 Mensagem:', error.message);
+      console.error('🚨 Stack:', error.stack);
+      
+      // Análise detalhada do erro
+      if (error instanceof TypeError) {
+        if (error.message.includes('Failed to fetch')) {
+          console.error('🚨 DIAGNÓSTICO: Erro de rede/CORS - fetch() foi bloqueado');
+          throw new Error('Erro de conectividade: Possível bloqueio de CORS ou rede. Verifique se a API está acessível do navegador.');
+        } else if (error.message.includes('NetworkError')) {
+          console.error('🚨 DIAGNÓSTICO: Erro de rede - conexão falhou');
+          throw new Error('Erro de rede: Não foi possível estabelecer conexão com a API externa.');
+        }
+      } else if (error.name === 'AbortError') {
+        console.error('🚨 DIAGNÓSTICO: Requisição foi cancelada/timeout');
+        throw new Error('Timeout: A requisição demorou muito para responder.');
+      }
+      
       throw error;
     }
   };
@@ -244,7 +325,13 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     setLoading(true);
 
     try {
-      console.log('Iniciando criação do agente...');
+      console.log('🎯 Iniciando criação do agente...');
+      console.log('🎯 Dados do formulário:', formData);
+      console.log('🎯 Ambiente:', {
+        location: window.location.href,
+        userAgent: navigator.userAgent,
+        online: navigator.onLine
+      });
       
       // Validação dos dados obrigatórios
       if (!formData.name.trim()) {
@@ -258,10 +345,12 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       }
 
       // 1. Criar agente na API externa
+      console.log('📡 Chamando API externa...');
       await createAgentAPI();
+      console.log('✅ API externa respondeu com sucesso');
 
       // 2. Salvar no Supabase para persistência local
-      console.log('Salvando no banco de dados local...');
+      console.log('💾 Salvando no banco de dados local...');
       const { error: supabaseError } = await (supabase as any)
         .from('agents')
         .insert({
@@ -273,11 +362,11 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         });
 
       if (supabaseError) {
-        console.error('Erro no Supabase:', supabaseError);
+        console.error('❌ Erro no Supabase:', supabaseError);
         throw new Error(`Erro ao salvar no banco de dados: ${supabaseError.message}`);
       }
 
-      console.log('Agente salvo no banco local com sucesso');
+      console.log('✅ Agente salvo no banco local com sucesso');
 
       toast({
         title: "Agente criado com sucesso!",
@@ -301,13 +390,13 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       setUploadedFiles([]);
 
     } catch (error) {
-      console.error('Error creating agent:', error);
+      console.error('💥 Error creating agent:', error);
       
       // Tratamento específico por tipo de erro
       if (error instanceof TypeError && error.message.includes('fetch')) {
         toast({
           title: "Erro de Conexão",
-          description: "Não foi possível conectar aos servidores. Verifique sua conexão com a internet.",
+          description: `Falha na comunicação com a API: ${error.message}`,
           variant: "destructive"
         });
       } else if (error instanceof Error) {
@@ -321,7 +410,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         // Erro genérico
         toast({
           title: "Erro Inesperado",
-          description: "Ocorreu um erro inesperado. Tente novamente em alguns minutos.",
+          description: "Ocorreu um erro inesperado. Verifique o console para mais detalhes.",
           variant: "destructive"
         });
       }
