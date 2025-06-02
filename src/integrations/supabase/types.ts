@@ -198,6 +198,80 @@ export type Database = {
         }
         Relationships: []
       }
+      ticket_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_staff: boolean | null
+          message: string
+          ticket_id: string
+          user_email: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_staff?: boolean | null
+          message: string
+          ticket_id: string
+          user_email: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_staff?: boolean | null
+          message?: string
+          ticket_id?: string
+          user_email?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tickets: {
+        Row: {
+          assigned_to: string | null
+          created_at: string | null
+          id: string
+          priority: string
+          status: string
+          subject: string
+          updated_at: string | null
+          user_email: string
+          user_id: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string | null
+          id?: string
+          priority?: string
+          status?: string
+          subject: string
+          updated_at?: string | null
+          user_email: string
+          user_id?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string | null
+          id?: string
+          priority?: string
+          status?: string
+          subject?: string
+          updated_at?: string | null
+          user_email?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_actions: {
         Row: {
           action_type: string
@@ -258,15 +332,52 @@ export type Database = {
         }
         Relationships: []
       }
+      user_permissions: {
+        Row: {
+          created_at: string | null
+          email: string
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          user_id: string | null
+          user_type: Database["public"]["Enums"]["user_type"]
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          user_id?: string | null
+          user_type?: Database["public"]["Enums"]["user_type"]
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          user_id?: string | null
+          user_type?: Database["public"]["Enums"]["user_type"]
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      is_staff: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_type: "user" | "staff" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -381,6 +492,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_type: ["user", "staff", "admin"],
+    },
   },
 } as const

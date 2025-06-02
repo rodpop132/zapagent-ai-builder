@@ -538,6 +538,18 @@ const AdminDashboard = ({ onLogout }: AdminDashboardProps) => {
             )}
           </CardContent>
         </Card>
+
+        {/* Gerenciamento de Staff */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="text-base sm:text-lg">
+              Gerenciar Staff
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <StaffManagement />
+          </CardContent>
+        </Card>
       </div>
 
       {/* Modais */}

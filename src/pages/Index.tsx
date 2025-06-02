@@ -21,6 +21,7 @@ const Index = () => {
       <PricingSection />
       <FAQ />
       <Footer />
+      <SupportWidget />
     </div>
   );
 };
