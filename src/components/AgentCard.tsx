@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,9 +33,20 @@ const AgentCard = ({ agent, onUpdate }: AgentCardProps) => {
   const [messagesCount] = useState(Math.floor(Math.random() * 100)); // Placeholder
   const [showQrModal, setShowQrModal] = useState(false);
   const [qrCode, setQrCode] = useState<string>('');
+  const [qrLoading, setQrLoading] = useState(false);
   const { toast } = useToast();
 
   const handleToggleActive = async () => {
+    // Só permite ativar se estiver conectado ao WhatsApp
+    if (!agent.is_active && whatsappStatus !== 'connected') {
+      toast({
+        title: "Conexão necessária",
+        description: "O agente precisa estar conectado ao WhatsApp para ser ativado",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       const { error } = await (supabase as any)
@@ -98,21 +110,34 @@ const AgentCard = ({ agent, onUpdate }: AgentCardProps) => {
     try {
       const { error } = await (supabase as any)
         .from('agents')
-        .update({ whatsapp_status: status })
+        .update({ 
+          whatsapp_status: status,
+          // Se desconectou, pausar o agente automaticamente
+          is_active: status === 'connected' ? agent.is_active : false
+        })
         .eq('id', agent.id);
 
       if (error) {
         console.error('Error updating WhatsApp status:', error);
+      } else {
+        // Se desconectou, atualizar a UI
+        if (status === 'pending' && agent.is_active) {
+          onUpdate();
+          toast({
+            title: "Agente pausado",
+            description: "O agente foi pausado automaticamente ao desconectar do WhatsApp"
+          });
+        }
       }
     } catch (error) {
       console.error('Error updating WhatsApp status:', error);
     }
   };
 
-  const fetchQrCode = async () => {
+  const fetchQrCode = async (attempt = 1) => {
     try {
-      setLoading(true);
-      console.log('🔄 Buscando QR code para AgentCard:', agent.phone_number);
+      setQrLoading(true);
+      console.log(`🔄 Tentativa ${attempt} - Buscando QR code para AgentCard:`, agent.phone_number);
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -138,6 +163,8 @@ const AgentCard = ({ agent, onUpdate }: AgentCardProps) => {
           title: "Agente Conectado",
           description: "Este agente já está conectado ao WhatsApp",
         });
+        setWhatsappStatus('connected');
+        handleWhatsAppStatusChange('connected');
         return;
       }
       
@@ -146,18 +173,32 @@ const AgentCard = ({ agent, onUpdate }: AgentCardProps) => {
       if (imgMatch && imgMatch[1]) {
         setQrCode(imgMatch[1]);
         setShowQrModal(true);
+        setWhatsappStatus('pending');
+        handleWhatsAppStatusChange('pending');
       } else {
+        if (attempt < 3) {
+          console.log(`🔄 QR não encontrado, tentando novamente em ${attempt * 2} segundos...`);
+          setTimeout(() => fetchQrCode(attempt + 1), attempt * 2000);
+          return;
+        }
         throw new Error('QR code não encontrado');
       }
     } catch (error) {
       console.error('Erro ao buscar QR code:', error);
+      
+      if (attempt < 3) {
+        console.log(`🔄 Erro na tentativa ${attempt}, tentando novamente em ${attempt * 2} segundos...`);
+        setTimeout(() => fetchQrCode(attempt + 1), attempt * 3000);
+        return;
+      }
+      
       toast({
         title: "Erro",
         description: error instanceof Error ? error.message : "Não foi possível carregar o QR code",
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      setQrLoading(false);
     }
   };
 
@@ -166,6 +207,8 @@ const AgentCard = ({ agent, onUpdate }: AgentCardProps) => {
     if (count < 20) return 'text-yellow-600';
     return 'text-green-600';
   };
+
+  const isAgentActive = whatsappStatus === 'connected' && agent.is_active;
 
   return (
     <>
@@ -183,8 +226,8 @@ const AgentCard = ({ agent, onUpdate }: AgentCardProps) => {
                 </CardDescription>
               </div>
             </div>
-            <Badge variant={agent.is_active ? "default" : "secondary"}>
-              {agent.is_active ? "Ativo" : "Pausado"}
+            <Badge variant={isAgentActive ? "default" : "secondary"}>
+              {isAgentActive ? "Ativo" : "Pausado"}
             </Badge>
           </div>
         </CardHeader>
@@ -218,12 +261,12 @@ const AgentCard = ({ agent, onUpdate }: AgentCardProps) => {
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={fetchQrCode}
-                  disabled={loading}
+                  onClick={() => fetchQrCode(1)}
+                  disabled={qrLoading}
                   className="text-xs"
                 >
                   <QrCode className="w-3 h-3 mr-1" />
-                  QR Code
+                  {qrLoading ? 'Carregando...' : 'QR Code'}
                 </Button>
               </div>
             </div>
@@ -235,13 +278,16 @@ const AgentCard = ({ agent, onUpdate }: AgentCardProps) => {
 
           <div className="flex space-x-2">
             <Button
-              variant={agent.is_active ? "secondary" : "default"}
+              variant={isAgentActive ? "secondary" : "default"}
               size="sm"
               onClick={handleToggleActive}
-              disabled={loading}
+              disabled={loading || (whatsappStatus !== 'connected' && !agent.is_active)}
               className="flex-1"
+              title={whatsappStatus !== 'connected' && !agent.is_active ? 
+                'Conecte ao WhatsApp primeiro' : ''
+              }
             >
-              {agent.is_active ? (
+              {isAgentActive ? (
                 <>
                   <Pause className="h-4 w-4 mr-1" />
                   Pausar
@@ -303,6 +349,15 @@ const AgentCard = ({ agent, onUpdate }: AgentCardProps) => {
                 </div>
               </div>
             )}
+            
+            <Button
+              onClick={() => fetchQrCode(1)}
+              variant="outline"
+              size="sm"
+              className="w-full"
+            >
+              Gerar Novo QR Code
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

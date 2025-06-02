@@ -31,6 +31,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
   const [showQrModal, setShowQrModal] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'pending' | 'connected' | null>(null);
   const [statusCheckInterval, setStatusCheckInterval] = useState<NodeJS.Timeout | null>(null);
+  const [qrGenerationAttempts, setQrGenerationAttempts] = useState(0);
   const [userPlan, setUserPlan] = useState<string>('free');
   const { user } = useAuth();
   const { toast } = useToast();
@@ -121,7 +122,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       // Mapear plano para os valores aceitos pela API
       let planValue = 'gratuito';
       if (userPlan === 'pro') planValue = 'standard';
-      if (userPlan === 'ultra' || userPlan === 'unlimited') planValue = 'ultra';
+      if (userPlan === 'ultra') planValue = 'ultra';
       
       // Log do número com DDI para debug
       console.log('📞 Número completo com DDI:', formData.phone_number);
@@ -198,9 +199,9 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     }
   };
 
-  const fetchQrCode = async () => {
+  const fetchQrCode = async (attempt = 1) => {
     try {
-      console.log('🔄 Buscando QR code para número com DDI:', formData.phone_number);
+      console.log(`🔄 Tentativa ${attempt} - Buscando QR code para número:`, formData.phone_number);
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -222,23 +223,29 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         const errorText = await response.text();
         console.error('❌ Erro na resposta do QR code:', response.status, errorText);
         
-        if (errorText.includes('QR não encontrado')) {
-          throw new Error('QR code ainda não foi gerado. Aguarde alguns segundos e tente novamente.');
+        if (errorText.includes('QR não encontrado') && attempt < 3) {
+          console.log(`⏳ QR ainda não gerado, tentando novamente em ${attempt * 2} segundos...`);
+          setTimeout(() => fetchQrCode(attempt + 1), attempt * 2000);
+          return;
         }
         
-        throw new Error(`Erro ${response.status}: Servidor de QR code indisponível`);
+        throw new Error('QR code ainda não foi gerado. Aguarde alguns segundos e tente novamente.');
       }
       
       const htmlContent = await response.text();
-      console.log('📄 HTML QR recebido:', htmlContent);
+      console.log('📄 HTML QR recebido (primeiros 200 chars):', htmlContent.substring(0, 200));
       
       // Verificar se retornou mensagem de QR não encontrado
       if (htmlContent.includes('QR não encontrado')) {
+        if (attempt < 3) {
+          console.log(`⏳ QR ainda não gerado, tentando novamente em ${attempt * 2} segundos...`);
+          setTimeout(() => fetchQrCode(attempt + 1), attempt * 2000);
+          return;
+        }
         throw new Error('QR code ainda não foi gerado. Aguarde alguns segundos e tente novamente.');
       }
       
       // Melhorar a extração da imagem base64 do HTML
-      // Buscar por diferentes padrões possíveis de src
       const imgPatterns = [
         /src\s*=\s*["'](data:image\/[^;]+;base64,[^"']+)["']/i,
         /src\s*=\s*["']([^"']*data:image[^"']*)["']/i,
@@ -259,11 +266,16 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       if (qrCodeData && qrCodeData.startsWith('data:image/') && qrCodeData.includes('base64,')) {
         console.log('✅ QR code válido extraído, primeiros 100 chars:', qrCodeData.substring(0, 100));
         setQrCodeUrl(qrCodeData);
+        setQrGenerationAttempts(0);
         setShowQrModal(true);
         startStatusPolling();
       } else {
         console.error('❌ QR code não encontrado ou inválido no HTML');
-        console.log('🔍 HTML completo para debug:', htmlContent);
+        if (attempt < 3) {
+          console.log(`🔄 Tentando novamente em ${attempt * 2} segundos...`);
+          setTimeout(() => fetchQrCode(attempt + 1), attempt * 2000);
+          return;
+        }
         throw new Error('QR code ainda não foi gerado ou está em formato inválido. Aguarde alguns segundos e tente novamente.');
       }
     } catch (error) {
@@ -271,6 +283,12 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       
       if (error.name === 'AbortError') {
         throw new Error('Timeout: QR code demorou muito para carregar');
+      }
+      
+      if (attempt < 3) {
+        console.log(`🔄 Erro na tentativa ${attempt}, tentando novamente em ${attempt * 2} segundos...`);
+        setTimeout(() => fetchQrCode(attempt + 1), attempt * 3000);
+        return;
       }
       
       toast({
@@ -299,7 +317,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       clearTimeout(timeoutId);
       
       if (!response.ok) {
-        console.error('❌ Erro na resposta do status:', response.status);
+        console.error('❌ Erro na verificação de status:', response.status);
         return false;
       }
       
@@ -310,6 +328,17 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       if (htmlContent.includes('QR não encontrado')) {
         setConnectionStatus('connected');
         stopStatusPolling();
+        
+        // Atualizar status no banco de dados
+        try {
+          await (supabase as any)
+            .from('agents')
+            .update({ whatsapp_status: 'connected' })
+            .eq('phone_number', formData.phone_number);
+        } catch (dbError) {
+          console.error('Erro ao atualizar status no banco:', dbError);
+        }
+        
         toast({
           title: "Agente Conectado!",
           description: "Seu agente está ativo e pronto para receber mensagens.",
@@ -400,8 +429,8 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
       // 3. Aguardar alguns segundos antes de buscar QR code
       setTimeout(async () => {
-        await fetchQrCode();
-      }, 5000); // Aumentei para 5 segundos para dar tempo da API processar
+        await fetchQrCode(1);
+      }, 3000);
 
       onAgentCreated();
       
@@ -446,6 +475,12 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     setShowQrModal(false);
     stopStatusPolling();
     onClose();
+  };
+
+  const handleRetryQrCode = () => {
+    setQrGenerationAttempts(prev => prev + 1);
+    setQrCodeUrl('');
+    fetchQrCode(1);
   };
 
   return (
@@ -681,7 +716,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
               <div className="flex justify-center items-center h-64 bg-gray-100 rounded-lg">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green mx-auto mb-2"></div>
-                  <p className="text-sm text-gray-600">Aguardando QR Code...</p>
+                  <p className="text-sm text-gray-600">Gerando QR Code...</p>
                 </div>
               </div>
             )}
@@ -705,15 +740,12 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
             
             <div className="flex space-x-2">
               <Button
-                onClick={() => {
-                  console.log('🔄 Atualizando QR Code manualmente');
-                  fetchQrCode();
-                }}
+                onClick={handleRetryQrCode}
                 variant="outline"
                 size="sm"
                 className="flex-1"
               >
-                Atualizar QR Code
+                {qrCodeUrl ? 'Atualizar QR Code' : 'Tentar Novamente'}
               </Button>
               
               <Button
