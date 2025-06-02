@@ -35,7 +35,13 @@ const StaffManagement = () => {
         .order('granted_at', { ascending: false });
 
       if (error) throw error;
-      setStaffMembers(data || []);
+      
+      // Filter to only include staff and admin members
+      const filteredData = (data || []).filter(member => 
+        member.user_type === 'staff' || member.user_type === 'admin'
+      );
+      
+      setStaffMembers(filteredData);
     } catch (error) {
       console.error('Erro ao carregar staff:', error);
       toast.error('Erro ao carregar membros da equipe');

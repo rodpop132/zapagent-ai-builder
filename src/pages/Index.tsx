@@ -8,6 +8,7 @@ import Testimonials from "@/components/Testimonials";
 import PricingSection from "@/components/PricingSection";
 import FAQ from "@/components/FAQ";
 import Footer from "@/components/Footer";
+import SupportWidget from "@/components/SupportWidget";
 
 const Index = () => {
   return (

@@ -1,14 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { Navigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Send, Clock, User, AlertCircle } from 'lucide-react';
+import { MessageCircle, Send, Clock, CheckCircle, AlertCircle, LogOut, RefreshCw } from 'lucide-react';
 
 interface Ticket {
   id: string;
@@ -18,29 +18,30 @@ interface Ticket {
   priority: string;
   created_at: string;
   updated_at: string;
+  messages?: TicketMessage[];
 }
 
 interface TicketMessage {
   id: string;
   message: string;
-  is_staff: boolean;
   user_email: string;
+  is_staff: boolean;
   created_at: string;
 }
 
 const Staff = () => {
-  const { user, loading: authLoading } = useAuth();
-  const [isStaff, setIsStaff] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const { user, signOut } = useAuth();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
   const [messages, setMessages] = useState<TicketMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [sendingMessage, setSendingMessage] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [isStaff, setIsStaff] = useState(false);
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     if (user) {
-      checkStaffPermission();
+      checkStaffPermissions();
     }
   }, [user]);
 
@@ -52,25 +53,28 @@ const Staff = () => {
 
   useEffect(() => {
     if (selectedTicket) {
-      loadMessages();
+      loadMessages(selectedTicket.id);
     }
   }, [selectedTicket]);
 
-  const checkStaffPermission = async () => {
+  const checkStaffPermissions = async () => {
     try {
       const { data, error } = await supabase
         .from('user_permissions')
-        .select('user_type')
+        .select('*')
         .eq('user_id', user?.id)
+        .in('user_type', ['staff', 'admin'])
         .single();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Erro ao verificar permissões:', error);
+        setIsStaff(false);
+      } else {
+        setIsStaff(!!data);
       }
-
-      setIsStaff(data?.user_type === 'staff' || data?.user_type === 'admin');
     } catch (error) {
-      console.error('Erro ao verificar staff:', error);
+      console.error('Erro crítico ao verificar permissões:', error);
+      setIsStaff(false);
     } finally {
       setLoading(false);
     }
@@ -91,14 +95,12 @@ const Staff = () => {
     }
   };
 
-  const loadMessages = async () => {
-    if (!selectedTicket) return;
-
+  const loadMessages = async (ticketId: string) => {
     try {
       const { data, error } = await supabase
         .from('ticket_messages')
         .select('*')
-        .eq('ticket_id', selectedTicket.id)
+        .eq('ticket_id', ticketId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -110,74 +112,112 @@ const Staff = () => {
   };
 
   const sendMessage = async () => {
-    if (!selectedTicket || !newMessage.trim() || !user) return;
+    if (!selectedTicket || !newMessage.trim() || sending) return;
 
-    setSendingMessage(true);
+    setSending(true);
     try {
       const { error } = await supabase
         .from('ticket_messages')
         .insert({
           ticket_id: selectedTicket.id,
-          user_id: user.id,
-          user_email: user.email || '',
+          user_id: user?.id,
+          user_email: user?.email || '',
           message: newMessage.trim(),
           is_staff: true
         });
 
       if (error) throw error;
 
+      // Atualizar status do ticket para 'answered' se ainda estiver 'open'
+      if (selectedTicket.status === 'open') {
+        await supabase
+          .from('tickets')
+          .update({ 
+            status: 'answered',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', selectedTicket.id);
+      }
+
       setNewMessage('');
-      loadMessages();
+      loadMessages(selectedTicket.id);
+      loadTickets(); // Recarregar tickets para atualizar status
       toast.success('Mensagem enviada!');
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
       toast.error('Erro ao enviar mensagem');
     } finally {
-      setSendingMessage(false);
+      setSending(false);
     }
   };
 
-  const updateTicketStatus = async (status: string) => {
-    if (!selectedTicket) return;
-
+  const updateTicketStatus = async (ticketId: string, newStatus: string) => {
     try {
       const { error } = await supabase
         .from('tickets')
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq('id', selectedTicket.id);
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', ticketId);
 
       if (error) throw error;
 
-      setSelectedTicket({ ...selectedTicket, status });
       loadTickets();
-      toast.success('Status atualizado!');
+      toast.success('Status do ticket atualizado!');
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
-      toast.error('Erro ao atualizar status');
+      toast.error('Erro ao atualizar status do ticket');
     }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'open': return 'bg-green-100 text-green-800';
-      case 'in_progress': return 'bg-yellow-100 text-yellow-800';
+      case 'answered': return 'bg-blue-100 text-blue-800';
       case 'closed': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'open': return <AlertCircle className="w-4 h-4" />;
+      case 'answered': return <CheckCircle className="w-4 h-4" />;
+      case 'closed': return <Clock className="w-4 h-4" />;
+      default: return <Clock className="w-4 h-4" />;
     }
   };
 
-  if (authLoading || loading) {
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'open': return 'Aberto';
+      case 'answered': return 'Respondido';
+      case 'closed': return 'Fechado';
+      default: return 'Desconhecido';
+    }
+  };
+
+  const handleLogout = async () => {
+    if (confirm('Tem certeza que deseja sair?')) {
+      await signOut();
+      window.location.href = '/';
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p>Verificando permissões...</p>
@@ -186,24 +226,18 @@ const Staff = () => {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
   if (!isStaff) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
+          <CardContent className="text-center py-8">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <CardTitle>Acesso Negado</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center">
+            <h2 className="text-xl font-semibold mb-2">Acesso Negado</h2>
             <p className="text-gray-600 mb-4">
               Você não tem permissão para acessar o painel de staff.
             </p>
-            <Button onClick={() => window.history.back()}>
-              Voltar
+            <Button onClick={() => window.location.href = '/'}>
+              Voltar ao Início
             </Button>
           </CardContent>
         </Card>
@@ -212,142 +246,174 @@ const Staff = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-800 mb-8">Painel de Suporte</h1>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Lista de Tickets */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>Tickets ({tickets.length})</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="max-h-96 overflow-y-auto">
-                  {tickets.map((ticket) => (
-                    <div
-                      key={ticket.id}
-                      onClick={() => setSelectedTicket(ticket)}
-                      className={`p-4 border-b cursor-pointer hover:bg-gray-50 ${
-                        selectedTicket?.id === ticket.id ? 'bg-blue-50 border-blue-200' : ''
-                      }`}
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-medium text-sm truncate">{ticket.subject}</h3>
-                        <Badge className={getStatusColor(ticket.status)}>
-                          {ticket.status}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center text-xs text-gray-500 mb-1">
-                        <User className="w-3 h-3 mr-1" />
-                        {ticket.user_email}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <Badge className={getPriorityColor(ticket.priority)}>
-                          {ticket.priority}
-                        </Badge>
-                        <div className="flex items-center text-xs text-gray-400">
-                          <Clock className="w-3 h-3 mr-1" />
-                          {new Date(ticket.created_at).toLocaleDateString('pt-BR')}
+    <div className="min-h-screen bg-gray-100">
+      {/* Header */}
+      <div className="bg-white border-b px-6 py-4">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-800">Painel Staff - Tickets</h1>
+          <div className="flex gap-2">
+            <Button 
+              onClick={loadTickets}
+              variant="outline"
+              size="sm"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Atualizar
+            </Button>
+            <Button 
+              onClick={handleLogout}
+              variant="outline"
+              size="sm"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Sair
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex h-screen">
+        {/* Lista de Tickets */}
+        <div className="w-1/3 bg-white border-r overflow-y-auto">
+          <div className="p-4 border-b">
+            <h2 className="font-semibold">Tickets ({tickets.length})</h2>
+          </div>
+          
+          <div className="space-y-2 p-4">
+            {tickets.length === 0 ? (
+              <div className="text-center py-8">
+                <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">Nenhum ticket encontrado</p>
+              </div>
+            ) : (
+              tickets.map((ticket) => (
+                <Card 
+                  key={ticket.id}
+                  className={`cursor-pointer transition-colors ${
+                    selectedTicket?.id === ticket.id ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
+                  }`}
+                  onClick={() => setSelectedTicket(ticket)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-medium text-sm truncate pr-2">
+                        {ticket.subject}
+                      </h3>
+                      <Badge className={getStatusColor(ticket.status)}>
+                        <div className="flex items-center gap-1">
+                          {getStatusIcon(ticket.status)}
+                          {getStatusLabel(ticket.status)}
                         </div>
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-gray-500 mb-2">{ticket.user_email}</p>
+                    <p className="text-xs text-gray-400">
+                      {formatDate(ticket.created_at)}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Chat do Ticket */}
+        <div className="flex-1 flex flex-col">
+          {selectedTicket ? (
+            <>
+              {/* Header do Chat */}
+              <div className="bg-white border-b p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h2 className="font-semibold">{selectedTicket.subject}</h2>
+                    <p className="text-sm text-gray-500">{selectedTicket.user_email}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <select
+                      value={selectedTicket.status}
+                      onChange={(e) => updateTicketStatus(selectedTicket.id, e.target.value)}
+                      className="px-3 py-1 border rounded-md text-sm"
+                    >
+                      <option value="open">Aberto</option>
+                      <option value="answered">Respondido</option>
+                      <option value="closed">Fechado</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mensagens */}
+              <ScrollArea className="flex-1 p-4">
+                <div className="space-y-4">
+                  {messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex ${message.is_staff ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                          message.is_staff
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-200 text-gray-800'
+                        }`}
+                      >
+                        <p className="text-sm">{message.message}</p>
+                        <p
+                          className={`text-xs mt-1 ${
+                            message.is_staff ? 'text-blue-100' : 'text-gray-500'
+                          }`}
+                        >
+                          {message.is_staff ? 'Staff' : message.user_email} • {formatDate(message.created_at)}
+                        </p>
                       </div>
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </ScrollArea>
 
-          {/* Chat do Ticket */}
-          <div className="lg:col-span-2">
-            {selectedTicket ? (
-              <Card className="h-full">
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle>{selectedTicket.subject}</CardTitle>
-                      <p className="text-sm text-gray-600">{selectedTicket.user_email}</p>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => updateTicketStatus('in_progress')}
-                        disabled={selectedTicket.status === 'in_progress'}
-                      >
-                        Em Andamento
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => updateTicketStatus('closed')}
-                        disabled={selectedTicket.status === 'closed'}
-                      >
-                        Fechar
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex flex-col h-96">
-                  {/* Mensagens */}
-                  <div className="flex-1 overflow-y-auto space-y-4 mb-4">
-                    {messages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`flex ${message.is_staff ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div
-                          className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                            message.is_staff
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-200 text-gray-800'
-                          }`}
-                        >
-                          <p className="text-sm">{message.message}</p>
-                          <p className={`text-xs mt-1 ${
-                            message.is_staff ? 'text-blue-100' : 'text-gray-500'
-                          }`}>
-                            {new Date(message.created_at).toLocaleString('pt-BR')}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Input de Nova Mensagem */}
-                  <div className="flex gap-2">
-                    <Textarea
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      placeholder="Digite sua resposta..."
-                      rows={2}
-                      className="flex-1"
-                    />
-                    <Button
-                      onClick={sendMessage}
-                      disabled={!newMessage.trim() || sendingMessage}
-                      size="icon"
-                    >
+              {/* Input de Mensagem */}
+              <div className="bg-white border-t p-4">
+                <div className="flex gap-2">
+                  <Textarea
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    placeholder="Digite sua resposta..."
+                    rows={2}
+                    className="flex-1"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                      }
+                    }}
+                  />
+                  <Button
+                    onClick={sendMessage}
+                    disabled={!newMessage.trim() || sending}
+                    className="px-4"
+                  >
+                    {sending ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                    ) : (
                       <Send className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="h-full flex items-center justify-center">
-                <CardContent className="text-center">
-                  <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-600 mb-2">
-                    Selecione um ticket
-                  </h3>
-                  <p className="text-gray-500">
-                    Escolha um ticket da lista para visualizar as mensagens.
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex items-center justify-center bg-gray-50">
+              <div className="text-center">
+                <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-600 mb-2">
+                  Selecione um ticket
+                </h3>
+                <p className="text-gray-500">
+                  Escolha um ticket da lista para começar a conversar
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
