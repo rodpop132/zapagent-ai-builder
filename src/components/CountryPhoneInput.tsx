@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 
@@ -32,12 +32,21 @@ const CountryPhoneInput = ({ value, onChange, placeholder = "Digite o número", 
   const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]); // Brasil como padrão
   const [localNumber, setLocalNumber] = useState('');
 
+  // Inicializar com o DDI do Brasil quando o componente monta
+  useEffect(() => {
+    if (!value) {
+      console.log('📱 Inicializando com DDI do Brasil:', selectedCountry.dialCode);
+      onChange(selectedCountry.dialCode);
+    }
+  }, []);
+
   const handleCountryChange = (countryCode: string) => {
     const country = countries.find(c => c.code === countryCode);
     if (country) {
       setSelectedCountry(country);
-      // Atualiza o número completo
+      // Atualiza o número completo com o novo DDI + número local existente
       const fullNumber = country.dialCode + localNumber;
+      console.log('🌍 País alterado para:', country.name, 'DDI:', country.dialCode, 'Número completo:', fullNumber);
       onChange(fullNumber);
     }
   };
@@ -45,8 +54,9 @@ const CountryPhoneInput = ({ value, onChange, placeholder = "Digite o número", 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const number = e.target.value.replace(/\D/g, ''); // Remove caracteres não numéricos
     setLocalNumber(number);
-    // Atualiza o número completo
+    // Sempre concatena DDI + número local
     const fullNumber = selectedCountry.dialCode + number;
+    console.log('📞 Número local alterado:', number, 'DDI:', selectedCountry.dialCode, 'Número completo:', fullNumber);
     onChange(fullNumber);
   };
 
