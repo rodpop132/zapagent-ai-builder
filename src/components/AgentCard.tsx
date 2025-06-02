@@ -38,7 +38,7 @@ const AgentCard = ({ agent, onUpdate }: AgentCardProps) => {
   const handleToggleActive = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('agents')
         .update({ is_active: !agent.is_active })
         .eq('id', agent.id);
@@ -68,7 +68,7 @@ const AgentCard = ({ agent, onUpdate }: AgentCardProps) => {
 
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('agents')
         .delete()
         .eq('id', agent.id);
@@ -97,7 +97,7 @@ const AgentCard = ({ agent, onUpdate }: AgentCardProps) => {
     setWhatsappStatus(status);
     
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('agents')
         .update({ whatsapp_status: status })
         .eq('id', agent.id);

@@ -51,7 +51,7 @@ const AdminLogin = ({ onLogin }: AdminLoginProps) => {
     try {
       console.log('📧 Solicitando permissão para:', requestEmail);
       
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('admin_access_requests')
         .insert({
           email: requestEmail,

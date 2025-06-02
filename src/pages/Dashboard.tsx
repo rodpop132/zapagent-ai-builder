@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -46,7 +47,7 @@ const Dashboard = () => {
 
   const fetchAgents = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('agents')
         .select('*')
         .eq('user_id', user?.id)
@@ -68,7 +69,7 @@ const Dashboard = () => {
 
   const fetchSubscription = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('subscriptions')
         .select('*')
         .eq('user_id', user?.id)

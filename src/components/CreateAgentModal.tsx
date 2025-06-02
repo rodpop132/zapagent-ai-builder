@@ -84,7 +84,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
   const getUserPlan = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('subscriptions')
         .select('plan_type')
         .eq('user_id', user?.id)
@@ -262,7 +262,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
       // 2. Salvar no Supabase para persistência local
       console.log('Salvando no banco de dados local...');
-      const { error: supabaseError } = await supabase
+      const { error: supabaseError } = await (supabase as any)
         .from('agents')
         .insert({
           ...formData,
