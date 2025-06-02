@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -17,15 +18,23 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
       const botUrl = `https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(phoneNumber)}`;
       
       const response = await fetch(botUrl);
-      if (!response.ok) throw new Error('Erro ao buscar QR code');
+      if (!response.ok) {
+        console.error('Erro na resposta do QR code:', response.status, response.statusText);
+        throw new Error('Erro ao buscar QR code');
+      }
       
       // A API retorna HTML, não JSON
       const htmlContent = await response.text();
+      console.log('HTML QR recebido (primeiros 200 chars):', htmlContent.substring(0, 200));
       
       // Extrair a imagem base64 do HTML
       const imgMatch = htmlContent.match(/src="(data:image\/png;base64,[^"]+)"/);
       if (imgMatch && imgMatch[1]) {
+        console.log('QR code extraído com sucesso do HTML');
         setQrCode(imgMatch[1]);
+      } else {
+        console.error('QR code não encontrado no HTML');
+        throw new Error('QR code não encontrado no HTML');
       }
     } catch (error) {
       console.error('Erro ao buscar QR code:', error);
@@ -63,6 +72,8 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
         console.log('Verificação de status cancelada por timeout');
       }
       setStatus('pending');
+      // Em caso de erro, ainda tentar buscar QR code
+      await fetchQrCode();
     }
   };
 
@@ -150,12 +161,15 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
             )}
             
             <Button
-              onClick={checkStatus}
+              onClick={() => {
+                fetchQrCode();
+                checkStatus();
+              }}
               variant="outline"
               size="sm"
               className="w-full"
             >
-              Verificar Status Novamente
+              Atualizar QR Code
             </Button>
           </div>
         </DialogContent>

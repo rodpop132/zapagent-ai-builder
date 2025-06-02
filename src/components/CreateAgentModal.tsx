@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -250,15 +249,18 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       
       // A API retorna HTML, não JSON
       const htmlContent = await response.text();
-      console.log('HTML recebido:', htmlContent.substring(0, 200) + '...');
+      console.log('HTML recebido (primeiros 200 chars):', htmlContent.substring(0, 200));
       
-      // Extrair a imagem base64 do HTML
+      // Extrair a imagem base64 do HTML usando regex mais robusto
       const imgMatch = htmlContent.match(/src="(data:image\/png;base64,[^"]+)"/);
       if (imgMatch && imgMatch[1]) {
+        console.log('✅ QR code extraído com sucesso do HTML');
         setQrCodeUrl(imgMatch[1]);
         setShowQrModal(true);
         startStatusPolling();
       } else {
+        console.error('❌ QR code não encontrado no HTML retornado');
+        console.log('HTML completo para debug:', htmlContent);
         throw new Error('QR code não encontrado no HTML retornado');
       }
     } catch (error) {
@@ -341,12 +343,6 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
     try {
       console.log('🎯 Iniciando criação do agente...');
-      console.log('🎯 Dados do formulário:', formData);
-      console.log('🎯 Ambiente:', {
-        location: window.location.href,
-        userAgent: navigator.userAgent,
-        online: navigator.onLine
-      });
       
       // Validação dos dados obrigatórios
       if (!formData.name.trim()) {
@@ -407,22 +403,13 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     } catch (error) {
       console.error('💥 Error creating agent:', error);
       
-      // Tratamento específico por tipo de erro
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        toast({
-          title: "Erro de Conexão",
-          description: `Falha na comunicação com a API: ${error.message}`,
-          variant: "destructive"
-        });
-      } else if (error instanceof Error) {
-        // Erro conhecido com mensagem específica
+      if (error instanceof Error) {
         toast({
           title: "Erro na Criação do Agente",
           description: error.message,
           variant: "destructive"
         });
       } else {
-        // Erro genérico
         toast({
           title: "Erro Inesperado",
           description: "Ocorreu um erro inesperado. Verifique o console para mais detalhes.",
@@ -659,6 +646,10 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
                   src={qrCodeUrl} 
                   alt="QR Code do WhatsApp" 
                   className="max-w-full h-auto border rounded-lg"
+                  onError={(e) => {
+                    console.error('Erro ao carregar imagem do QR code');
+                    console.log('URL da imagem:', qrCodeUrl);
+                  }}
                 />
               </div>
             ) : (
