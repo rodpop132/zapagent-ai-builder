@@ -166,6 +166,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_unlimited: boolean | null
           messages_limit: number
           messages_used: number
           plan_type: string
@@ -176,6 +177,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_unlimited?: boolean | null
           messages_limit?: number
           messages_used?: number
           plan_type?: string
@@ -186,6 +188,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_unlimited?: boolean | null
           messages_limit?: number
           messages_used?: number
           plan_type?: string

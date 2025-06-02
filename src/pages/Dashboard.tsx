@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -26,6 +25,7 @@ interface Subscription {
   messages_used: number;
   messages_limit: number;
   status: string;
+  is_unlimited?: boolean;
 }
 
 const Dashboard = () => {
@@ -84,6 +84,13 @@ const Dashboard = () => {
   };
 
   const handleCreateAgent = () => {
+    // Verificar se é usuário ilimitado
+    if (subscription?.is_unlimited) {
+      setShowCreateModal(true);
+      return;
+    }
+
+    // Verificar limites para usuários normais
     if (subscription?.plan_type === 'free' && agents.length >= 1) {
       toast({
         title: "Limite atingido",
@@ -105,6 +112,7 @@ const Dashboard = () => {
       case 'free': return 'bg-gray-100 text-gray-700';
       case 'pro': return 'bg-blue-100 text-blue-700';
       case 'ultra': return 'bg-purple-100 text-purple-700';
+      case 'unlimited': return 'bg-gradient-to-r from-yellow-400 to-orange-500 text-white';
       default: return 'bg-gray-100 text-gray-700';
     }
   };
@@ -114,8 +122,16 @@ const Dashboard = () => {
       case 'free': return 'Gratuito';
       case 'pro': return 'Pro';
       case 'ultra': return 'Ultra';
+      case 'unlimited': return '👑 Ilimitado';
       default: return 'Gratuito';
     }
+  };
+
+  const getMessagesDisplay = () => {
+    if (subscription?.is_unlimited) {
+      return '∞ Ilimitado';
+    }
+    return `${subscription?.messages_used || 0}/${subscription?.messages_limit || 30}`;
   };
 
   if (loading) {
@@ -148,7 +164,7 @@ const Dashboard = () => {
                 <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-medium animate-in scale-in-50 duration-200`}>
                   {getPlanDisplayName(subscription?.plan_type || 'free')}
                 </Badge>
-                {subscription?.plan_type === 'free' && (
+                {subscription?.plan_type === 'free' && !subscription?.is_unlimited && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -189,7 +205,7 @@ const Dashboard = () => {
                   <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-medium`}>
                     {getPlanDisplayName(subscription?.plan_type || 'free')}
                   </Badge>
-                  {subscription?.plan_type === 'free' && (
+                  {subscription?.plan_type === 'free' && !subscription?.is_unlimited && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -227,7 +243,7 @@ const Dashboard = () => {
             { 
               icon: MessageCircle, 
               label: 'Mensagens', 
-              value: `${subscription?.messages_used || 0}/${subscription?.messages_limit || 30}`, 
+              value: getMessagesDisplay(), 
               color: 'text-blue-600',
               delay: 100 
             },
