@@ -86,7 +86,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     try {
       const { data, error } = await (supabase as any)
         .from('subscriptions')
-        .select('plan_type')
+        .select('plan_type, is_unlimited')
         .eq('user_id', user?.id)
         .eq('status', 'active')
         .single();
@@ -97,6 +97,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       }
       
       const plan = data?.plan_type || 'free';
+      console.log('📋 Plano do usuário obtido:', plan, 'Is unlimited:', data?.is_unlimited);
       setUserPlan(plan);
       return plan;
     } catch (error) {
@@ -121,6 +122,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       let planValue = 'gratuito';
       if (userPlan === 'pro') planValue = 'standard';
       if (userPlan === 'ultra') planValue = 'ultra';
+      if (userPlan === 'unlimited') planValue = 'ultra'; // Mapear unlimited para ultra
       
       const payload = {
         nome: formData.name,
@@ -134,9 +136,8 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       console.log('🚀 DEBUG: Iniciando requisição para API externa');
       console.log('🔗 URL:', 'https://zapagent-bot.onrender.com/zapagent');
       console.log('📦 Payload completo:', JSON.stringify(payload, null, 2));
-      console.log('📡 Headers:', { 'Content-Type': 'application/json' });
-      console.log('🌐 User Agent:', navigator.userAgent);
-      console.log('🔒 Protocolo:', window.location.protocol);
+      console.log('👤 Plano do usuário detectado:', userPlan);
+      console.log('📡 Plano enviado para API:', planValue);
 
       // Teste de conectividade básica primeiro
       console.log('🔍 Testando conectividade básica...');
@@ -249,19 +250,18 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       
       // A API retorna HTML, não JSON
       const htmlContent = await response.text();
-      console.log('HTML recebido (primeiros 200 chars):', htmlContent.substring(0, 200));
+      console.log('HTML QR recebido (primeiros 200 chars):', htmlContent.substring(0, 200));
       
-      // Extrair a imagem base64 do HTML usando regex mais robusto
+      // Extrair a imagem base64 do HTML
       const imgMatch = htmlContent.match(/src="(data:image\/png;base64,[^"]+)"/);
       if (imgMatch && imgMatch[1]) {
-        console.log('✅ QR code extraído com sucesso do HTML');
+        console.log('QR code extraído com sucesso do HTML');
         setQrCodeUrl(imgMatch[1]);
         setShowQrModal(true);
         startStatusPolling();
       } else {
-        console.error('❌ QR code não encontrado no HTML retornado');
-        console.log('HTML completo para debug:', htmlContent);
-        throw new Error('QR code não encontrado no HTML retornado');
+        console.error('QR code não encontrado no HTML');
+        throw new Error('QR code não encontrado no HTML');
       }
     } catch (error) {
       console.error('Erro ao buscar QR code:', error);
