@@ -12,6 +12,8 @@ interface StaffMember {
   email: string;
   user_type: 'staff' | 'admin';
   granted_at: string;
+  created_at: string;
+  granted_by: string;
   user_id?: string;
 }
 
@@ -35,10 +37,18 @@ const StaffManagement = () => {
 
       if (error) throw error;
       
-      // Filter to only include staff and admin members and ensure type safety
-      const filteredData = (data || []).filter((member): member is StaffMember => 
-        member.user_type === 'staff' || member.user_type === 'admin'
-      );
+      // Filter and map to only include staff and admin members
+      const filteredData = (data || [])
+        .filter(member => member.user_type === 'staff' || member.user_type === 'admin')
+        .map(member => ({
+          id: member.id,
+          email: member.email,
+          user_type: member.user_type as 'staff' | 'admin',
+          granted_at: member.granted_at || member.created_at || new Date().toISOString(),
+          created_at: member.created_at || new Date().toISOString(),
+          granted_by: member.granted_by || '',
+          user_id: member.user_id || undefined
+        }));
       
       setStaffMembers(filteredData);
     } catch (error) {
