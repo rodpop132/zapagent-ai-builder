@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -65,11 +66,15 @@ const StaffManagement = () => {
     setAdding(true);
     try {
       // Verificar se já existe
-      const { data: existing } = await supabase
+      const { data: existing, error: existingError } = await supabase
         .from('user_permissions')
         .select('*')
         .eq('email', newStaffEmail.trim())
-        .single();
+        .maybeSingle();
+
+      if (existingError) {
+        console.error('Error checking existing user:', existingError);
+      }
 
       if (existing) {
         toast.error('Este email já possui permissões');
