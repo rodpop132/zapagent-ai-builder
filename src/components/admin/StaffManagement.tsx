@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -83,12 +82,17 @@ const StaffManagement = () => {
       }
 
       // Tentar encontrar o usuário pelo email
-      const { data: users, error: usersError } = await supabase.auth.admin.listUsers();
-      
       let userId = null;
-      if (!usersError && users) {
-        const user = users.users.find(u => u.email === newStaffEmail.trim());
-        userId = user?.id || null;
+      try {
+        const { data: usersResponse, error: usersError } = await supabase.auth.admin.listUsers();
+        
+        if (!usersError && usersResponse?.users) {
+          const user = usersResponse.users.find(u => u.email === newStaffEmail.trim());
+          userId = user?.id || null;
+        }
+      } catch (userError) {
+        console.error('Error fetching users:', userError);
+        // Continue without userId - user might not be registered yet
       }
 
       // Adicionar permissão
