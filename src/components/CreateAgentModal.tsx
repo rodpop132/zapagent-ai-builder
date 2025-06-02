@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -118,10 +119,11 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     try {
       const userPlan = await getUserPlan();
       
-      // Mapear plano para os valores aceitos pela API
+      // Mapear plano para os valores aceitos pela API - usuários ilimitados usam identificador especial
       let planValue = 'gratuito';
       if (userPlan === 'pro') planValue = 'standard';
-      if (userPlan === 'ultra' || userPlan === 'unlimited') planValue = 'ultra';
+      if (userPlan === 'ultra') planValue = 'ultra';
+      if (userPlan === 'unlimited') planValue = 'ilimitado'; // Valor especial para plano ilimitado
       
       const payload = {
         nome: formData.name,
@@ -132,7 +134,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         plano: planValue
       };
 
-      console.log('🚀 DEBUG: Criando agente na API correta');
+      console.log('🚀 DEBUG: Criando agente na API externa');
       console.log('🔗 URL:', 'https://zapagent-bot.onrender.com/zapagent');
       console.log('📦 Payload completo:', JSON.stringify(payload, null, 2));
 
