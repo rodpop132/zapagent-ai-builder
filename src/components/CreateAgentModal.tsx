@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -119,11 +118,10 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     try {
       const userPlan = await getUserPlan();
       
-      // Mapear plano para os valores aceitos pela API - usuários ilimitados usam identificador especial
+      // Mapear plano para os valores aceitos pela API
       let planValue = 'gratuito';
       if (userPlan === 'pro') planValue = 'standard';
-      if (userPlan === 'ultra') planValue = 'ultra';
-      if (userPlan === 'unlimited') planValue = 'ilimitado'; // Valor especial para plano ilimitado
+      if (userPlan === 'ultra' || userPlan === 'unlimited') planValue = 'ultra';
       
       const payload = {
         nome: formData.name,

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -85,9 +84,8 @@ const Dashboard = () => {
   };
 
   const handleCreateAgent = () => {
-    // Verificar se é usuário ilimitado - sem limites
-    if (subscription?.is_unlimited || subscription?.plan_type === 'unlimited') {
-      console.log('🆓 Usuário ilimitado - criando agente sem verificação de limites');
+    // Verificar se é usuário ilimitado
+    if (subscription?.is_unlimited) {
       setShowCreateModal(true);
       return;
     }
@@ -101,25 +99,6 @@ const Dashboard = () => {
       });
       return;
     }
-    
-    if (subscription?.plan_type === 'pro' && agents.length >= 3) {
-      toast({
-        title: "Limite atingido", 
-        description: "No plano Pro você pode criar até 3 agentes. Faça upgrade para Ultra para criar mais!",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (subscription?.plan_type === 'ultra' && agents.length >= 10) {
-      toast({
-        title: "Limite atingido",
-        description: "No plano Ultra você pode criar até 10 agentes. Entre em contato para planos personalizados!",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     setShowCreateModal(true);
   };
 
