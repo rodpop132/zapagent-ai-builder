@@ -115,14 +115,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     try {
+      // Limpa os estados localmente primeiro
+      setSession(null);
+      setUser(null);
+      
+      // Tenta fazer logout no Supabase
       const { error } = await supabase.auth.signOut();
+      
+      // Se der erro de sessão ausente, ignora pois já limpamos localmente
+      if (error && error.message.includes('Auth session missing')) {
+        console.log('Session already cleared, logout successful');
+        return;
+      }
+      
       if (error) {
         console.error('SignOut error:', error);
-        throw error;
+        // Mesmo com erro, mantem os estados limpos
+        return;
       }
+      
+      console.log('Logout successful');
     } catch (error) {
       console.error('SignOut failed:', error);
-      throw error;
+      // Mesmo com erro, mantem os estados limpos para permitir "logout forçado"
     }
   };
 
