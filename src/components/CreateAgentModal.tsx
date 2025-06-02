@@ -117,13 +117,18 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     try {
       const userPlan = await getUserPlan();
       
+      // Mapear plano para os valores aceitos pela API
+      let planValue = 'gratuito';
+      if (userPlan === 'pro') planValue = 'standard';
+      if (userPlan === 'ultra') planValue = 'ultra';
+      
       const payload = {
         nome: formData.name,
         tipo: formData.business_type,
         descricao: formData.description,
         prompt: formData.personality_prompt || `Você é um assistente virtual para ${formData.business_type}. Seja sempre educado, prestativo e responda de forma clara e objetiva.`,
         numero: formData.phone_number,
-        plano: userPlan
+        plano: planValue
       };
 
       console.log('Enviando para API:', payload);
