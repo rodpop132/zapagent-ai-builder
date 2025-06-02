@@ -1,8 +1,10 @@
 
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Check, Crown, Zap, Star } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Check, Crown, Zap, Infinity } from 'lucide-react';
 
 interface PlanUpgradeModalProps {
   isOpen: boolean;
@@ -11,167 +13,134 @@ interface PlanUpgradeModalProps {
 }
 
 const PlanUpgradeModal = ({ isOpen, onClose, currentPlan }: PlanUpgradeModalProps) => {
-  const [selectedPlan, setSelectedPlan] = useState<string>('');
-  const [loading, setLoading] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<string>('pro');
 
   const plans = [
     {
       id: 'pro',
       name: 'Pro',
-      price: 'R$ 49',
+      price: '€29',
       period: '/mês',
-      description: 'Ideal para pequenos negócios',
-      icon: <Crown className="h-6 w-6" />,
-      color: 'bg-blue-500',
+      description: 'Ideal para pequenas empresas',
+      messages: '10.000',
+      agents: 'Até 5 agentes',
+      support: 'Suporte prioritário',
+      icon: Crown,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      borderColor: 'border-blue-200',
       features: [
-        '1 agente IA ativo',
-        '1.000 mensagens/mês',
-        'Integração WhatsApp',
-        'Analytics básicos',
+        '10.000 mensagens por mês',
+        'Até 5 agentes IA',
         'Suporte prioritário',
-        'Personalizações extras'
-      ],
-      popular: false
+        'Análise de conversas',
+        'Integração avançada'
+      ]
     },
     {
       id: 'ultra',
       name: 'Ultra',
-      price: 'R$ 99',
+      price: '€79',
       period: '/mês',
-      description: 'Para negócios em crescimento',
-      icon: <Zap className="h-6 w-6" />,
-      color: 'bg-purple-500',
+      description: 'Para empresas em crescimento',
+      messages: 'Ilimitadas',
+      agents: 'Agentes ilimitados',
+      support: 'Suporte 24/7',
+      icon: Zap,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
+      borderColor: 'border-purple-200',
       features: [
-        '3 agentes IA ativos',
         'Mensagens ilimitadas',
-        'Analytics avançados',
-        'Múltiplas integrações',
-        'Suporte VIP',
+        'Agentes ilimitados',
+        'Suporte 24/7',
         'API personalizada',
-        'Exportação para Telegram'
-      ],
-      popular: true
+        'Relatórios avançados',
+        'Integração WhatsApp Business'
+      ]
     }
   ];
 
-  const handleUpgrade = async (planId: string) => {
-    setLoading(true);
-    setSelectedPlan(planId);
-    
-    try {
-      // Aqui será implementada a integração com Stripe
-      console.log('Upgrading to plan:', planId);
-      // Simular redirecionamento para Stripe
-      setTimeout(() => {
-        alert(`Redirecionando para checkout do plano ${planId.toUpperCase()}...`);
-        setLoading(false);
-        onClose();
-      }, 1500);
-    } catch (error) {
-      console.error('Error upgrading plan:', error);
-      setLoading(false);
-    }
+  const handleUpgrade = (planId: string) => {
+    console.log(`Upgrading to ${planId} plan`);
+    // Aqui você implementaria a integração com Stripe
+    onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto animate-in slide-in-from-bottom-4 duration-300">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <Star className="h-6 w-6 text-yellow-500" />
-            <span>Atualize seu Plano</span>
+          <DialogTitle className="text-2xl font-bold text-center">
+            Atualize seu Plano
           </DialogTitle>
-          <DialogDescription>
-            Escolha o plano ideal para expandir seu negócio com mais recursos e funcionalidades
-          </DialogDescription>
+          <p className="text-center text-gray-600">
+            Escolha o plano ideal para suas necessidades
+          </p>
         </DialogHeader>
 
-        <div className="grid md:grid-cols-2 gap-6 py-4">
-          {plans.map((plan, index) => (
-            <div 
-              key={plan.id} 
-              className={`relative rounded-2xl p-6 border-2 transition-all duration-300 hover:scale-105 animate-in fade-in-50 ${
-                plan.popular 
-                  ? 'border-brand-green bg-brand-green/5 shadow-lg' 
-                  : 'border-gray-200 hover:border-brand-green/50'
-              }`}
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-brand-green text-white px-3 py-1 rounded-full text-sm font-bold animate-pulse">
-                    Mais Popular
-                  </span>
-                </div>
-              )}
-              
-              <div className="text-center mb-6">
-                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full ${plan.color} text-white mb-3`}>
-                  {plan.icon}
-                </div>
-                <h3 className="text-2xl font-bold text-brand-dark mb-2">
-                  {plan.name}
-                </h3>
-                <div className="mb-2">
-                  <span className="text-3xl font-bold text-brand-dark">
-                    {plan.price}
-                  </span>
-                  <span className="text-lg text-brand-gray">
-                    {plan.period}
-                  </span>
-                </div>
-                <p className="text-brand-gray">
-                  {plan.description}
-                </p>
-              </div>
-
-              <ul className="space-y-3 mb-6">
-                {plan.features.map((feature, featureIndex) => (
-                  <li 
-                    key={featureIndex} 
-                    className="flex items-center animate-in slide-in-from-left-1 duration-200"
-                    style={{ animationDelay: `${(index * 100) + (featureIndex * 50)}ms` }}
-                  >
-                    <Check className="h-5 w-5 mr-3 text-brand-green flex-shrink-0" />
-                    <span className="text-brand-gray text-sm">
-                      {feature}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              <Button 
-                onClick={() => handleUpgrade(plan.id)}
-                disabled={loading || currentPlan === plan.id}
-                className={`w-full py-3 transition-all duration-200 hover:scale-105 ${
-                  plan.popular 
-                    ? 'bg-brand-green text-white hover:bg-brand-green/90' 
-                    : 'bg-gray-100 text-brand-dark hover:bg-brand-green hover:text-white'
-                } ${currentPlan === plan.id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                size="lg"
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          {plans.map((plan) => {
+            const Icon = plan.icon;
+            const isSelected = selectedPlan === plan.id;
+            
+            return (
+              <Card 
+                key={plan.id} 
+                className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                  isSelected ? `ring-2 ring-offset-2 ${plan.borderColor.replace('border-', 'ring-')}` : ''
+                }`}
+                onClick={() => setSelectedPlan(plan.id)}
               >
-                {loading && selectedPlan === plan.id ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Processando...</span>
+                <CardHeader className="text-center">
+                  <div className={`w-12 h-12 ${plan.bgColor} rounded-lg flex items-center justify-center mx-auto mb-4`}>
+                    <Icon className={`h-6 w-6 ${plan.color}`} />
                   </div>
-                ) : currentPlan === plan.id ? (
-                  'Plano Atual'
-                ) : (
-                  `Escolher ${plan.name}`
-                )}
-              </Button>
-            </div>
-          ))}
+                  <CardTitle className="text-xl">{plan.name}</CardTitle>
+                  <CardDescription>{plan.description}</CardDescription>
+                  
+                  <div className="mt-4">
+                    <span className="text-3xl font-bold">{plan.price}</span>
+                    <span className="text-gray-600">{plan.period}</span>
+                  </div>
+
+                  <div className="flex flex-wrap justify-center gap-2 mt-4">
+                    <Badge variant="secondary" className="text-xs">
+                      {plan.messages} mensagens
+                    </Badge>
+                    <Badge variant="secondary" className="text-xs">
+                      {plan.agents}
+                    </Badge>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="space-y-3">
+                  {plan.features.map((feature, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <Check className="h-4 w-4 text-green-600 flex-shrink-0" />
+                      <span className="text-sm">{feature}</span>
+                    </div>
+                  ))}
+
+                  <Button
+                    className={`w-full mt-6 ${
+                      isSelected 
+                        ? 'bg-brand-green hover:bg-brand-green/90' 
+                        : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                    }`}
+                    onClick={() => handleUpgrade(plan.id)}
+                  >
+                    {isSelected ? 'Escolher este Plano' : 'Selecionar'}
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
-        <div className="text-center mt-6 animate-in fade-in-50 duration-300 delay-500">
-          <p className="text-brand-gray mb-2">
-            Todos os planos incluem garantia de 7 dias. Cancele quando quiser.
-          </p>
-          <p className="text-sm text-brand-gray">
-            Processamento seguro via Stripe
-          </p>
+        <div className="mt-6 text-center text-sm text-gray-600">
+          <p>Todos os planos incluem 7 dias de teste gratuito</p>
+          <p>Cancele a qualquer momento, sem taxas ocultas</p>
         </div>
       </DialogContent>
     </Dialog>
