@@ -12,6 +12,7 @@ import AdminPanel from "./pages/AdminPanel";
 import Staff from "./pages/Staff";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
+import SupportWidget from "./components/SupportWidget";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => (
             />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <SupportWidget />
         </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>
