@@ -123,12 +123,20 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       if (userPlan === 'pro') planValue = 'standard';
       if (userPlan === 'ultra' || userPlan === 'unlimited') planValue = 'ultra';
       
+      // Log do número com DDI para debug
+      console.log('📞 Número completo com DDI:', formData.phone_number);
+      
+      // Verificar se o número tem DDI (deve começar com código do país)
+      if (!formData.phone_number || formData.phone_number.length < 10) {
+        throw new Error('Número do WhatsApp deve incluir o código do país (DDI)');
+      }
+      
       const payload = {
         nome: formData.name,
         tipo: formData.business_type,
         descricao: formData.description,
         prompt: formData.personality_prompt || `Você é um assistente virtual para ${formData.business_type}. Seja sempre educado, prestativo e responda de forma clara e objetiva.`,
-        numero: formData.phone_number,
+        numero: formData.phone_number, // Este número já deve vir com DDI do CountryPhoneInput
         plano: planValue
       };
 
@@ -192,12 +200,15 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
   const fetchQrCode = async () => {
     try {
-      console.log('🔄 Buscando QR code para:', formData.phone_number);
+      console.log('🔄 Buscando QR code para número com DDI:', formData.phone_number);
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
       
-      const response = await fetch(`https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(formData.phone_number)}`, {
+      const qrUrl = `https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(formData.phone_number)}`;
+      console.log('🔗 URL completa do QR:', qrUrl);
+      
+      const response = await fetch(qrUrl, {
         signal: controller.signal,
         headers: {
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -219,28 +230,41 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       }
       
       const htmlContent = await response.text();
-      console.log('📄 HTML QR recebido (primeiros 300 chars):', htmlContent.substring(0, 300));
+      console.log('📄 HTML QR recebido:', htmlContent);
       
       // Verificar se retornou mensagem de QR não encontrado
       if (htmlContent.includes('QR não encontrado')) {
         throw new Error('QR code ainda não foi gerado. Aguarde alguns segundos e tente novamente.');
       }
       
-      // Extrair a imagem base64 do HTML
-      const imgMatch = htmlContent.match(/src\s*=\s*["'](data:image\/[^;]+;base64,[^"']+)["']/i);
-      if (imgMatch && imgMatch[1]) {
-        console.log('✅ QR code extraído com sucesso');
-        
-        if (imgMatch[1].startsWith('data:image/') && imgMatch[1].includes('base64,')) {
-          setQrCodeUrl(imgMatch[1]);
-          setShowQrModal(true);
-          startStatusPolling();
-        } else {
-          throw new Error('QR code extraído não é uma imagem base64 válida');
+      // Melhorar a extração da imagem base64 do HTML
+      // Buscar por diferentes padrões possíveis de src
+      const imgPatterns = [
+        /src\s*=\s*["'](data:image\/[^;]+;base64,[^"']+)["']/i,
+        /src\s*=\s*["']([^"']*data:image[^"']*)["']/i,
+        /<img[^>]*src\s*=\s*["']([^"']*data:image[^"']*)["']/i
+      ];
+      
+      let qrCodeData = null;
+      
+      for (const pattern of imgPatterns) {
+        const match = htmlContent.match(pattern);
+        if (match && match[1]) {
+          qrCodeData = match[1];
+          console.log('✅ QR code extraído com padrão:', pattern.toString());
+          break;
         }
+      }
+      
+      if (qrCodeData && qrCodeData.startsWith('data:image/') && qrCodeData.includes('base64,')) {
+        console.log('✅ QR code válido extraído, primeiros 100 chars:', qrCodeData.substring(0, 100));
+        setQrCodeUrl(qrCodeData);
+        setShowQrModal(true);
+        startStatusPolling();
       } else {
-        console.error('❌ QR code não encontrado no HTML');
-        throw new Error('QR code ainda não foi gerado. Aguarde alguns segundos e tente novamente.');
+        console.error('❌ QR code não encontrado ou inválido no HTML');
+        console.log('🔍 HTML completo para debug:', htmlContent);
+        throw new Error('QR code ainda não foi gerado ou está em formato inválido. Aguarde alguns segundos e tente novamente.');
       }
     } catch (error) {
       console.error('💥 Erro ao buscar QR code:', error);
@@ -327,6 +351,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
     try {
       console.log('🎯 Iniciando criação do agente...');
+      console.log('📞 Número do telefone recebido:', formData.phone_number);
       
       // Validação dos dados obrigatórios
       if (!formData.name.trim()) {
@@ -339,8 +364,13 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         throw new Error('Número do WhatsApp é obrigatório');
       }
 
+      // Verificar se o número tem pelo menos o formato mínimo com DDI
+      if (formData.phone_number.length < 10) {
+        throw new Error('Número deve incluir o código do país (DDI) e ter pelo menos 10 dígitos');
+      }
+
       // 1. Criar agente na API externa
-      console.log('📡 Chamando API externa...');
+      console.log('📡 Chamando API externa com número:', formData.phone_number);
       await createAgentAPI();
       console.log('✅ API externa respondeu com sucesso');
 
@@ -371,7 +401,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       // 3. Aguardar alguns segundos antes de buscar QR code
       setTimeout(async () => {
         await fetchQrCode();
-      }, 3000);
+      }, 5000); // Aumentei para 5 segundos para dar tempo da API processar
 
       onAgentCreated();
       
@@ -408,6 +438,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
   };
 
   const handlePhoneChange = (fullNumber: string) => {
+    console.log('📱 Número atualizado no input:', fullNumber);
     setFormData({ ...formData, phone_number: fullNumber });
   };
 
@@ -478,7 +509,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
             <div className="animate-in fade-in-50 duration-300 delay-400">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Número do WhatsApp *
+                Número do WhatsApp * (com código do país)
               </label>
               <CountryPhoneInput
                 value={formData.phone_number}
@@ -487,8 +518,13 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
                 className="transition-all duration-200 focus:scale-[1.01]"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Selecione o país e digite apenas o número local
+                ⚠️ IMPORTANTE: Selecione o país correto. O número deve incluir o DDI (código do país) para o QR code funcionar.
               </p>
+              {formData.phone_number && (
+                <p className="text-xs text-green-600 mt-1">
+                  ✅ Número com DDI: {formData.phone_number}
+                </p>
+              )}
             </div>
 
             <div className="animate-in fade-in-50 duration-300 delay-500">
