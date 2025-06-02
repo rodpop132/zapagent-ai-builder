@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,11 +12,40 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
   const [qrCode, setQrCode] = useState<string>('');
   const [showQrModal, setShowQrModal] = useState(false);
 
+  const fetchQrCode = async () => {
+    try {
+      const botUrl = `https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(phoneNumber)}`;
+      
+      const response = await fetch(botUrl);
+      if (!response.ok) throw new Error('Erro ao buscar QR code');
+      
+      // A API retorna HTML, não JSON
+      const htmlContent = await response.text();
+      
+      // Extrair a imagem base64 do HTML
+      const imgMatch = htmlContent.match(/src="(data:image\/png;base64,[^"]+)"/);
+      if (imgMatch && imgMatch[1]) {
+        setQrCode(imgMatch[1]);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar QR code:', error);
+    }
+  };
+
   const checkStatus = async () => {
     try {
+      // Usar timeout para evitar requisições que ficam pendentes
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 segundos timeout
+      
       const apiUrl = `https://zapagent-api.onrender.com/status?numero=${encodeURIComponent(phoneNumber)}`;
       
-      const response = await fetch(apiUrl);
+      const response = await fetch(apiUrl, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
       if (!response.ok) throw new Error('Erro ao verificar status');
       
       const data = await response.json();
@@ -31,23 +59,10 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
       }
     } catch (error) {
       console.error('Erro ao verificar status:', error);
-      setStatus('pending');
-    }
-  };
-
-  const fetchQrCode = async () => {
-    try {
-      const botUrl = `https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(phoneNumber)}`;
-      
-      const response = await fetch(botUrl);
-      if (!response.ok) throw new Error('Erro ao buscar QR code');
-      
-      const data = await response.json();
-      if (data.qr) {
-        setQrCode(data.qr);
+      if (error.name === 'AbortError') {
+        console.log('Verificação de status cancelada por timeout');
       }
-    } catch (error) {
-      console.error('Erro ao buscar QR code:', error);
+      setStatus('pending');
     }
   };
 

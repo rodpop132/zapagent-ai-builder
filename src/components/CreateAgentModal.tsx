@@ -248,15 +248,18 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         throw new Error(`Erro ${response.status}: Servidor de QR code indisponível`);
       }
       
-      const data = await response.json();
-      console.log('QR code recebido:', data.qr ? 'Sim' : 'Não');
+      // A API retorna HTML, não JSON
+      const htmlContent = await response.text();
+      console.log('HTML recebido:', htmlContent.substring(0, 200) + '...');
       
-      if (data.qr) {
-        setQrCodeUrl(`data:image/png;base64,${data.qr}`);
+      // Extrair a imagem base64 do HTML
+      const imgMatch = htmlContent.match(/src="(data:image\/png;base64,[^"]+)"/);
+      if (imgMatch && imgMatch[1]) {
+        setQrCodeUrl(imgMatch[1]);
         setShowQrModal(true);
         startStatusPolling();
       } else {
-        throw new Error('QR code não encontrado na resposta');
+        throw new Error('QR code não encontrado no HTML retornado');
       }
     } catch (error) {
       console.error('Erro ao buscar QR code:', error);
@@ -271,7 +274,16 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
   const checkConnectionStatus = async () => {
     try {
       console.log('Verificando status de conexão para:', formData.phone_number);
-      const response = await fetch(`https://zapagent-api.onrender.com/status?numero=${encodeURIComponent(formData.phone_number)}`);
+      
+      // Usar um timeout para evitar requisições que ficam pendentes
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
+      
+      const response = await fetch(`https://zapagent-api.onrender.com/status?numero=${encodeURIComponent(formData.phone_number)}`, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -295,6 +307,9 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       return false;
     } catch (error) {
       console.error('Erro ao verificar status:', error);
+      if (error.name === 'AbortError') {
+        console.log('Verificação de status cancelada por timeout');
+      }
       return false;
     }
   };
