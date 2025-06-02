@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -122,8 +121,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       // Mapear plano para os valores aceitos pela API
       let planValue = 'gratuito';
       if (userPlan === 'pro') planValue = 'standard';
-      if (userPlan === 'ultra') planValue = 'ultra';
-      if (userPlan === 'unlimited') planValue = 'ultra'; // Mapear unlimited para ultra
+      if (userPlan === 'ultra' || userPlan === 'unlimited') planValue = 'ultra';
       
       const payload = {
         nome: formData.name,
@@ -134,70 +132,37 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         plano: planValue
       };
 
-      console.log('🚀 DEBUG: Iniciando requisição para API externa');
-      console.log('🔗 URL:', 'https://zapagent-api.onrender.com/zapagent');
+      console.log('🚀 DEBUG: Criando agente na API correta');
+      console.log('🔗 URL:', 'https://zapagent-bot.onrender.com/zapagent');
       console.log('📦 Payload completo:', JSON.stringify(payload, null, 2));
-      console.log('👤 Plano do usuário detectado:', userPlan);
-      console.log('📡 Plano enviado para API:', planValue);
 
-      // Teste de conectividade básica primeiro
-      console.log('🔍 Testando conectividade básica...');
-      try {
-        const pingResponse = await fetch('https://zapagent-api.onrender.com/zapagent', {
-          method: 'HEAD',
-          mode: 'cors'
-        });
-        console.log('✅ Teste HEAD concluído:', pingResponse.status, pingResponse.statusText);
-      } catch (pingError) {
-        console.error('❌ Teste HEAD falhou:', pingError);
-        console.error('❌ Tipo do erro ping:', pingError.name);
-        console.error('❌ Mensagem do erro ping:', pingError.message);
-      }
-
-      // Requisição principal com timeout aumentado
-      console.log('📤 Enviando requisição POST...');
-      
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 segundos timeout
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
       
       const startTime = performance.now();
       
-      const response = await fetch('https://zapagent-api.onrender.com/zapagent', {
+      const response = await fetch('https://zapagent-bot.onrender.com/zapagent', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
-          'User-Agent': 'Lovable-App/1.0',
         },
         body: JSON.stringify(payload),
         mode: 'cors',
-        credentials: 'omit',
         signal: controller.signal
       });
 
       clearTimeout(timeoutId);
       const endTime = performance.now();
-      const requestTime = endTime - startTime;
 
-      console.log(`⏱️ Tempo de resposta: ${requestTime.toFixed(2)}ms`);
+      console.log(`⏱️ Tempo de resposta: ${(endTime - startTime).toFixed(2)}ms`);
       console.log('📊 Status da resposta:', response.status);
-      console.log('📊 Status text:', response.statusText);
       console.log('📊 Headers da resposta:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Erro na resposta da API:', response.status, response.statusText);
-        console.error('❌ Corpo da resposta de erro:', errorText);
-        
-        if (response.status === 0) {
-          throw new Error('Erro de CORS ou bloqueio de rede - Status 0');
-        } else if (response.status >= 500) {
-          throw new Error(`Erro do servidor externo (${response.status}): ${response.statusText}`);
-        } else if (response.status >= 400) {
-          throw new Error(`Erro de requisição (${response.status}): ${errorText || response.statusText}`);
-        } else {
-          throw new Error(`Erro ${response.status}: ${response.statusText}`);
-        }
+        console.error('❌ Erro na resposta da API:', response.status, errorText);
+        throw new Error(`Erro ${response.status}: ${errorText || response.statusText}`);
       }
 
       const responseText = await response.text();
@@ -215,9 +180,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
       return result;
     } catch (error) {
-      console.error('🚨 ERRO COMPLETO na createAgentAPI:');
-      console.error('🚨 Tipo:', error.constructor.name);
-      console.error('🚨 Mensagem:', error.message);
+      console.error('🚨 ERRO COMPLETO na createAgentAPI:', error);
       
       if (error.name === 'AbortError') {
         throw new Error('Timeout: A requisição demorou muito para responder.');
@@ -232,9 +195,9 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       console.log('🔄 Buscando QR code para:', formData.phone_number);
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos timeout
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
       
-      const response = await fetch(`https://zapagent-api.onrender.com/qrcode?numero=${encodeURIComponent(formData.phone_number)}`, {
+      const response = await fetch(`https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(formData.phone_number)}`, {
         signal: controller.signal,
         headers: {
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -247,18 +210,27 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ Erro na resposta do QR code:', response.status, errorText);
-        throw new Error(`Erro ${response.status}: Servidor de QR code indisponível - ${errorText}`);
+        
+        if (errorText.includes('QR não encontrado')) {
+          throw new Error('QR code ainda não foi gerado. Aguarde alguns segundos e tente novamente.');
+        }
+        
+        throw new Error(`Erro ${response.status}: Servidor de QR code indisponível`);
       }
       
       const htmlContent = await response.text();
       console.log('📄 HTML QR recebido (primeiros 300 chars):', htmlContent.substring(0, 300));
       
-      // Extrair a imagem base64 do HTML com regex mais flexível
+      // Verificar se retornou mensagem de QR não encontrado
+      if (htmlContent.includes('QR não encontrado')) {
+        throw new Error('QR code ainda não foi gerado. Aguarde alguns segundos e tente novamente.');
+      }
+      
+      // Extrair a imagem base64 do HTML
       const imgMatch = htmlContent.match(/src\s*=\s*["'](data:image\/[^;]+;base64,[^"']+)["']/i);
       if (imgMatch && imgMatch[1]) {
-        console.log('✅ QR code extraído com sucesso:', imgMatch[1].substring(0, 50) + '...');
+        console.log('✅ QR code extraído com sucesso');
         
-        // Validar se é uma imagem base64 válida
         if (imgMatch[1].startsWith('data:image/') && imgMatch[1].includes('base64,')) {
           setQrCodeUrl(imgMatch[1]);
           setShowQrModal(true);
@@ -268,8 +240,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         }
       } else {
         console.error('❌ QR code não encontrado no HTML');
-        console.log('🔍 HTML completo para debug:', htmlContent);
-        throw new Error('QR code não encontrado no HTML retornado');
+        throw new Error('QR code ainda não foi gerado. Aguarde alguns segundos e tente novamente.');
       }
     } catch (error) {
       console.error('💥 Erro ao buscar QR code:', error);
@@ -290,29 +261,29 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     try {
       console.log('🔍 Verificando status de conexão para:', formData.phone_number);
       
+      // Tentar buscar o QR code novamente para verificar se ainda existe
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 segundos timeout
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
       
-      const response = await fetch(`https://zapagent-api.onrender.com/status?numero=${encodeURIComponent(formData.phone_number)}`, {
+      const response = await fetch(`https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(formData.phone_number)}`, {
         signal: controller.signal,
         headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
+          'Accept': 'text/html',
         }
       });
       
       clearTimeout(timeoutId);
       
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Erro na resposta do status:', response.status, errorText);
+        console.error('❌ Erro na resposta do status:', response.status);
         return false;
       }
       
-      const data = await response.json();
-      console.log('📊 Status recebido:', data);
+      const htmlContent = await response.text();
+      console.log('📊 Status HTML recebido (primeiros 100 chars):', htmlContent.substring(0, 100));
       
-      if (data.connected) {
+      // Se retornar "QR não encontrado", significa que já foi conectado
+      if (htmlContent.includes('QR não encontrado')) {
         setConnectionStatus('connected');
         stopStatusPolling();
         toast({
@@ -325,9 +296,6 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       return false;
     } catch (error) {
       console.error('💥 Erro ao verificar status:', error);
-      if (error.name === 'AbortError') {
-        console.log('⏰ Verificação de status cancelada por timeout');
-      }
       return false;
     }
   };
@@ -397,11 +365,13 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
       toast({
         title: "Agente criado com sucesso!",
-        description: "Escaneie o QR code para conectar o WhatsApp..."
+        description: "Aguarde alguns segundos e depois escaneie o QR code para conectar o WhatsApp..."
       });
 
-      // 3. Buscar QR code
-      await fetchQrCode();
+      // 3. Aguardar alguns segundos antes de buscar QR code
+      setTimeout(async () => {
+        await fetchQrCode();
+      }, 3000);
 
       onAgentCreated();
       
@@ -661,10 +631,13 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
                 <img 
                   src={qrCodeUrl} 
                   alt="QR Code do WhatsApp" 
-                  className="max-w-full h-auto border rounded-lg"
+                  className="max-w-full h-auto border rounded-lg shadow-lg"
                   onError={(e) => {
-                    console.error('Erro ao carregar imagem do QR code');
-                    console.log('URL da imagem:', qrCodeUrl);
+                    console.error('❌ Erro ao carregar imagem do QR code');
+                    console.log('🔗 URL da imagem:', qrCodeUrl?.substring(0, 100) + '...');
+                  }}
+                  onLoad={() => {
+                    console.log('✅ QR code carregado com sucesso na UI');
                   }}
                 />
               </div>
@@ -672,7 +645,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
               <div className="flex justify-center items-center h-64 bg-gray-100 rounded-lg">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green mx-auto mb-2"></div>
-                  <p className="text-sm text-gray-600">Carregando QR Code...</p>
+                  <p className="text-sm text-gray-600">Aguardando QR Code...</p>
                 </div>
               </div>
             )}
@@ -694,14 +667,28 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
               </div>
             )}
             
-            <Button
-              onClick={checkConnectionStatus}
-              variant="outline"
-              size="sm"
-              className="w-full"
-            >
-              Verificar Status
-            </Button>
+            <div className="flex space-x-2">
+              <Button
+                onClick={() => {
+                  console.log('🔄 Atualizando QR Code manualmente');
+                  fetchQrCode();
+                }}
+                variant="outline"
+                size="sm"
+                className="flex-1"
+              >
+                Atualizar QR Code
+              </Button>
+              
+              <Button
+                onClick={checkConnectionStatus}
+                variant="outline"
+                size="sm"
+                className="flex-1"
+              >
+                Verificar Status
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

@@ -20,7 +20,7 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000);
       
-      const response = await fetch(`https://zapagent-api.onrender.com/qrcode?numero=${encodeURIComponent(phoneNumber)}`, {
+      const response = await fetch(`https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(phoneNumber)}`, {
         signal: controller.signal,
         headers: {
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -38,14 +38,23 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
       const htmlContent = await response.text();
       console.log('📄 HTML QR recebido (primeiros 300 chars):', htmlContent.substring(0, 300));
       
-      // Extrair a imagem base64 do HTML com regex mais flexível
+      // Verificar se retornou mensagem de QR não encontrado (significa que está conectado)
+      if (htmlContent.includes('QR não encontrado')) {
+        console.log('✅ Agente já está conectado (QR não encontrado)');
+        setStatus('connected');
+        onStatusChange?.('connected');
+        return;
+      }
+      
+      // Extrair a imagem base64 do HTML
       const imgMatch = htmlContent.match(/src\s*=\s*["'](data:image\/[^;]+;base64,[^"']+)["']/i);
       if (imgMatch && imgMatch[1]) {
         console.log('✅ QR code extraído com sucesso para status');
         
-        // Validar se é uma imagem base64 válida
         if (imgMatch[1].startsWith('data:image/') && imgMatch[1].includes('base64,')) {
           setQrCode(imgMatch[1]);
+          setStatus('pending');
+          onStatusChange?.('pending');
         } else {
           throw new Error('QR code extraído não é uma imagem base64 válida');
         }
@@ -55,6 +64,7 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
       }
     } catch (error) {
       console.error('💥 Erro ao buscar QR code:', error);
+      setStatus('pending');
     }
   };
 
@@ -65,11 +75,10 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000);
       
-      const response = await fetch(`https://zapagent-api.onrender.com/status?numero=${encodeURIComponent(phoneNumber)}`, {
+      const response = await fetch(`https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(phoneNumber)}`, {
         signal: controller.signal,
         headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
+          'Accept': 'text/html',
         }
       });
       
@@ -80,16 +89,23 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
         throw new Error('Erro ao verificar status');
       }
       
-      const data = await response.json();
-      console.log('📊 Status verificado:', data);
+      const htmlContent = await response.text();
+      console.log('📊 Status verificado (primeiros 100 chars):', htmlContent.substring(0, 100));
       
-      const newStatus = data.connected ? 'connected' : 'pending';
-      setStatus(newStatus);
-      onStatusChange?.(newStatus);
-      
-      // Se aguardando conexão, buscar QR code
-      if (!data.connected) {
-        await fetchQrCode();
+      // Se retornar "QR não encontrado", significa que já foi conectado
+      if (htmlContent.includes('QR não encontrado')) {
+        setStatus('connected');
+        onStatusChange?.('connected');
+      } else {
+        // Se retornou HTML com QR code, ainda está pendente
+        setStatus('pending');
+        onStatusChange?.('pending');
+        
+        // Tentar extrair QR code para exibir se necessário
+        const imgMatch = htmlContent.match(/src\s*=\s*["'](data:image\/[^;]+;base64,[^"']+)["']/i);
+        if (imgMatch && imgMatch[1]) {
+          setQrCode(imgMatch[1]);
+        }
       }
     } catch (error) {
       console.error('💥 Erro ao verificar status:', error);
@@ -97,8 +113,6 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
         console.log('⏰ Verificação de status cancelada por timeout');
       }
       setStatus('pending');
-      // Em caso de erro, ainda tentar buscar QR code
-      await fetchQrCode();
     }
   };
 
@@ -194,7 +208,7 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
             
             <Button
               onClick={() => {
-                console.log('🔄 Atualizando QR Code manualmente');
+                console.log('🔄 Atualizando QR Code e status manualmente');
                 fetchQrCode();
                 checkStatus();
               }}

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -113,13 +112,39 @@ const AgentCard = ({ agent, onUpdate }: AgentCardProps) => {
   const fetchQrCode = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(agent.phone_number)}`);
+      console.log('🔄 Buscando QR code para AgentCard:', agent.phone_number);
       
-      if (!response.ok) throw new Error('Erro ao buscar QR code');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
       
-      const data = await response.json();
-      if (data.qr) {
-        setQrCode(`data:image/png;base64,${data.qr}`);
+      const response = await fetch(`https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(agent.phone_number)}`, {
+        signal: controller.signal,
+        headers: {
+          'Accept': 'text/html',
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error('Erro ao buscar QR code');
+      }
+      
+      const htmlContent = await response.text();
+      
+      // Verificar se retornou mensagem de QR não encontrado
+      if (htmlContent.includes('QR não encontrado')) {
+        toast({
+          title: "Agente Conectado",
+          description: "Este agente já está conectado ao WhatsApp",
+        });
+        return;
+      }
+      
+      // Extrair a imagem base64 do HTML
+      const imgMatch = htmlContent.match(/src\s*=\s*["'](data:image\/[^;]+;base64,[^"']+)["']/i);
+      if (imgMatch && imgMatch[1]) {
+        setQrCode(imgMatch[1]);
         setShowQrModal(true);
       } else {
         throw new Error('QR code não encontrado');
@@ -128,7 +153,7 @@ const AgentCard = ({ agent, onUpdate }: AgentCardProps) => {
       console.error('Erro ao buscar QR code:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível carregar o QR code",
+        description: error instanceof Error ? error.message : "Não foi possível carregar o QR code",
         variant: "destructive"
       });
     } finally {
@@ -267,7 +292,7 @@ const AgentCard = ({ agent, onUpdate }: AgentCardProps) => {
                 <img 
                   src={qrCode} 
                   alt="QR Code do WhatsApp" 
-                  className="max-w-full h-auto border rounded-lg"
+                  className="max-w-full h-auto border rounded-lg shadow-lg"
                 />
               </div>
             ) : (
