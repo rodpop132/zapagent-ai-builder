@@ -4,7 +4,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Crown, Zap, Infinity } from 'lucide-react';
+import { Check, Crown, Zap, Infinity, Loader2 } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface PlanUpgradeModalProps {
   isOpen: boolean;
@@ -14,24 +17,26 @@ interface PlanUpgradeModalProps {
 
 const PlanUpgradeModal = ({ isOpen, onClose, currentPlan }: PlanUpgradeModalProps) => {
   const [selectedPlan, setSelectedPlan] = useState<string>('pro');
+  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
 
   const plans = [
     {
       id: 'pro',
       name: 'Pro',
-      price: '€29',
+      price: 'R$ 49',
       period: '/mês',
       description: 'Ideal para pequenas empresas',
-      messages: '10.000',
-      agents: 'Até 5 agentes',
+      messages: '1.000',
+      agents: 'Até 3 agentes',
       support: 'Suporte prioritário',
       icon: Crown,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200',
       features: [
-        '10.000 mensagens por mês',
-        'Até 5 agentes IA',
+        '1.000 mensagens por mês',
+        'Até 3 agentes IA',
         'Suporte prioritário',
         'Análise de conversas',
         'Integração avançada'
@@ -40,7 +45,7 @@ const PlanUpgradeModal = ({ isOpen, onClose, currentPlan }: PlanUpgradeModalProp
     {
       id: 'ultra',
       name: 'Ultra',
-      price: '€79',
+      price: 'R$ 99',
       period: '/mês',
       description: 'Para empresas em crescimento',
       messages: 'Ilimitadas',
@@ -61,10 +66,37 @@ const PlanUpgradeModal = ({ isOpen, onClose, currentPlan }: PlanUpgradeModalProp
     }
   ];
 
-  const handleUpgrade = (planId: string) => {
-    console.log(`Upgrading to ${planId} plan`);
-    // Aqui você implementaria a integração com Stripe
-    onClose();
+  const handleUpgrade = async (planId: string) => {
+    if (!user) {
+      toast.error('Você precisa estar logado para assinar um plano');
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { planType: planId }
+      });
+
+      if (error) {
+        console.error('Erro ao criar checkout:', error);
+        throw error;
+      }
+
+      if (data?.url) {
+        // Abrir checkout do Stripe em nova aba
+        window.open(data.url, '_blank');
+        onClose();
+      } else {
+        throw new Error('URL do checkout não retornada');
+      }
+    } catch (error) {
+      console.error('Erro ao processar upgrade:', error);
+      toast.error('Erro ao processar pagamento. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -129,8 +161,16 @@ const PlanUpgradeModal = ({ isOpen, onClose, currentPlan }: PlanUpgradeModalProp
                         : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
                     }`}
                     onClick={() => handleUpgrade(plan.id)}
+                    disabled={loading}
                   >
-                    {isSelected ? 'Escolher este Plano' : 'Selecionar'}
+                    {loading && selectedPlan === plan.id ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Processando...
+                      </>
+                    ) : (
+                      isSelected ? 'Escolher este Plano' : 'Selecionar'
+                    )}
                   </Button>
                 </CardContent>
               </Card>

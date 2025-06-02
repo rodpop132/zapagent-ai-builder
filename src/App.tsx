@@ -10,6 +10,8 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import AdminPanel from "./pages/AdminPanel";
 import Staff from "./pages/Staff";
+import Sucesso from "./pages/Sucesso";
+import Cancelado from "./pages/Cancelado";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 import SupportWidget from "./components/SupportWidget";
@@ -28,6 +30,8 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/rodpop132" element={<AdminPanel />} />
             <Route path="/staff" element={<Staff />} />
+            <Route path="/sucesso" element={<Sucesso />} />
+            <Route path="/cancelado" element={<Cancelado />} />
             <Route 
               path="/dashboard" 
               element={

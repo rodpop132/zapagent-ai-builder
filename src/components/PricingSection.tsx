@@ -1,8 +1,49 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const PricingSection = () => {
+  const [loading, setLoading] = useState<string | null>(null);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  const handleSubscribe = async (planType: string) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    setLoading(planType);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { planType }
+      });
+
+      if (error) {
+        console.error('Erro ao criar checkout:', error);
+        throw error;
+      }
+
+      if (data?.url) {
+        // Abrir checkout do Stripe em nova aba
+        window.open(data.url, '_blank');
+      } else {
+        throw new Error('URL do checkout não retornada');
+      }
+    } catch (error) {
+      console.error('Erro ao processar assinatura:', error);
+      toast.error('Erro ao processar pagamento. Tente novamente.');
+    } finally {
+      setLoading(null);
+    }
+  };
+
   const plans = [
     {
       name: "Grátis",
@@ -17,7 +58,8 @@ const PricingSection = () => {
         "Suporte básico"
       ],
       cta: "Começar grátis",
-      popular: false
+      popular: false,
+      planType: "free"
     },
     {
       name: "Pro",
@@ -25,7 +67,7 @@ const PricingSection = () => {
       period: "/mês",
       description: "Ideal para pequenos negócios",
       features: [
-        "1 agente IA ativo",
+        "3 agentes IA ativos",
         "1.000 mensagens/mês",
         "Integração WhatsApp",
         "Analytics básicos",
@@ -33,7 +75,8 @@ const PricingSection = () => {
         "Personalizações extras"
       ],
       cta: "Escolher Pro",
-      popular: true
+      popular: true,
+      planType: "pro"
     },
     {
       name: "Ultra",
@@ -41,7 +84,7 @@ const PricingSection = () => {
       period: "/mês", 
       description: "Para negócios em crescimento",
       features: [
-        "3 agentes IA ativos",
+        "Agentes IA ilimitados",
         "Mensagens ilimitadas",
         "Analytics avançados",
         "Múltiplas integrações",
@@ -50,7 +93,8 @@ const PricingSection = () => {
         "Exportação para Telegram"
       ],
       cta: "Escolher Ultra",
-      popular: false
+      popular: false,
+      planType: "ultra"
     }
   ];
 
@@ -124,8 +168,17 @@ const PricingSection = () => {
                     : 'bg-brand-green text-white hover:bg-brand-green/90'
                 }`}
                 size="lg"
+                onClick={() => plan.planType === 'free' ? navigate('/auth') : handleSubscribe(plan.planType)}
+                disabled={loading === plan.planType}
               >
-                {plan.cta}
+                {loading === plan.planType ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  plan.cta
+                )}
               </Button>
             </div>
           ))}

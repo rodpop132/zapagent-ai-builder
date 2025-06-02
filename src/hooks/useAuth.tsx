@@ -10,6 +10,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
   loading: boolean;
+  refreshSubscription: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,6 +19,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const refreshSubscription = async () => {
+    if (!user) return;
+    
+    try {
+      await supabase.functions.invoke('verify-subscription');
+    } catch (error) {
+      console.error('Erro ao atualizar assinatura:', error);
+    }
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -40,6 +51,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setSession(initialSession);
           setUser(initialSession?.user || null);
           setLoading(false);
+
+          // Verificar assinatura se o usuário estiver logado
+          if (initialSession?.user) {
+            refreshSubscription();
+          }
         }
       } catch (error) {
         console.error('Session initialization failed:', error);
@@ -62,6 +78,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user || null);
         setLoading(false);
+        
+        // Verificar assinatura quando usuário faz login
+        if (event === 'SIGNED_IN' && session?.user) {
+          refreshSubscription();
+        }
         
         // Log session details for debugging
         if (session) {
@@ -148,7 +169,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       signUp,
       signIn,
       signOut,
-      loading
+      loading,
+      refreshSubscription
     }}>
       {children}
     </AuthContext.Provider>
