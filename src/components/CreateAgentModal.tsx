@@ -1,11 +1,10 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, X, FileText, QrCode } from 'lucide-react';
+import { Upload, X, FileText, QrCode, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -32,6 +31,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
   const [showQrModal, setShowQrModal] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'pending' | 'connected' | null>(null);
   const [statusCheckInterval, setStatusCheckInterval] = useState<NodeJS.Timeout | null>(null);
+  const [userPlan, setUserPlan] = useState<string>('free');
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -49,6 +49,16 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
   ];
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Verifica se o usuário tem plano Pro ou Ultra
+    if (userPlan === 'free') {
+      toast({
+        title: "Funcionalidade Premium",
+        description: "Upload de arquivos está disponível apenas nos planos Pro e Ultra",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const files = Array.from(e.target.files || []);
     const validFiles = files.filter(file => 
       file.type === 'text/plain' || 
@@ -86,12 +96,22 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         return 'free';
       }
       
-      return data?.plan_type || 'free';
+      const plan = data?.plan_type || 'free';
+      setUserPlan(plan);
+      return plan;
     } catch (error) {
       console.error('Error getting user plan:', error);
+      setUserPlan('free');
       return 'free';
     }
   };
+
+  // Carregar plano do usuário quando o modal abrir
+  React.useEffect(() => {
+    if (isOpen) {
+      getUserPlan();
+    }
+  }, [isOpen]);
 
   const createAgentAPI = async () => {
     try {
@@ -392,8 +412,18 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
             <div className="animate-in fade-in-50 duration-300 delay-500">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Upload de Arquivos para Treinamento
+                {userPlan === 'free' && (
+                  <span className="ml-2 inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+                    <Lock className="w-3 h-3 mr-1" />
+                    Pro/Ultra
+                  </span>
+                )}
               </label>
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-brand-green transition-colors duration-200">
+              <div className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors duration-200 ${
+                userPlan === 'free' 
+                  ? 'border-gray-200 bg-gray-50 cursor-not-allowed' 
+                  : 'border-gray-300 hover:border-brand-green cursor-pointer'
+              }`}>
                 <input
                   type="file"
                   multiple
@@ -401,15 +431,21 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
                   onChange={handleFileUpload}
                   className="hidden"
                   id="file-upload"
+                  disabled={userPlan === 'free'}
                 />
-                <label htmlFor="file-upload" className="cursor-pointer">
-                  <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
-                  <p className="text-sm text-gray-600">
-                    Clique para fazer upload de arquivos PDF ou TXT
+                <label htmlFor="file-upload" className={userPlan === 'free' ? 'cursor-not-allowed' : 'cursor-pointer'}>
+                  <Upload className={`mx-auto h-8 w-8 mb-2 ${userPlan === 'free' ? 'text-gray-300' : 'text-gray-400'}`} />
+                  <p className={`text-sm ${userPlan === 'free' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    {userPlan === 'free' 
+                      ? 'Upload de arquivos disponível nos planos Pro e Ultra'
+                      : 'Clique para fazer upload de arquivos PDF ou TXT'
+                    }
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Estes arquivos ajudarão a treinar seu agente
-                  </p>
+                  {userPlan !== 'free' && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Estes arquivos ajudarão a treinar seu agente
+                    </p>
+                  )}
                 </label>
               </div>
 
