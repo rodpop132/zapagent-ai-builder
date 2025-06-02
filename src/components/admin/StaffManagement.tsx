@@ -87,7 +87,7 @@ const StaffManagement = () => {
         const { data: usersResponse, error: usersError } = await supabase.auth.admin.listUsers();
         
         if (!usersError && usersResponse?.users) {
-          const user = usersResponse.users.find(u => u.email === newStaffEmail.trim());
+          const user = usersResponse.users.find((u: any) => u.email === newStaffEmail.trim());
           userId = user?.id || null;
         }
       } catch (userError) {
