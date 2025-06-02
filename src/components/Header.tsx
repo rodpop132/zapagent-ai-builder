@@ -20,11 +20,6 @@ const Header = () => {
     setMobileMenuOpen(false);
   };
 
-  const handleCreateAgentClick = () => {
-    navigate('/create-agent');
-    setMobileMenuOpen(false);
-  };
-
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
@@ -63,12 +58,6 @@ const Header = () => {
           >
             FAQ
           </button>
-          <button 
-            onClick={handleCreateAgentClick}
-            className="text-brand-gray hover:text-brand-dark transition-all duration-300 hover:scale-110 relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-0.5 after:bottom-0 after:left-0 after:bg-brand-green after:origin-bottom-right after:transition-transform after:duration-300 hover:after:scale-x-100 hover:after:origin-bottom-left group"
-          >
-            Criar Agente
-          </button>
         </nav>
 
         {/* Desktop Buttons */}
@@ -100,7 +89,7 @@ const Header = () => {
               </Button>
               <Button 
                 className="bg-brand-green hover:bg-brand-green/90 text-white transition-all duration-300 hover:scale-110 hover:shadow-xl hover:shadow-brand-green/25 group"
-                onClick={handleCreateAgentClick}
+                onClick={handleDashboardClick}
               >
                 Criar agente grátis
               </Button>
@@ -139,12 +128,6 @@ const Header = () => {
             >
               FAQ
             </button>
-            <button 
-              onClick={handleCreateAgentClick}
-              className="block w-full text-left py-2 text-brand-gray hover:text-brand-dark transition-colors"
-            >
-              Criar Agente
-            </button>
             
             <div className="pt-4 border-t border-gray-100 space-y-3">
               {user ? (
@@ -174,7 +157,7 @@ const Header = () => {
                   </Button>
                   <Button 
                     className="w-full bg-brand-green hover:bg-brand-green/90 text-white justify-center"
-                    onClick={handleCreateAgentClick}
+                    onClick={handleDashboardClick}
                   >
                     Criar agente grátis
                   </Button>
