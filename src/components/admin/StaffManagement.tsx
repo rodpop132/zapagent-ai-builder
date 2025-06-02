@@ -38,7 +38,7 @@ const StaffManagement = () => {
       if (error) throw error;
       
       // Filter and map to only include staff and admin members
-      const filteredData = (data || [])
+      const filteredData: StaffMember[] = (data || [])
         .filter(member => member.user_type === 'staff' || member.user_type === 'admin')
         .map(member => ({
           id: member.id,
