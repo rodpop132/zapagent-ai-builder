@@ -31,6 +31,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [showQrModal, setShowQrModal] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'pending' | 'connected' | null>(null);
+  const [statusCheckInterval, setStatusCheckInterval] = useState<NodeJS.Timeout | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -71,50 +72,69 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     setUploadedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  const checkConnectionStatus = async (phoneNumber: string) => {
+  const getUserPlan = async () => {
     try {
-      console.log('Verificando status de conexão para:', phoneNumber);
-      const response = await fetch(`https://zapagent-api.onrender.com/status?numero=${encodeURIComponent(phoneNumber)}`);
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Erro na resposta do status:', response.status, errorText);
-        throw new Error(`Erro ${response.status}: Servidor de status indisponível`);
+      const { data, error } = await supabase
+        .from('subscriptions')
+        .select('plan_type')
+        .eq('user_id', user?.id)
+        .eq('status', 'active')
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching subscription:', error);
+        return 'free';
       }
       
-      const data = await response.json();
-      console.log('Status recebido:', data);
-      const status = data.connected ? 'connected' : 'pending';
-      setConnectionStatus(status);
-      
-      if (!data.connected) {
-        await fetchQrCode(phoneNumber);
-      }
-      
-      return status;
+      return data?.plan_type || 'free';
     } catch (error) {
-      console.error('Erro ao verificar status:', error);
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        toast({
-          title: "Erro de Conexão",
-          description: "Não foi possível conectar ao servidor de status. Verifique sua internet.",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Erro no Status",
-          description: error instanceof Error ? error.message : "Falha ao verificar status de conexão",
-          variant: "destructive"
-        });
-      }
-      return 'pending';
+      console.error('Error getting user plan:', error);
+      return 'free';
     }
   };
 
-  const fetchQrCode = async (phoneNumber: string) => {
+  const createAgentAPI = async () => {
     try {
-      console.log('Buscando QR code para:', phoneNumber);
-      const response = await fetch(`https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(phoneNumber)}`);
+      const userPlan = await getUserPlan();
+      
+      const payload = {
+        nome: formData.name,
+        tipo: formData.business_type,
+        descricao: formData.description,
+        prompt: formData.personality_prompt || `Você é um assistente virtual para ${formData.business_type}. Seja sempre educado, prestativo e responda de forma clara e objetiva.`,
+        numero: formData.phone_number,
+        plano: userPlan
+      };
+
+      console.log('Enviando para API:', payload);
+
+      const response = await fetch('https://zapagent-bot.onrender.com/zapagent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Erro na API:', response.status, errorText);
+        throw new Error(`Erro ${response.status}: Falha na criação do agente`);
+      }
+
+      const result = await response.json();
+      console.log('Agente criado na API:', result);
+      return result;
+    } catch (error) {
+      console.error('Erro ao criar agente na API:', error);
+      throw error;
+    }
+  };
+
+  const fetchQrCode = async () => {
+    try {
+      console.log('Buscando QR code para:', formData.phone_number);
+      const response = await fetch(`https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(formData.phone_number)}`);
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -128,24 +148,69 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       if (data.qr) {
         setQrCodeUrl(`data:image/png;base64,${data.qr}`);
         setShowQrModal(true);
+        startStatusPolling();
       } else {
         throw new Error('QR code não encontrado na resposta');
       }
     } catch (error) {
       console.error('Erro ao buscar QR code:', error);
-      if (error instanceof TypeError && error.message.includes('fetch')) {
-        toast({
-          title: "Erro de Conexão",
-          description: "Não foi possível conectar ao servidor de QR code. Verifique sua internet.",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "Erro no QR Code",
-          description: error instanceof Error ? error.message : "Falha ao gerar QR code",
-          variant: "destructive"
-        });
+      toast({
+        title: "Erro no QR Code",
+        description: error instanceof Error ? error.message : "Falha ao gerar QR code",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const checkConnectionStatus = async () => {
+    try {
+      console.log('Verificando status de conexão para:', formData.phone_number);
+      const response = await fetch(`https://zapagent-api.onrender.com/status?numero=${encodeURIComponent(formData.phone_number)}`);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Erro na resposta do status:', response.status, errorText);
+        return false;
       }
+      
+      const data = await response.json();
+      console.log('Status recebido:', data);
+      
+      if (data.connected) {
+        setConnectionStatus('connected');
+        stopStatusPolling();
+        toast({
+          title: "Agente Conectado!",
+          description: "Seu agente está ativo e pronto para receber mensagens.",
+        });
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Erro ao verificar status:', error);
+      return false;
+    }
+  };
+
+  const startStatusPolling = () => {
+    // Verificar imediatamente
+    checkConnectionStatus();
+    
+    // Verificar a cada 5 segundos
+    const interval = setInterval(checkConnectionStatus, 5000);
+    setStatusCheckInterval(interval);
+    
+    // Parar após 5 minutos
+    setTimeout(() => {
+      stopStatusPolling();
+    }, 300000);
+  };
+
+  const stopStatusPolling = () => {
+    if (statusCheckInterval) {
+      clearInterval(statusCheckInterval);
+      setStatusCheckInterval(null);
     }
   };
 
@@ -167,49 +232,11 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         throw new Error('Número do WhatsApp é obrigatório');
       }
 
-      // Preparar FormData para envio
-      const apiFormData = new FormData();
-      apiFormData.append('nome', formData.name);
-      apiFormData.append('negocio', formData.business_type);
-      apiFormData.append('descricao', formData.description);
-      apiFormData.append('numero', formData.phone_number);
-      apiFormData.append('contexto_extra', formData.training_data);
-      apiFormData.append('personalidade', formData.personality_prompt || `Você é um assistente virtual para ${formData.business_type}. Seja sempre educado, prestativo e responda de forma clara e objetiva.`);
+      // 1. Criar agente na API externa
+      await createAgentAPI();
 
-      // Adicionar arquivo se houver
-      if (uploadedFiles.length > 0) {
-        apiFormData.append('arquivo', uploadedFiles[0]);
-        console.log('Arquivo anexado:', uploadedFiles[0].name);
-      }
-
-      console.log('Enviando dados para API externa...');
-      // Enviar para a API externa
-      const apiResponse = await fetch('https://zapagent-api.onrender.com/create', {
-        method: 'POST',
-        body: apiFormData
-      });
-
-      if (!apiResponse.ok) {
-        const errorText = await apiResponse.text();
-        console.error('Erro na API externa:', apiResponse.status, errorText);
-        
-        let errorMessage = 'Erro desconhecido na API';
-        if (apiResponse.status === 400) {
-          errorMessage = 'Dados inválidos enviados para a API';
-        } else if (apiResponse.status === 500) {
-          errorMessage = 'Erro interno da API de criação';
-        } else if (apiResponse.status === 503) {
-          errorMessage = 'Servidor de criação temporariamente indisponível';
-        }
-        
-        throw new Error(`${errorMessage} (${apiResponse.status})`);
-      }
-
-      const apiResult = await apiResponse.json();
-      console.log('Agente criado na API externa com sucesso:', apiResult);
-
+      // 2. Salvar no Supabase para persistência local
       console.log('Salvando no banco de dados local...');
-      // Salvar no Supabase para persistência local
       const { error: supabaseError } = await supabase
         .from('agents')
         .insert({
@@ -229,12 +256,11 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
       toast({
         title: "Agente criado com sucesso!",
-        description: "Verificando status de conexão do WhatsApp..."
+        description: "Escaneie o QR code para conectar o WhatsApp..."
       });
 
-      console.log('Verificando status de conexão...');
-      // Verificar status de conexão
-      await checkConnectionStatus(formData.phone_number);
+      // 3. Buscar QR code
+      await fetchQrCode();
 
       onAgentCreated();
       
@@ -281,6 +307,12 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
   const handlePhoneChange = (fullNumber: string) => {
     setFormData({ ...formData, phone_number: fullNumber });
+  };
+
+  const handleCloseQrModal = () => {
+    setShowQrModal(false);
+    stopStatusPolling();
+    onClose();
   };
 
   return (
@@ -437,33 +469,6 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
               </p>
             </div>
 
-            {/* Status de conexão */}
-            {connectionStatus && (
-              <div className="animate-in fade-in-50 duration-300 p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-2">
-                  {connectionStatus === 'connected' ? (
-                    <>
-                      <span className="text-green-600 font-medium">✅ Agente Ativo</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-orange-600 font-medium">⏳ Aguardando conexão via QR Code</span>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setShowQrModal(true)}
-                        className="ml-2"
-                      >
-                        <QrCode className="h-4 w-4 mr-1" />
-                        Ver QR Code
-                      </Button>
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-
             <div className="flex space-x-4 pt-4 animate-in fade-in-50 duration-300 delay-800">
               <Button
                 type="button"
@@ -493,7 +498,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       </Dialog>
 
       {/* Modal do QR Code */}
-      <Dialog open={showQrModal} onOpenChange={setShowQrModal}>
+      <Dialog open={showQrModal} onOpenChange={handleCloseQrModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Conectar WhatsApp</DialogTitle>
@@ -520,13 +525,30 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
               </div>
             )}
             
+            {/* Status de conexão */}
+            {connectionStatus && (
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-center space-x-2">
+                  {connectionStatus === 'connected' ? (
+                    <>
+                      <span className="text-green-600 font-medium">✅ Agente Conectado!</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-orange-600 font-medium">⏳ Aguardando conexão...</span>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+            
             <Button
-              onClick={() => checkConnectionStatus(formData.phone_number)}
+              onClick={checkConnectionStatus}
               variant="outline"
               size="sm"
               className="w-full"
             >
-              Verificar Status Novamente
+              Verificar Status
             </Button>
           </div>
         </DialogContent>
