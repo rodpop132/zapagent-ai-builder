@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, Loader2 } from "lucide-react";
@@ -37,11 +36,11 @@ const PricingSection = () => {
         checkoutData = data;
       } else {
         // Usuário não logado - checkout direto
-        const response = await fetch(`${supabase.supabaseUrl}/functions/v1/create-checkout`, {
+        const response = await fetch(`https://hagweqrpbrjbtsbbscbn.supabase.co/functions/v1/create-checkout`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'apikey': supabase.supabaseKey,
+            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhhZ3dlcXJwYnJqYnRzYmJzY2JuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg4Nzc3MzYsImV4cCI6MjA2NDQ1MzczNn0.Vv3lWCvfqTPFwCTDWsqLiMgnybseNYsbhWRft4CkRZs',
           },
           body: JSON.stringify({ planType, guestCheckout: true })
         });
