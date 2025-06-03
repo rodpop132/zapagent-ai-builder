@@ -71,6 +71,7 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
   const checkStatus = async () => {
     try {
       console.log('🔍 Verificando status para:', phoneNumber);
+      setStatus('loading'); // Mostrar loading durante verificação
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000);
@@ -94,9 +95,11 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
       
       // Se retornar "QR não encontrado", significa que já foi conectado
       if (htmlContent.includes('QR não encontrado')) {
+        console.log('✅ Status atualizado: CONECTADO');
         setStatus('connected');
         onStatusChange?.('connected');
       } else {
+        console.log('⏳ Status atualizado: PENDENTE');
         // Se retornou HTML com QR code, ainda está pendente
         setStatus('pending');
         onStatusChange?.('pending');
@@ -116,6 +119,11 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
     }
   };
 
+  const handleManualCheck = () => {
+    console.log('🔄 Verificação manual solicitada pelo usuário');
+    checkStatus();
+  };
+
   useEffect(() => {
     if (phoneNumber) {
       checkStatus();
@@ -133,7 +141,16 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
           text: 'Conectado',
           color: 'text-green-600',
           icon: '🟢',
-          action: null
+          action: (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleManualCheck}
+              className="ml-2 text-xs"
+            >
+              Verificar
+            </Button>
+          )
         };
       case 'pending':
         return {
@@ -141,14 +158,24 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
           color: 'text-red-600',
           icon: '🔴',
           action: (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setShowQrModal(true)}
-              className="ml-2 text-xs"
-            >
-              Ver QR Code
-            </Button>
+            <div className="flex gap-1 ml-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowQrModal(true)}
+                className="text-xs"
+              >
+                Ver QR Code
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleManualCheck}
+                className="text-xs"
+              >
+                Verificar
+              </Button>
+            </div>
           )
         };
       case 'loading':
