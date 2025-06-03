@@ -37,7 +37,6 @@ const Dashboard = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -102,7 +101,6 @@ const Dashboard = () => {
         });
       } else {
         console.log('✅ Resposta da verificação:', data);
-        setDebugInfo(data.debug);
         await fetchSubscription();
         
         if (data?.subscribed) {
