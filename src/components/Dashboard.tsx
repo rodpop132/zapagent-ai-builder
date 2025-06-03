@@ -1,11 +1,14 @@
-
 import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Crown } from "lucide-react";
+import PlanUpgradeModal from "@/components/PlanUpgradeModal";
 
 const Dashboard = () => {
   const [currentConversationIndex, setCurrentConversationIndex] = useState(0);
   const [newMessageCount, setNewMessageCount] = useState(1247);
   const [clientCount, setClientCount] = useState(156);
   const [responseRate, setResponseRate] = useState(94);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
   const conversations = [
     { name: "João Silva", message: "Qual o horário de funcionamento?", time: "2 min", status: "online" },
@@ -77,6 +80,17 @@ const Dashboard = () => {
           <p className="text-lg md:text-xl text-brand-gray max-w-2xl mx-auto animate-in slide-in-from-bottom-4 duration-700 delay-200 px-4">
             Acompanhe conversas, analytics e performance do seu agente IA em tempo real
           </p>
+          
+          {/* Upgrade Plan Button */}
+          <div className="mt-8 animate-in slide-in-from-bottom-4 duration-700 delay-400">
+            <Button
+              onClick={() => setShowUpgradeModal(true)}
+              className="bg-gradient-to-r from-brand-green to-green-600 hover:from-brand-green/90 hover:to-green-600/90 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+            >
+              <Crown className="h-5 w-5 mr-2" />
+              Atualizar Plano
+            </Button>
+          </div>
         </div>
 
         <div className="bg-white rounded-2xl shadow-2xl p-4 md:p-8 max-w-4xl mx-auto hover:shadow-3xl transition-all duration-500 animate-in scale-in-95 duration-700 delay-300 group">
@@ -198,6 +212,13 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal de Upgrade */}
+      <PlanUpgradeModal
+        isOpen={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        currentPlan="free"
+      />
     </section>
   );
 };
