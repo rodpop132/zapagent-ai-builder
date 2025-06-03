@@ -71,11 +71,37 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
   const checkStatus = async () => {
     try {
       console.log('🔍 Verificando status para:', phoneNumber);
-      setStatus('loading'); // Mostrar loading durante verificação
+      setStatus('loading');
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
       
+      // Primeiro tentar endpoint de status direto se existir
+      try {
+        const statusResponse = await fetch(`https://zapagent-bot.onrender.com/status?numero=${encodeURIComponent(phoneNumber)}`, {
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json',
+          }
+        });
+        
+        if (statusResponse.ok) {
+          const statusData = await statusResponse.json();
+          console.log('📊 Status direto recebido:', statusData);
+          
+          if (statusData.connected === true || statusData.status === 'connected') {
+            console.log('✅ Status direto: CONECTADO');
+            setStatus('connected');
+            onStatusChange?.('connected');
+            clearTimeout(timeoutId);
+            return;
+          }
+        }
+      } catch (statusError) {
+        console.log('⚠️ Endpoint de status não disponível, usando QR check');
+      }
+      
+      // Fallback para verificação via QR
       const response = await fetch(`https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(phoneNumber)}`, {
         signal: controller.signal,
         headers: {
@@ -91,16 +117,28 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
       }
       
       const htmlContent = await response.text();
-      console.log('📊 Status verificado (primeiros 100 chars):', htmlContent.substring(0, 100));
+      console.log('📊 Status verificado (primeiros 200 chars):', htmlContent.substring(0, 200));
       
-      // Se retornar "QR não encontrado", significa que já foi conectado
-      if (htmlContent.includes('QR não encontrado')) {
+      // Verificações mais rigorosas para detectar conexão
+      const connectedIndicators = [
+        'QR não encontrado',
+        'já está conectado',
+        'connected',
+        'conectado',
+        'session active',
+        'sessão ativa'
+      ];
+      
+      const isConnected = connectedIndicators.some(indicator => 
+        htmlContent.toLowerCase().includes(indicator.toLowerCase())
+      );
+      
+      if (isConnected) {
         console.log('✅ Status atualizado: CONECTADO');
         setStatus('connected');
         onStatusChange?.('connected');
       } else {
         console.log('⏳ Status atualizado: PENDENTE');
-        // Se retornou HTML com QR code, ainda está pendente
         setStatus('pending');
         onStatusChange?.('pending');
         
@@ -119,9 +157,9 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
     }
   };
 
-  const handleManualCheck = () => {
+  const handleManualCheck = async () => {
     console.log('🔄 Verificação manual solicitada pelo usuário');
-    checkStatus();
+    await checkStatus();
   };
 
   useEffect(() => {
