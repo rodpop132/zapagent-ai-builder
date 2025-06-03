@@ -46,16 +46,41 @@ serve(async (req) => {
     
     if (customers.data.length === 0) {
       console.log("❌ Nenhum customer encontrado no Stripe, mantendo plano gratuito");
-      // Sem customer = plano gratuito
-      await supabaseClient.from("subscriptions").upsert({
-        user_id: user.id,
-        plan_type: 'free',
-        status: 'active',
-        messages_used: 0,
-        messages_limit: 30,
-        is_unlimited: false,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id' });
+      
+      // Primeiro, verificar se já existe um registro
+      const { data: existingSubscription } = await supabaseClient
+        .from("subscriptions")
+        .select("id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (existingSubscription) {
+        // Atualizar registro existente
+        await supabaseClient
+          .from("subscriptions")
+          .update({
+            plan_type: 'free',
+            status: 'active',
+            messages_used: 0,
+            messages_limit: 30,
+            is_unlimited: false,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("user_id", user.id);
+      } else {
+        // Inserir novo registro
+        await supabaseClient
+          .from("subscriptions")
+          .insert({
+            user_id: user.id,
+            plan_type: 'free',
+            status: 'active',
+            messages_used: 0,
+            messages_limit: 30,
+            is_unlimited: false,
+            updated_at: new Date().toISOString(),
+          });
+      }
 
       return new Response(JSON.stringify({ 
         subscribed: false, 
@@ -120,14 +145,41 @@ serve(async (req) => {
     // Atualizar no Supabase
     console.log(`💾 Atualizando Supabase: ${planType}, limite: ${messagesLimit}, ilimitado: ${isUnlimited}`);
     
-    const { error: upsertError } = await supabaseClient.from("subscriptions").upsert({
-      user_id: user.id,
-      plan_type: planType,
-      status: 'active',
-      messages_limit: messagesLimit,
-      is_unlimited: isUnlimited,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id' });
+    // Primeiro, verificar se já existe um registro
+    const { data: existingSubscription } = await supabaseClient
+      .from("subscriptions")
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    let upsertError;
+    if (existingSubscription) {
+      // Atualizar registro existente
+      const { error } = await supabaseClient
+        .from("subscriptions")
+        .update({
+          plan_type: planType,
+          status: 'active',
+          messages_limit: messagesLimit,
+          is_unlimited: isUnlimited,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", user.id);
+      upsertError = error;
+    } else {
+      // Inserir novo registro
+      const { error } = await supabaseClient
+        .from("subscriptions")
+        .insert({
+          user_id: user.id,
+          plan_type: planType,
+          status: 'active',
+          messages_limit: messagesLimit,
+          is_unlimited: isUnlimited,
+          updated_at: new Date().toISOString(),
+        });
+      upsertError = error;
+    }
 
     if (upsertError) {
       console.error("❌ Erro ao atualizar subscription:", upsertError);
