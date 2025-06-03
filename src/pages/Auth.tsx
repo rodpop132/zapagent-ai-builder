@@ -1,11 +1,11 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -16,22 +16,13 @@ const Auth = () => {
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
-  const hasRedirected = useRef(false);
 
   // Redirecionar se já estiver autenticado
   useEffect(() => {
-    if (user && !hasRedirected.current) {
-      hasRedirected.current = true;
+    if (user) {
       const from = location.state?.from?.pathname || '/dashboard';
-      console.log('🎯 User authenticated, redirecting to:', from);
-      
-      // Pequeno delay para garantir que o estado foi totalmente atualizado
-      setTimeout(() => {
-        navigate(from, { replace: true });
-      }, 100);
-    } else if (!user) {
-      hasRedirected.current = false;
+      console.log('🎯 AUTH PAGE: Usuário autenticado, redirecionando para:', from);
+      navigate(from, { replace: true });
     }
   }, [user, navigate, location]);
 
@@ -41,48 +32,29 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        console.log('🔑 Attempting login...');
+        console.log('🔑 AUTH PAGE: Tentando login...');
         const { error } = await signIn(email, password);
         if (error) {
-          console.error('❌ Login error:', error.message);
-          toast({
-            title: "Erro no login",
-            description: error.message,
-            variant: "destructive"
-          });
+          console.error('❌ AUTH PAGE: Erro no login:', error.message);
+          toast.error(`Erro no login: ${error.message}`);
         } else {
-          console.log('✅ Login successful!');
-          toast({
-            title: "Login realizado com sucesso!",
-            description: "Bem-vindo de volta ao ZapAgent AI"
-          });
-          // O redirecionamento será feito pelo useEffect acima
+          console.log('✅ AUTH PAGE: Login bem-sucedido!');
+          toast.success('Login realizado com sucesso!');
         }
       } else {
-        console.log('📝 Attempting signup...');
+        console.log('📝 AUTH PAGE: Tentando cadastro...');
         const { error } = await signUp(email, password, fullName);
         if (error) {
-          console.error('❌ Signup error:', error.message);
-          toast({
-            title: "Erro no cadastro",
-            description: error.message,
-            variant: "destructive"
-          });
+          console.error('❌ AUTH PAGE: Erro no cadastro:', error.message);
+          toast.error(`Erro no cadastro: ${error.message}`);
         } else {
-          console.log('✅ Signup successful!');
-          toast({
-            title: "Cadastro realizado!",
-            description: "Verifique seu email para confirmar a conta"
-          });
+          console.log('✅ AUTH PAGE: Cadastro bem-sucedido!');
+          toast.success('Cadastro realizado! Verifique seu email para confirmar a conta');
         }
       }
     } catch (error) {
-      console.error('💥 Auth error:', error);
-      toast({
-        title: "Erro",
-        description: "Algo deu errado. Tente novamente.",
-        variant: "destructive"
-      });
+      console.error('💥 AUTH PAGE: Erro inesperado:', error);
+      toast.error('Algo deu errado. Tente novamente.');
     } finally {
       setLoading(false);
     }
