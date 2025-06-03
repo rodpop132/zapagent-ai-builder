@@ -93,6 +93,26 @@ const Dashboard = () => {
 
       if (error && error.code !== 'PGRST116') {
         console.error('❌ DASHBOARD: Erro ao buscar assinatura:', error);
+        // Se não encontrar assinatura, criar uma padrão gratuita
+        const { data: newSub, error: createError } = await supabase
+          .from('subscriptions')
+          .insert({
+            user_id: user?.id,
+            plan_type: 'free',
+            status: 'active',
+            messages_used: 0,
+            messages_limit: 30,
+            is_unlimited: false
+          })
+          .select()
+          .single();
+        
+        if (createError) {
+          console.error('❌ DASHBOARD: Erro ao criar assinatura:', createError);
+        } else {
+          console.log('✅ DASHBOARD: Assinatura gratuita criada');
+          setSubscription(newSub);
+        }
       } else {
         console.log('✅ DASHBOARD: Assinatura carregada:', data?.plan_type || 'none');
         setSubscription(data);
@@ -102,18 +122,42 @@ const Dashboard = () => {
     }
   };
 
-  const handleCreateAgent = () => {
-    if (subscription?.is_unlimited) {
-      setShowCreateModal(true);
-      return;
+  const getAgentLimitByPlan = (planType: string) => {
+    switch (planType) {
+      case 'free': return 1;
+      case 'pro': return 10;
+      case 'ultra': return 999999;
+      case 'unlimited': return 999999;
+      default: return 1;
     }
+  };
 
-    if (subscription?.plan_type === 'free' && agents.length >= 1) {
+  const canCreateAgent = () => {
+    const planType = subscription?.plan_type || 'free';
+    const currentAgentCount = agents.length;
+    const agentLimit = getAgentLimitByPlan(planType);
+    
+    console.log('🔍 VERIFICAÇÃO LIMITE:', {
+      planType,
+      currentAgentCount,
+      agentLimit,
+      canCreate: currentAgentCount < agentLimit
+    });
+    
+    return currentAgentCount < agentLimit;
+  };
+
+  const handleCreateAgent = () => {
+    if (!canCreateAgent()) {
+      const planType = subscription?.plan_type || 'free';
+      const agentLimit = getAgentLimitByPlan(planType);
+      
       toast({
         title: "Limite atingido",
-        description: "No plano gratuito você pode criar apenas 1 agente. Faça upgrade para criar mais!",
+        description: `No plano ${getPlanDisplayName(planType)} você pode criar até ${agentLimit} agente${agentLimit > 1 ? 's' : ''}. Faça upgrade para criar mais!`,
         variant: "destructive"
       });
+      setShowUpgradeModal(true);
       return;
     }
     setShowCreateModal(true);
@@ -178,6 +222,9 @@ const Dashboard = () => {
       </div>
     );
   }
+
+  const planType = subscription?.plan_type || 'free';
+  const agentLimit = getAgentLimitByPlan(planType);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -273,7 +320,7 @@ const Dashboard = () => {
         {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
           {[
-            { icon: Bot, label: 'Agentes', value: agents.length, color: 'text-brand-green' },
+            { icon: Bot, label: 'Agentes', value: `${agents.length}/${agentLimit === 999999 ? '∞' : agentLimit}`, color: 'text-brand-green' },
             { 
               icon: MessageCircle, 
               label: 'Mensagens', 
@@ -317,11 +364,32 @@ const Dashboard = () => {
             <Button 
               onClick={handleCreateAgent}
               className="bg-brand-green hover:bg-brand-green/90 text-white transition-all duration-200 hover:scale-105 w-full sm:w-auto"
+              disabled={!canCreateAgent()}
             >
               <Plus className="h-4 w-4 mr-2" />
               Criar Agente
+              {!canCreateAgent() && (
+                <span className="ml-2 text-xs">
+                  (Limite atingido)
+                </span>
+              )}
             </Button>
           </div>
+
+          {/* Plan info message */}
+          {!canCreateAgent() && (
+            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                <strong>Limite atingido:</strong> No plano {getPlanDisplayName(planType)} você pode criar até {agentLimit} agente{agentLimit > 1 ? 's' : ''}. 
+                <button 
+                  onClick={() => setShowUpgradeModal(true)}
+                  className="ml-1 text-brand-green hover:underline font-medium"
+                >
+                  Faça upgrade para criar mais agentes
+                </button>
+              </p>
+            </div>
+          )}
 
           {agents.length === 0 ? (
             <Card>
@@ -336,6 +404,7 @@ const Dashboard = () => {
                 <Button 
                   onClick={handleCreateAgent}
                   className="bg-brand-green hover:bg-brand-green/90 text-white transition-all duration-200 hover:scale-105"
+                  disabled={!canCreateAgent()}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Criar Primeiro Agente
