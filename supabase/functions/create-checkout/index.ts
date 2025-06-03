@@ -23,22 +23,25 @@ serve(async (req) => {
     
     let user = null;
     
-    // Se não for checkout de convidado, autenticar usuário
+    // Se não for checkout de convidado, tentar autenticar usuário
     if (!guestCheckout) {
       const authHeader = req.headers.get("Authorization");
-      if (!authHeader) throw new Error("Authorization header required for authenticated checkout");
-      
-      const token = authHeader.replace("Bearer ", "");
-      const { data } = await supabaseClient.auth.getUser(token);
-      user = data.user;
-      if (!user?.email) throw new Error("User not authenticated or email not available");
+      if (authHeader) {
+        try {
+          const token = authHeader.replace("Bearer ", "");
+          const { data } = await supabaseClient.auth.getUser(token);
+          user = data.user;
+        } catch (error) {
+          console.log("Erro na autenticação, continuando como convidado:", error);
+        }
+      }
     }
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
     });
 
-    // Definir preços baseado no plano com limite correto para Pro
+    // Definir preços baseado no plano
     const priceIds = {
       pro: "price_1RVbYyPpmCy5gtzzPUjXC12Z", // 10.000 mensagens/mês
       ultra: "price_1RVfjlPpmCy5gtzzfOMaqUJO" // Ilimitado
@@ -103,6 +106,12 @@ serve(async (req) => {
         user_id: user.id,
         user_email: user.email,
         plan_type: planType
+      };
+    } else {
+      // Para checkout de convidado, ainda incluir metadados do plano
+      sessionConfig.metadata = {
+        plan_type: planType,
+        guest_checkout: true
       };
     }
 
