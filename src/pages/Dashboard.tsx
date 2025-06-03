@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Bot, MessageCircle, Settings, BarChart3, Crown, LogOut, Menu } from 'lucide-react';
+import { Plus, Bot, MessageCircle, Settings, BarChart3, Crown, LogOut, Menu, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import AgentCard from '@/components/AgentCard';
@@ -33,9 +33,11 @@ const Dashboard = () => {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -80,6 +82,50 @@ const Dashboard = () => {
       setSubscription(data);
     } catch (error) {
       console.error('Error fetching subscription:', error);
+    }
+  };
+
+  const refreshSubscriptionStatus = async () => {
+    if (!user) return;
+    
+    setRefreshing(true);
+    try {
+      console.log('🔄 Forçando verificação de assinatura...');
+      const { data, error } = await supabase.functions.invoke('verify-subscription');
+      
+      if (error) {
+        console.error('❌ Erro ao verificar assinatura:', error);
+        toast({
+          title: "Erro",
+          description: "Erro ao verificar assinatura",
+          variant: "destructive"
+        });
+      } else {
+        console.log('✅ Resposta da verificação:', data);
+        setDebugInfo(data.debug);
+        await fetchSubscription();
+        
+        if (data?.subscribed) {
+          toast({
+            title: "Sucesso",
+            description: `Assinatura verificada! Plano ${data.plan_type} ativo.`,
+          });
+        } else {
+          toast({
+            title: "Info",
+            description: "Nenhuma assinatura ativa encontrada",
+          });
+        }
+      }
+    } catch (error) {
+      console.error('❌ Erro na verificação:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao processar verificação",
+        variant: "destructive"
+      });
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -164,6 +210,16 @@ const Dashboard = () => {
                 <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-medium animate-in scale-in-50 duration-200`}>
                   {getPlanDisplayName(subscription?.plan_type || 'free')}
                 </Badge>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={refreshSubscriptionStatus}
+                  disabled={refreshing}
+                  className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
+                  {refreshing ? 'Verificando...' : 'Verificar'}
+                </Button>
                 {subscription?.plan_type === 'free' && !subscription?.is_unlimited && (
                   <Button
                     variant="outline"
@@ -205,6 +261,16 @@ const Dashboard = () => {
                   <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-medium`}>
                     {getPlanDisplayName(subscription?.plan_type || 'free')}
                   </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={refreshSubscriptionStatus}
+                    disabled={refreshing}
+                    className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
+                    Verificar
+                  </Button>
                   {subscription?.plan_type === 'free' && !subscription?.is_unlimited && (
                     <Button
                       variant="outline"
@@ -236,6 +302,20 @@ const Dashboard = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+        {/* Debug Info */}
+        {debugInfo && (
+          <Card className="mb-6 border-blue-200 bg-blue-50">
+            <CardHeader>
+              <CardTitle className="text-sm text-blue-800">🔍 Debug Info</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <pre className="text-xs text-blue-700 overflow-auto">
+                {JSON.stringify(debugInfo, null, 2)}
+              </pre>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
           {[
