@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bot, Settings, MessageCircle, Phone, Users, MoreVertical, Edit } from 'lucide-react';
+import { Bot, Settings, MessageCircle, Phone, Users, MoreVertical, Edit, History } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import WhatsAppStatus from './WhatsAppStatus';
 import EditAgentModal from './EditAgentModal';
+import AgentHistory from './AgentHistory';
+import { ZapAgentService } from '@/services/zapAgentService';
 
 interface Agent {
   id: string;
@@ -39,6 +41,7 @@ interface AgentCardProps {
 const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [whatsappStatus, setWhatsappStatus] = useState<'connected' | 'pending'>('pending');
   const { toast } = useToast();
 
@@ -142,36 +145,17 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
     try {
       console.log('🧪 Enviando mensagem de teste para agente:', agent.phone_number);
       
-      // Preparar número (remover + e espaços)
-      const numero = agent.phone_number.replace(/[\s+]/g, '');
+      const prompt = agent.prompt || `Você é um assistente virtual para ${agent.business_type}. Seja prestativo e educado.`;
+      const testMessage = 'Olá! Esta é uma mensagem de teste do sistema.';
       
-      const response = await fetch(`https://zapagent-api.onrender.com/responder/${numero}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          msg: 'Olá! Esta é uma mensagem de teste do sistema.',
-          prompt: agent.prompt || `Você é um assistente virtual para ${agent.business_type}. Seja prestativo e educado.`
-        })
-      });
+      // Usar o novo serviço
+      const response = await ZapAgentService.sendMessage(
+        agent.phone_number,
+        testMessage,
+        prompt
+      );
 
-      if (!response.ok) {
-        throw new Error(`Erro na API: ${response.status}`);
-      }
-
-      const result = await response.text();
-      console.log('✅ Resposta da API:', result);
-
-      // Verificar se atingiu o limite
-      if (result.includes('Limite de mensagens do plano') && result.includes('atingido')) {
-        toast({
-          title: "⚠️ Limite atingido",
-          description: `Limite de mensagens do plano ${planType} atingido. Considere fazer upgrade.`,
-          variant: "destructive"
-        });
-        return;
-      }
+      console.log('✅ Resposta da IA:', response);
 
       toast({
         title: "✅ Teste enviado",
@@ -256,6 +240,13 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
                     Configurar Bot
                   </DropdownMenuItem>
                   <DropdownMenuItem 
+                    onClick={() => setShowHistory(!showHistory)}
+                    className="cursor-pointer hover:bg-gray-50"
+                  >
+                    <History className="h-4 w-4 mr-2" />
+                    {showHistory ? 'Ocultar' : 'Ver'} Histórico
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
                     onClick={handleToggleActive}
                     disabled={isLoading}
                     className="cursor-pointer hover:bg-gray-50"
@@ -329,6 +320,16 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
             </Button>
           </div>
         </CardContent>
+
+        {/* Histórico de conversas */}
+        {showHistory && (
+          <CardContent className="pt-0">
+            <AgentHistory 
+              phoneNumber={agent.phone_number}
+              agentName={agent.name}
+            />
+          </CardContent>
+        )}
       </Card>
 
       <EditAgentModal
