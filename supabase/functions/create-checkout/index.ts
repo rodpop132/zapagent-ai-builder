@@ -19,22 +19,29 @@ serve(async (req) => {
   );
 
   try {
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
-
-    const { planType } = await req.json();
+    const { planType, guestCheckout } = await req.json();
+    
+    let user = null;
+    
+    // Se não for checkout de convidado, autenticar usuário
+    if (!guestCheckout) {
+      const authHeader = req.headers.get("Authorization");
+      if (!authHeader) throw new Error("Authorization header required for authenticated checkout");
+      
+      const token = authHeader.replace("Bearer ", "");
+      const { data } = await supabaseClient.auth.getUser(token);
+      user = data.user;
+      if (!user?.email) throw new Error("User not authenticated or email not available");
+    }
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
     });
 
-    // Definir preços baseado no plano
+    // Definir preços baseado no plano com limite correto para Pro
     const priceIds = {
-      pro: "price_1RVbYyPpmCy5gtzzPUjXC12Z",
-      ultra: "price_1RVfjlPpmCy5gtzzfOMaqUJO"
+      pro: "price_1RVbYyPpmCy5gtzzPUjXC12Z", // 10.000 mensagens/mês
+      ultra: "price_1RVfjlPpmCy5gtzzfOMaqUJO" // Ilimitado
     };
 
     const priceId = priceIds[planType as keyof typeof priceIds];
@@ -42,14 +49,17 @@ serve(async (req) => {
       throw new Error("Plano inválido");
     }
 
-    // Verificar se já existe um customer
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId;
-    if (customers.data.length > 0) {
-      customerId = customers.data[0].id;
+    
+    // Se for usuário autenticado, verificar customer existente
+    if (user?.email) {
+      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+      if (customers.data.length > 0) {
+        customerId = customers.data[0].id;
+      }
     }
 
-    // Detectar o domínio correto da requisição - usar apenas origin ou referer sem fallback fixo
+    // Detectar o domínio correto da requisição
     const origin = req.headers.get("origin") || req.headers.get("referer")?.split('/').slice(0, 3).join('/');
     
     if (!origin) {
@@ -57,16 +67,13 @@ serve(async (req) => {
     }
 
     console.log("Origin detected:", origin);
-    console.log("All headers:", Object.fromEntries(req.headers.entries()));
 
     // URLs de redirecionamento corretas
     const successUrl = `${origin}/sucesso?session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${origin}/cancelado`;
 
-    // Criar sessão de checkout
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      customer_email: customerId ? undefined : user.email,
+    // Configuração da sessão de checkout
+    const sessionConfig: any = {
       line_items: [
         {
           price: priceId,
@@ -76,13 +83,31 @@ serve(async (req) => {
       mode: "subscription",
       success_url: successUrl,
       cancel_url: cancelUrl,
-      metadata: {
+      allow_promotion_codes: true,
+    };
+
+    // Se tiver customer ID, usar ele, senão permitir que o Stripe crie
+    if (customerId) {
+      sessionConfig.customer = customerId;
+    } else {
+      // Para checkout de convidado ou novo usuário, permitir entrada de email
+      sessionConfig.customer_creation = 'always';
+      if (user?.email) {
+        sessionConfig.customer_email = user.email;
+      }
+    }
+
+    // Metadados para identificar o usuário se estiver logado
+    if (user) {
+      sessionConfig.metadata = {
         user_id: user.id,
         user_email: user.email,
         plan_type: planType
-      },
-      allow_promotion_codes: true,
-    });
+      };
+    }
+
+    // Criar sessão de checkout
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     console.log("Checkout session created:", session.id);
     console.log("Success URL:", successUrl);

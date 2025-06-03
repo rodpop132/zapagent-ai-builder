@@ -13,7 +13,8 @@ const PricingSection = () => {
   const navigate = useNavigate();
 
   const handleSubscribe = async (planType: string) => {
-    if (!user) {
+    // Para plano gratuito, sempre direcionar para login
+    if (planType === 'free') {
       navigate('/auth');
       return;
     }
@@ -21,18 +22,40 @@ const PricingSection = () => {
     setLoading(planType);
     
     try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { planType }
-      });
+      let checkoutData;
+      
+      if (user) {
+        // Usuário logado - usar o método atual
+        const { data, error } = await supabase.functions.invoke('create-checkout', {
+          body: { planType }
+        });
 
-      if (error) {
-        console.error('Erro ao criar checkout:', error);
-        throw error;
+        if (error) {
+          console.error('Erro ao criar checkout:', error);
+          throw error;
+        }
+        checkoutData = data;
+      } else {
+        // Usuário não logado - checkout direto
+        const response = await fetch(`${supabase.supabaseUrl}/functions/v1/create-checkout`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabase.supabaseKey,
+          },
+          body: JSON.stringify({ planType, guestCheckout: true })
+        });
+
+        if (!response.ok) {
+          throw new Error('Erro ao criar checkout');
+        }
+        
+        checkoutData = await response.json();
       }
 
-      if (data?.url) {
+      if (checkoutData?.url) {
         // Abrir checkout do Stripe em nova aba
-        window.open(data.url, '_blank');
+        window.open(checkoutData.url, '_blank');
       } else {
         throw new Error('URL do checkout não retornada');
       }
@@ -68,7 +91,7 @@ const PricingSection = () => {
       description: "Ideal para pequenos negócios",
       features: [
         "3 agentes IA ativos",
-        "1.000 mensagens/mês",
+        "10.000 mensagens/mês",
         "Integração WhatsApp",
         "Analytics básicos",
         "Suporte prioritário",
@@ -168,7 +191,7 @@ const PricingSection = () => {
                     : 'bg-brand-green text-white hover:bg-brand-green/90'
                 }`}
                 size="lg"
-                onClick={() => plan.planType === 'free' ? navigate('/auth') : handleSubscribe(plan.planType)}
+                onClick={() => handleSubscribe(plan.planType)}
                 disabled={loading === plan.planType}
               >
                 {loading === plan.planType ? (

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { MessageCircle, X, Send } from 'lucide-react';
+import { MessageCircle, X, Send, Ticket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -72,19 +72,19 @@ const SupportWidget = () => {
 
   return (
     <>
-      {/* Support Button */}
-      <div className="fixed bottom-6 right-6 z-50">
+      {/* Support Button - Otimizado para mobile */}
+      <div className="fixed bottom-4 right-4 z-50">
         <Button
           onClick={() => setIsOpen(true)}
-          className="h-16 w-16 rounded-full bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden"
+          className="h-14 w-14 md:h-16 md:w-16 rounded-full bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden"
           size="icon"
         >
           {/* Logo do SaaS */}
           <div className="relative z-10 flex flex-col items-center justify-center">
-            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center mb-1">
-              <MessageCircle className="w-5 h-5 text-green-600" />
+            <div className="w-6 h-6 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center mb-0.5 md:mb-1">
+              <Ticket className="w-3 h-3 md:w-5 md:h-5 text-green-600" />
             </div>
-            <span className="text-[10px] text-white font-medium opacity-90">
+            <span className="text-[8px] md:text-[10px] text-white font-medium opacity-90">
               Suporte
             </span>
           </div>
@@ -97,30 +97,30 @@ const SupportWidget = () => {
         </Button>
       </div>
 
-      {/* Chat Modal */}
+      {/* Chat Modal - Otimizado para mobile */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md max-h-[80vh] overflow-hidden animate-scale-in">
-            <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-green-600 to-green-700 text-white">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-                  <MessageCircle className="w-5 h-5 text-green-600" />
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center p-0 md:p-4">
+          <Card className="w-full max-w-md max-h-[90vh] md:max-h-[80vh] overflow-hidden animate-scale-in rounded-t-2xl md:rounded-2xl">
+            <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-3 md:px-6 md:py-4">
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className="w-6 h-6 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center">
+                  <Ticket className="w-3 h-3 md:w-5 md:h-5 text-green-600" />
                 </div>
-                <CardTitle className="text-lg">Suporte</CardTitle>
+                <CardTitle className="text-base md:text-lg">Suporte</CardTitle>
               </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsOpen(false)}
-                className="text-white hover:bg-green-600/50"
+                className="text-white hover:bg-green-600/50 h-8 w-8 md:h-10 md:w-10"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4 md:w-5 md:h-5" />
               </Button>
             </CardHeader>
-            <CardContent className="p-6">
-              <form onSubmit={handleSubmit} className="space-y-4">
+            <CardContent className="p-4 md:p-6 overflow-y-auto">
+              <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label className="block text-sm font-medium mb-1 md:mb-2">
                     Assunto
                   </label>
                   <Input
@@ -128,41 +128,41 @@ const SupportWidget = () => {
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder="Descreva brevemente sua dúvida"
                     required
-                    className="focus:ring-green-500 focus:border-green-500"
+                    className="focus:ring-green-500 focus:border-green-500 text-sm md:text-base"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2">
+                  <label className="block text-sm font-medium mb-1 md:mb-2">
                     Mensagem
                   </label>
                   <Textarea
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="Descreva sua dúvida em detalhes..."
-                    rows={4}
+                    rows={3}
                     required
-                    className="focus:ring-green-500 focus:border-green-500"
+                    className="focus:ring-green-500 focus:border-green-500 text-sm md:text-base resize-none"
                   />
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 pt-2">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setIsOpen(false)}
-                    className="flex-1"
+                    className="flex-1 text-sm md:text-base"
                   >
                     Cancelar
                   </Button>
                   <Button
                     type="submit"
                     disabled={loading || !subject.trim() || !message.trim()}
-                    className="flex-1 bg-green-600 hover:bg-green-700"
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-sm md:text-base"
                   >
                     {loading ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
                     ) : (
                       <>
-                        <Send className="w-4 h-4 mr-2" />
+                        <Send className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
                         Enviar
                       </>
                     )}

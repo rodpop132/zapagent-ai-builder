@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -125,11 +124,11 @@ serve(async (req) => {
       
       console.log(`💰 Price ID da assinatura ativa: ${priceId}`);
       
-      // Mapear price ID para plano
+      // Mapear price ID para plano com limite correto
       if (priceId === "price_1RVbYyPpmCy5gtzzPUjXC12Z") {
         planType = 'pro';
-        messagesLimit = 1000;
-        console.log("🎯 Plano identificado: Pro");
+        messagesLimit = 10000; // Corrigido de 1000 para 10000
+        console.log("🎯 Plano identificado: Pro (10.000 mensagens)");
       } else if (priceId === "price_1RVfjlPpmCy5gtzzfOMaqUJO") {
         planType = 'ultra';
         messagesLimit = 999999;
