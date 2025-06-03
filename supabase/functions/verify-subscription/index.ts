@@ -26,6 +26,8 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated");
 
+    console.log(`Verificando assinatura para usuário: ${user.email}`);
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
     });
@@ -34,6 +36,7 @@ serve(async (req) => {
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     
     if (customers.data.length === 0) {
+      console.log("Nenhum customer encontrado, mantendo plano gratuito");
       // Sem customer = plano gratuito
       await supabaseClient.from("subscriptions").upsert({
         user_id: user.id,
@@ -55,13 +58,16 @@ serve(async (req) => {
     }
 
     const customerId = customers.data[0].id;
+    console.log(`Customer encontrado: ${customerId}`);
 
     // Buscar assinaturas ativas
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: "active",
-      limit: 1,
+      limit: 10,
     });
+
+    console.log(`Encontradas ${subscriptions.data.length} assinaturas ativas`);
 
     let planType = 'free';
     let messagesLimit = 30;
@@ -71,19 +77,27 @@ serve(async (req) => {
       const subscription = subscriptions.data[0];
       const priceId = subscription.items.data[0].price.id;
       
+      console.log(`Price ID da assinatura: ${priceId}`);
+      
       // Mapear price ID para plano
       if (priceId === "price_1RVbYyPpmCy5gtzzPUjXC12Z") {
         planType = 'pro';
         messagesLimit = 1000;
+        console.log("Plano identificado: Pro");
       } else if (priceId === "price_1RVfjlPpmCy5gtzzfOMaqUJO") {
         planType = 'ultra';
         messagesLimit = 999999;
         isUnlimited = true;
+        console.log("Plano identificado: Ultra");
       }
+    } else {
+      console.log("Nenhuma assinatura ativa encontrada");
     }
 
     // Atualizar no Supabase
-    await supabaseClient.from("subscriptions").upsert({
+    console.log(`Atualizando Supabase: ${planType}, limite: ${messagesLimit}, ilimitado: ${isUnlimited}`);
+    
+    const { error: upsertError } = await supabaseClient.from("subscriptions").upsert({
       user_id: user.id,
       plan_type: planType,
       status: 'active',
@@ -92,11 +106,18 @@ serve(async (req) => {
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id' });
 
-    console.log(`Subscription verified for ${user.email}: ${planType}`);
+    if (upsertError) {
+      console.error("Erro ao atualizar subscription:", upsertError);
+      throw upsertError;
+    }
+
+    console.log(`Subscription atualizada com sucesso para ${user.email}: ${planType}`);
 
     return new Response(JSON.stringify({
       subscribed: planType !== 'free',
-      plan_type: planType
+      plan_type: planType,
+      messages_limit: messagesLimit,
+      is_unlimited: isUnlimited
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

@@ -6,13 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { CheckCircle, Loader2, ArrowRight } from 'lucide-react';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const Sucesso = () => {
   const [loading, setLoading] = useState(true);
   const [verified, setVerified] = useState(false);
-  const { user } = useAuth();
+  const { user, refreshSubscription } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get('session_id');
 
   useEffect(() => {
     const verifyPayment = async () => {
@@ -21,17 +23,39 @@ const Sucesso = () => {
         return;
       }
 
+      console.log('Iniciando verificação de pagamento...');
+      console.log('Session ID:', sessionId);
+      console.log('User:', user.email);
+
       try {
-        // Verificar assinatura no Stripe
+        // Aguardar um pouco mais para o Stripe processar
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        console.log('Verificando assinatura...');
         const { data, error } = await supabase.functions.invoke('verify-subscription');
         
         if (error) {
           console.error('Erro ao verificar assinatura:', error);
           toast.error('Erro ao verificar pagamento');
         } else {
+          console.log('Resposta da verificação:', data);
           setVerified(true);
+          
+          // Forçar atualização da assinatura no contexto
+          await refreshSubscription();
+          
           if (data?.subscribed) {
             toast.success(`Pagamento confirmado! Plano ${data.plan_type} ativado com sucesso.`);
+          } else {
+            // Se ainda não estiver ativo, tentar novamente após mais alguns segundos
+            setTimeout(async () => {
+              console.log('Tentando verificar novamente...');
+              const { data: retryData } = await supabase.functions.invoke('verify-subscription');
+              if (retryData?.subscribed) {
+                await refreshSubscription();
+                toast.success(`Pagamento confirmado! Plano ${retryData.plan_type} ativado com sucesso.`);
+              }
+            }, 5000);
           }
         }
       } catch (error) {
@@ -42,10 +66,8 @@ const Sucesso = () => {
       }
     };
 
-    // Aguardar um pouco para o Stripe processar
-    const timer = setTimeout(verifyPayment, 2000);
-    return () => clearTimeout(timer);
-  }, [user, navigate]);
+    verifyPayment();
+  }, [user, navigate, sessionId, refreshSubscription]);
 
   if (loading) {
     return (
@@ -59,6 +81,11 @@ const Sucesso = () => {
             <p className="text-gray-600">
               Aguarde enquanto confirmamos sua assinatura...
             </p>
+            {sessionId && (
+              <p className="text-xs text-gray-400 mt-2">
+                ID da sessão: {sessionId.substring(0, 20)}...
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>

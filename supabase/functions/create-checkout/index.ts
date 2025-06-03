@@ -49,9 +49,10 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
-    // Obter a URL base da requisição
-    const origin = req.headers.get("origin") || "https://zapagent-ai.lovable.site";
+    // Usar a origem da requisição, mas com fallback para o domínio de produção
+    const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/$/, '') || "https://zapagent-ai.lovable.site";
     console.log("Origin detected:", origin);
+    console.log("Referer:", req.headers.get("referer"));
 
     // Criar sessão de checkout
     const session = await stripe.checkout.sessions.create({
@@ -70,7 +71,8 @@ serve(async (req) => {
         user_id: user.id,
         user_email: user.email,
         plan_type: planType
-      }
+      },
+      allow_promotion_codes: true,
     });
 
     console.log("Checkout session created:", session.id);
