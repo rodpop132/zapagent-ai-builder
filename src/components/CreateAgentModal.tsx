@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -247,6 +246,85 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     }
   };
 
+  const checkConnectionStatus = async () => {
+    try {
+      console.log('🔍 Verificando status de conexão para:', formData.phone_number);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      
+      // Usar a nova rota de status
+      const response = await fetch(`https://zapagent-bot.onrender.com/status?numero=${encodeURIComponent(formData.phone_number)}`, {
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        console.error('❌ Erro na verificação de status:', response.status);
+        return false;
+      }
+      
+      const statusData = await response.json();
+      console.log('📊 Status recebido:', statusData);
+      
+      if (statusData.conectado === true) {
+        setConnectionStatus('connected');
+        stopStatusPolling();
+        
+        // Atualizar status no banco de dados
+        try {
+          await (supabase as any)
+            .from('agents')
+            .update({ whatsapp_status: 'connected' })
+            .eq('phone_number', formData.phone_number);
+        } catch (dbError) {
+          console.error('Erro ao atualizar status no banco:', dbError);
+        }
+        
+        toast({
+          title: "✅ Agente Conectado!",
+          description: "Seu agente está ativo e pronto para receber mensagens.",
+        });
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('💥 Erro ao verificar status:', error);
+      return false;
+    }
+  };
+
+  const startStatusPolling = () => {
+    console.log('🔄 Iniciando polling de status a cada 5 segundos...');
+    
+    // Verificar imediatamente após 5 segundos
+    setTimeout(() => {
+      checkConnectionStatus();
+    }, 5000);
+    
+    // Depois verificar a cada 5 segundos
+    const interval = setInterval(checkConnectionStatus, 5000);
+    setStatusCheckInterval(interval);
+    
+    // Parar após 5 minutos
+    setTimeout(() => {
+      stopStatusPolling();
+      console.log('⏰ Polling de status interrompido após 5 minutos');
+    }, 300000);
+  };
+
+  const stopStatusPolling = () => {
+    if (statusCheckInterval) {
+      clearInterval(statusCheckInterval);
+      setStatusCheckInterval(null);
+    }
+  };
+
   const fetchQrCode = async (attempt = 1, maxAttempts = 5) => {
     try {
       console.log(`🔄 Tentativa ${attempt}/${maxAttempts} - Buscando QR code para número:`, formData.phone_number);
@@ -256,7 +334,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       }
       
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000); // Aumentar timeout
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
       
       const qrUrl = `https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(formData.phone_number)}`;
       console.log('🔗 URL completa do QR:', qrUrl);
@@ -264,10 +342,8 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       const response = await fetch(qrUrl, {
         signal: controller.signal,
         headers: {
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'User-Agent': 'Mozilla/5.0 (compatible; ZapAgent/1.0)',
+          'Accept': 'text/html',
           'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
         }
       });
       
@@ -278,7 +354,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         console.error('❌ Erro na resposta do QR code:', response.status, errorText);
         
         if (errorText.includes('QR não encontrado') && attempt < maxAttempts) {
-          const waitTime = Math.min(attempt * 3000, 10000); // Máximo 10 segundos
+          const waitTime = Math.min(attempt * 3000, 10000);
           console.log(`⏳ QR ainda não gerado, tentando novamente em ${waitTime/1000} segundos...`);
           setTimeout(() => fetchQrCode(attempt + 1, maxAttempts), waitTime);
           return;
@@ -301,30 +377,15 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         throw new Error('QR code ainda não foi gerado. Tente atualizar manualmente.');
       }
       
-      // Melhorar a extração da imagem base64 do HTML
-      const imgPatterns = [
-        /src\s*=\s*["'](data:image\/[^;]+;base64,[^"']+)["']/i,
-        /src\s*=\s*["']([^"']*data:image[^"']*)["']/i,
-        /<img[^>]*src\s*=\s*["']([^"']*data:image[^"']*)["']/i
-      ];
+      // Extrair a imagem base64 do HTML
+      const imgMatch = htmlContent.match(/src\s*=\s*["'](data:image\/[^;]+;base64,[^"']+)["']/i);
       
-      let qrCodeData = null;
-      
-      for (const pattern of imgPatterns) {
-        const match = htmlContent.match(pattern);
-        if (match && match[1]) {
-          qrCodeData = match[1];
-          console.log('✅ QR code extraído com padrão:', pattern.toString());
-          break;
-        }
-      }
-      
-      if (qrCodeData && qrCodeData.startsWith('data:image/') && qrCodeData.includes('base64,')) {
-        console.log('✅ QR code válido extraído, primeiros 100 chars:', qrCodeData.substring(0, 100));
-        setQrCodeUrl(qrCodeData);
+      if (imgMatch && imgMatch[1] && imgMatch[1].startsWith('data:image/') && imgMatch[1].includes('base64,')) {
+        console.log('✅ QR code válido extraído, primeiros 100 chars:', imgMatch[1].substring(0, 100));
+        setQrCodeUrl(imgMatch[1]);
         setQrGenerationAttempts(0);
         setShowQrModal(true);
-        startStatusPolling();
+        startStatusPolling(); // Iniciar polling após mostrar QR
       } else {
         console.error('❌ QR code não encontrado ou inválido no HTML');
         if (attempt < maxAttempts) {
@@ -354,81 +415,6 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         description: error instanceof Error ? error.message : "Falha ao gerar QR code. Tente novamente manualmente.",
         variant: "destructive"
       });
-    }
-  };
-
-  const checkConnectionStatus = async () => {
-    try {
-      console.log('🔍 Verificando status de conexão para:', formData.phone_number);
-      
-      // Tentar buscar o QR code novamente para verificar se ainda existe
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
-      
-      const response = await fetch(`https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(formData.phone_number)}`, {
-        signal: controller.signal,
-        headers: {
-          'Accept': 'text/html',
-        }
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        console.error('❌ Erro na verificação de status:', response.status);
-        return false;
-      }
-      
-      const htmlContent = await response.text();
-      console.log('📊 Status HTML recebido (primeiros 100 chars):', htmlContent.substring(0, 100));
-      
-      // Se retornar "QR não encontrado", significa que já foi conectado
-      if (htmlContent.includes('QR não encontrado')) {
-        setConnectionStatus('connected');
-        stopStatusPolling();
-        
-        // Atualizar status no banco de dados
-        try {
-          await (supabase as any)
-            .from('agents')
-            .update({ whatsapp_status: 'connected' })
-            .eq('phone_number', formData.phone_number);
-        } catch (dbError) {
-          console.error('Erro ao atualizar status no banco:', dbError);
-        }
-        
-        toast({
-          title: "Agente Conectado!",
-          description: "Seu agente está ativo e pronto para receber mensagens.",
-        });
-        return true;
-      }
-      
-      return false;
-    } catch (error) {
-      console.error('💥 Erro ao verificar status:', error);
-      return false;
-    }
-  };
-
-  const startStatusPolling = () => {
-    // Verificar imediatamente
-    checkConnectionStatus();
-    
-    // Verificar a cada 5 segundos
-    const interval = setInterval(checkConnectionStatus, 5000);
-    setStatusCheckInterval(interval);
-    
-    // Parar após 5 minutos
-    setTimeout(() => {
-      stopStatusPolling();
-    }, 300000);
-  };
-
-  const stopStatusPolling = () => {
-    if (statusCheckInterval) {
-      clearInterval(statusCheckInterval);
-      setStatusCheckInterval(null);
     }
   };
 
@@ -486,13 +472,13 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
       toast({
         title: "Agente criado com sucesso!",
-        description: "Aguarde alguns segundos e depois escaneie o QR code para conectar o WhatsApp..."
+        description: "Aguarde alguns segundos para o QR code aparecer..."
       });
 
-      // 4. Aguardar alguns segundos antes de buscar QR code
+      // 4. Aguardar 8 segundos antes de buscar QR code (tempo para o backend processar)
       setTimeout(async () => {
         await fetchQrCode(1, 5);
-      }, 5000); // Aumentar delay inicial
+      }, 8000);
 
       onAgentCreated();
       
@@ -768,7 +754,6 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
                   className="max-w-full h-auto border rounded-lg shadow-lg"
                   onError={(e) => {
                     console.error('❌ Erro ao carregar imagem do QR code');
-                    console.log('🔗 URL da imagem:', qrCodeUrl?.substring(0, 100) + '...');
                   }}
                   onLoad={() => {
                     console.log('✅ QR code carregado com sucesso na UI');
@@ -784,22 +769,29 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
               </div>
             )}
             
-            {/* Status de conexão */}
-            {connectionStatus && (
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center justify-center space-x-2">
-                  {connectionStatus === 'connected' ? (
-                    <>
-                      <span className="text-green-600 font-medium">✅ Agente Conectado!</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-orange-600 font-medium">⏳ Aguardando conexão...</span>
-                    </>
-                  )}
-                </div>
+            {/* Status de conexão com visual melhorado */}
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center justify-center space-x-2">
+                {connectionStatus === 'connected' ? (
+                  <div className="text-center">
+                    <div className="text-green-600 font-bold text-lg mb-1">✅ Agente Conectado!</div>
+                    <p className="text-green-700 text-sm">Pronto para receber mensagens</p>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <div className="text-blue-600 font-medium text-base mb-1">⏳ Aguardando conexão com o WhatsApp...</div>
+                    <p className="text-blue-600 text-sm">Escaneie o QR code acima para conectar</p>
+                    <div className="flex justify-center mt-2">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce delay-75"></div>
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce delay-150"></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
             
             <div className="flex space-x-2">
               <Button
