@@ -49,6 +49,10 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
+    // Obter a URL base da requisição
+    const origin = req.headers.get("origin") || "https://zapagent-ai.lovable.site";
+    console.log("Origin detected:", origin);
+
     // Criar sessão de checkout
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -60,8 +64,8 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      success_url: `https://zapagent-ai.lovable.site/sucesso?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `https://zapagent-ai.lovable.site/cancelado`,
+      success_url: `${origin}/sucesso?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/cancelado`,
       metadata: {
         user_id: user.id,
         user_email: user.email,
@@ -70,6 +74,8 @@ serve(async (req) => {
     });
 
     console.log("Checkout session created:", session.id);
+    console.log("Success URL:", `${origin}/sucesso?session_id={CHECKOUT_SESSION_ID}`);
+    console.log("Cancel URL:", `${origin}/cancelado`);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
