@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import AgentCard from '@/components/AgentCard';
 import CreateAgentModal from '@/components/CreateAgentModal';
 import PlanUpgradeModal from '@/components/PlanUpgradeModal';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface Agent {
   id: string;
@@ -19,6 +19,9 @@ interface Agent {
   phone_number: string;
   is_active: boolean;
   created_at: string;
+  prompt?: string;
+  messages_used?: number;
+  messages_limit?: number;
 }
 
 interface Subscription {
@@ -249,11 +252,23 @@ const Dashboard = () => {
     }
   };
 
+  const getTotalMessagesUsed = () => {
+    return agents.reduce((total, agent) => total + (agent.messages_used || 0), 0);
+  };
+
   const getMessagesDisplay = () => {
     if (subscription?.is_unlimited) {
       return '∞ Ilimitado';
     }
-    return `${subscription?.messages_used || 0}/${subscription?.messages_limit || 30}`;
+    const totalUsed = getTotalMessagesUsed();
+    return `${totalUsed}/${subscription?.messages_limit || 30}`;
+  };
+
+  const shouldShowLimitWarning = () => {
+    if (subscription?.is_unlimited) return false;
+    const totalUsed = getTotalMessagesUsed();
+    const limit = subscription?.messages_limit || 30;
+    return totalUsed >= limit * 0.8; // Mostrar aviso quando usar 80% do limite
   };
 
   const shouldShowUpgradeButton = () => {
@@ -378,6 +393,21 @@ const Dashboard = () => {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+        {/* Alerta de limite de mensagens */}
+        {shouldShowLimitWarning() && (
+          <Alert className="mb-6 border-yellow-200 bg-yellow-50">
+            <AlertDescription className="text-yellow-800">
+              ⚠️ Você está próximo do limite de mensagens ({getMessagesDisplay()}). 
+              <button 
+                onClick={() => setShowUpgradeModal(true)}
+                className="ml-1 text-brand-green hover:underline font-medium"
+              >
+                Considere fazer upgrade do seu plano
+              </button>
+            </AlertDescription>
+          </Alert>
+        )}
+
         {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
           {[
@@ -479,6 +509,7 @@ const Dashboard = () => {
                   key={agent.id}
                   agent={agent}
                   onUpdate={fetchAgents}
+                  subscription={subscription}
                 />
               ))}
             </div>
