@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Wifi, WifiOff } from 'lucide-react';
+import { RefreshCw, Wifi, WifiOff, Server } from 'lucide-react';
 import { ZapAgentService } from '@/services/zapAgentService';
 
 const ApiStatusIndicator = () => {
@@ -37,11 +37,11 @@ const ApiStatusIndicator = () => {
         {isOnline === null ? (
           <Badge variant="secondary" className="flex items-center space-x-1">
             <RefreshCw className="h-3 w-3 animate-spin" />
-            <span>Verificando...</span>
+            <span>Verificando API...</span>
           </Badge>
         ) : isOnline ? (
           <Badge variant="default" className="bg-green-100 text-green-700 flex items-center space-x-1">
-            <Wifi className="h-3 w-3" />
+            <Server className="h-3 w-3" />
             <span>API Online</span>
           </Badge>
         ) : (
@@ -58,6 +58,7 @@ const ApiStatusIndicator = () => {
         onClick={checkApiStatus}
         disabled={loading}
         className="h-6 w-6 p-0"
+        title="Verificar status da API"
       >
         <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
       </Button>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bot, Settings, MessageCircle, Phone, Users, MoreVertical, Edit, History } from 'lucide-react';
+import { Bot, Settings, MessageCircle, Phone, Users, MoreVertical, Edit, History, AlertTriangle } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,6 +43,7 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [whatsappStatus, setWhatsappStatus] = useState<'connected' | 'pending'>('pending');
+  const [agentStats, setAgentStats] = useState<any>(null);
   const { toast } = useToast();
 
   const getMessagesLimitByPlan = (planType: string) => {
@@ -52,6 +53,15 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
       case 'ultra': return 999999;
       case 'unlimited': return 999999;
       default: return 30;
+    }
+  };
+
+  const loadAgentStats = async () => {
+    try {
+      const statusData = await ZapAgentService.getAgentStatus(agent.phone_number);
+      setAgentStats(statusData);
+    } catch (error) {
+      console.error('❌ Erro ao carregar estatísticas do agente:', error);
     }
   };
 
@@ -130,7 +140,7 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
     // Verificar limite de mensagens
     const planType = subscription?.plan_type || 'free';
     const limit = getMessagesLimitByPlan(planType);
-    const used = agent.messages_used || 0;
+    const used = agentStats?.mensagens_enviadas || 0;
 
     if (!subscription?.is_unlimited && used >= limit) {
       toast({
@@ -145,10 +155,9 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
     try {
       console.log('🧪 Enviando mensagem de teste para agente:', agent.phone_number);
       
-      const prompt = agent.prompt || `Você é um assistente virtual para ${agent.business_type}. Seja prestativo e educado.`;
+      const prompt = agent.personality_prompt || `Você é um assistente virtual para ${agent.business_type}. Seja prestativo e educado.`;
       const testMessage = 'Olá! Esta é uma mensagem de teste do sistema.';
       
-      // Usar o novo serviço
       const response = await ZapAgentService.sendMessage(
         agent.phone_number,
         testMessage,
@@ -163,7 +172,8 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
         variant: "default"
       });
 
-      // Recarregar dados para atualizar contador
+      // Recarregar estatísticas e dados do agente
+      await loadAgentStats();
       onUpdate();
 
     } catch (error) {
@@ -196,9 +206,10 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
     return icons[type] || '📋';
   };
 
-  const messagesUsed = agent.messages_used || 0;
+  const messagesUsed = agentStats?.mensagens_enviadas || 0;
   const planType = subscription?.plan_type || 'free';
   const messagesLimit = subscription?.is_unlimited ? '∞' : getMessagesLimitByPlan(planType);
+  const isLimitReached = !subscription?.is_unlimited && messagesUsed >= getMessagesLimitByPlan(planType);
 
   return (
     <>
@@ -225,6 +236,13 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
                 {agent.is_active ? "Ativo" : "Inativo"}
               </Badge>
               
+              {isLimitReached && (
+                <Badge variant="destructive" className="text-xs">
+                  <AlertTriangle className="h-3 w-3 mr-1" />
+                  Limite
+                </Badge>
+              )}
+              
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-100">
@@ -240,7 +258,10 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
                     Configurar Bot
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    onClick={() => setShowHistory(!showHistory)}
+                    onClick={() => {
+                      setShowHistory(!showHistory);
+                      if (!showHistory) loadAgentStats();
+                    }}
                     className="cursor-pointer hover:bg-gray-50"
                   >
                     <History className="h-4 w-4 mr-2" />
@@ -286,15 +307,25 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
               onStatusChange={setWhatsappStatus}
             />
 
-            <div className="flex items-center justify-between text-sm bg-blue-50 p-2 rounded-lg">
-              <div className="flex items-center text-blue-700">
+            <div className={`flex items-center justify-between text-sm p-2 rounded-lg ${
+              isLimitReached ? 'bg-red-50' : 'bg-blue-50'
+            }`}>
+              <div className={`flex items-center ${isLimitReached ? 'text-red-700' : 'text-blue-700'}`}>
                 <MessageCircle className="h-4 w-4 mr-2" />
                 <span>Mensagens</span>
               </div>
-              <span className="font-semibold text-blue-800">
+              <span className={`font-semibold ${isLimitReached ? 'text-red-800' : 'text-blue-800'}`}>
                 {messagesUsed}/{messagesLimit}
               </span>
             </div>
+
+            {isLimitReached && (
+              <div className="p-2 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-xs text-red-700">
+                  ⚠️ Limite de mensagens atingido. O agente não pode enviar mais respostas.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-2 pt-2">
@@ -302,7 +333,7 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
               size="sm"
               variant="outline"
               onClick={handleSendTestMessage}
-              disabled={isLoading || whatsappStatus !== 'connected'}
+              disabled={isLoading || whatsappStatus !== 'connected' || isLimitReached}
               className="flex-1 hover:bg-brand-green hover:text-white hover:border-brand-green transition-all duration-200"
             >
               <MessageCircle className="h-4 w-4 mr-2" />
@@ -327,6 +358,7 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
             <AgentHistory 
               phoneNumber={agent.phone_number}
               agentName={agent.name}
+              subscription={subscription}
             />
           </CardContent>
         )}
