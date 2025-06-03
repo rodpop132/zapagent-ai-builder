@@ -18,110 +18,129 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    console.log('🔄 Initializing auth state...');
+    console.log('🚀 AUTH PROVIDER: Starting initialization');
     
-    // Configurar listener primeiro
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        console.log('🔔 Auth event:', event, currentSession ? 'authenticated' : 'not authenticated');
-        
-        setSession(currentSession);
-        setUser(currentSession?.user || null);
-        setLoading(false);
-      }
-    );
-
-    // Depois verificar sessão inicial
+    // Get initial session first
     const getInitialSession = async () => {
       try {
+        console.log('🔍 AUTH: Getting initial session...');
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('❌ Error getting initial session:', error);
-          setLoading(false);
-          return;
+          console.error('❌ AUTH: Error getting initial session:', error);
+        } else {
+          console.log('📋 AUTH: Initial session found:', !!initialSession);
+          if (initialSession) {
+            setSession(initialSession);
+            setUser(initialSession.user);
+            console.log('✅ AUTH: User set from initial session:', initialSession.user.email);
+          }
         }
         
-        console.log('🎯 Initial session:', initialSession ? 'authenticated' : 'not authenticated');
-        setSession(initialSession);
-        setUser(initialSession?.user || null);
         setLoading(false);
+        setInitialized(true);
       } catch (error) {
-        console.error('💥 Failed to get initial session:', error);
+        console.error('💥 AUTH: Failed to get initial session:', error);
         setLoading(false);
+        setInitialized(true);
       }
     };
 
     getInitialSession();
 
+    // Set up auth state listener after getting initial session
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, currentSession) => {
+        console.log('🔔 AUTH EVENT:', event, 'Session exists:', !!currentSession);
+        
+        // Only update state if we're initialized to avoid race conditions
+        if (initialized) {
+          if (event === 'SIGNED_IN' && currentSession) {
+            console.log('✅ AUTH: User signed in:', currentSession.user.email);
+            setSession(currentSession);
+            setUser(currentSession.user);
+          } else if (event === 'SIGNED_OUT') {
+            console.log('🚪 AUTH: User signed out');
+            setSession(null);
+            setUser(null);
+          } else if (event === 'TOKEN_REFRESHED' && currentSession) {
+            console.log('🔄 AUTH: Token refreshed, maintaining session');
+            // Don't change state on token refresh to avoid logout
+            setSession(currentSession);
+            setUser(currentSession.user);
+          }
+        }
+      }
+    );
+
     return () => {
-      console.log('🧹 Cleaning up auth subscription');
+      console.log('🧹 AUTH: Cleaning up subscription');
       subscription.unsubscribe();
     };
-  }, []);
+  }, [initialized]);
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      console.log('📝 Attempting sign up for:', email);
+      console.log('📝 AUTH: Attempting sign up for:', email);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: fullName,
-          },
-          emailRedirectTo: `${window.location.origin}/dashboard`
+          }
         },
       });
       
       if (error) {
-        console.error('❌ Sign up error:', error);
+        console.error('❌ AUTH: Sign up error:', error);
       } else {
-        console.log('✅ Sign up successful');
+        console.log('✅ AUTH: Sign up successful');
       }
       
       return { data, error };
     } catch (error) {
-      console.error('💥 Sign up exception:', error);
+      console.error('💥 AUTH: Sign up exception:', error);
       return { data: null, error };
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('🔑 Attempting sign in for:', email);
+      console.log('🔑 AUTH: Attempting sign in for:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) {
-        console.error('❌ Sign in error:', error);
+        console.error('❌ AUTH: Sign in error:', error);
       } else {
-        console.log('✅ Sign in successful');
+        console.log('✅ AUTH: Sign in successful for:', email);
       }
       
       return { data, error };
     } catch (error) {
-      console.error('💥 Sign in exception:', error);
+      console.error('💥 AUTH: Sign in exception:', error);
       return { data: null, error };
     }
   };
 
   const signOut = async () => {
     try {
-      console.log('🚪 Attempting sign out...');
+      console.log('🚪 AUTH: Manual sign out requested');
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        console.error('❌ Sign out error:', error);
+        console.error('❌ AUTH: Sign out error:', error);
       } else {
-        console.log('✅ Sign out successful');
+        console.log('✅ AUTH: Manual sign out successful');
       }
     } catch (error) {
-      console.error('💥 Sign out exception:', error);
+      console.error('💥 AUTH: Sign out exception:', error);
     }
   };
 

@@ -41,6 +41,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (user) {
+      console.log('📊 DASHBOARD: Loading data for user:', user.email);
       fetchAgents();
       fetchSubscription();
     }
@@ -48,6 +49,7 @@ const Dashboard = () => {
 
   const fetchAgents = async () => {
     try {
+      console.log('🤖 DASHBOARD: Fetching agents...');
       const { data, error } = await (supabase as any)
         .from('agents')
         .select('*')
@@ -55,9 +57,10 @@ const Dashboard = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      console.log('✅ DASHBOARD: Agents loaded:', data?.length || 0);
       setAgents(data || []);
     } catch (error) {
-      console.error('Error fetching agents:', error);
+      console.error('❌ DASHBOARD: Error fetching agents:', error);
       toast({
         title: "Erro",
         description: "Não foi possível carregar os agentes",
@@ -70,6 +73,7 @@ const Dashboard = () => {
 
   const fetchSubscription = async () => {
     try {
+      console.log('💳 DASHBOARD: Fetching subscription (local only)...');
       const { data, error } = await (supabase as any)
         .from('subscriptions')
         .select('*')
@@ -77,10 +81,14 @@ const Dashboard = () => {
         .eq('status', 'active')
         .single();
 
-      if (error && error.code !== 'PGRST116') throw error;
-      setSubscription(data);
+      if (error && error.code !== 'PGRST116') {
+        console.error('❌ DASHBOARD: Error fetching subscription:', error);
+      } else {
+        console.log('✅ DASHBOARD: Subscription loaded:', data?.plan_type || 'none');
+        setSubscription(data);
+      }
     } catch (error) {
-      console.error('Error fetching subscription:', error);
+      console.error('❌ DASHBOARD: Subscription fetch error:', error);
     }
   };
 
