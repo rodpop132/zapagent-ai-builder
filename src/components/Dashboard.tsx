@@ -86,8 +86,6 @@ const Dashboard = () => {
                 {newMessageCount.toLocaleString()}
               </div>
               <div className="text-brand-gray text-sm md:text-base">Mensagens enviadas</div>
-              {/* Pulse indicator for new messages */}
-              <div className="absolute top-2 right-2 w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
             </div>
             <div className="bg-blue-50 rounded-lg p-4 md:p-6 text-center hover:bg-blue-100 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-bottom-6 duration-500 delay-700 group">
               <div className="text-2xl md:text-3xl font-bold text-blue-600 mb-2 group-hover:scale-110 transition-transform duration-300">{responseRate}%</div>
@@ -111,7 +109,7 @@ const Dashboard = () => {
                 Conversas recentes
               </h3>
               <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                 <span className="text-xs text-brand-gray">Ao vivo</span>
               </div>
             </div>
@@ -124,7 +122,7 @@ const Dashboard = () => {
                   <div 
                     key={`${conversation.name}-${index}-${currentConversationIndex}`}
                     className={`flex items-center justify-between bg-white p-3 rounded-lg transition-all duration-500 cursor-pointer group relative ${
-                      isActive ? 'ring-2 ring-brand-green shadow-lg scale-102 animate-pulse' : 'hover:shadow-md hover:scale-102'
+                      isActive ? 'ring-2 ring-brand-green shadow-lg scale-102' : 'hover:shadow-md hover:scale-102'
                     } ${isNewMessage ? 'border-l-4 border-green-500' : ''}`}
                   >
                     <div className="flex items-center space-x-3">
@@ -135,9 +133,7 @@ const Dashboard = () => {
                           {conversation.name.charAt(0)}
                         </span>
                         {/* Status indicator */}
-                        <div className={`absolute -bottom-1 -right-1 w-3 h-3 ${getStatusColor(conversation.status)} rounded-full border-2 border-white ${
-                          conversation.status === 'online' ? 'animate-pulse' : ''
-                        }`}></div>
+                        <div className={`absolute -bottom-1 -right-1 w-3 h-3 ${getStatusColor(conversation.status)} rounded-full border-2 border-white`}></div>
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className={`font-semibold text-brand-dark text-sm md:text-base group-hover:text-brand-green transition-colors duration-300 truncate ${

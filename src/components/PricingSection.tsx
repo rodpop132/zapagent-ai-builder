@@ -70,7 +70,7 @@ const PricingSection = () => {
   const plans = [
     {
       name: "Grátis",
-      price: "€0",
+      price: "R$0",
       period: "para sempre",
       description: "Perfeito para testar e começar",
       features: [
@@ -86,8 +86,8 @@ const PricingSection = () => {
     },
     {
       name: "Pro",
-      originalPrice: "€10",
-      price: "€49",
+      originalPrice: "R$59",
+      price: "R$149",
       period: "/mês",
       description: "Ideal para pequenos negócios",
       features: [
@@ -105,8 +105,8 @@ const PricingSection = () => {
     },
     {
       name: "Ultra",
-      originalPrice: "€250",
-      price: "€99",
+      originalPrice: "R$599",
+      price: "R$299",
       period: "/mês", 
       description: "Para negócios em crescimento",
       features: [
