@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -19,72 +20,94 @@ serve(async (req) => {
   );
 
   try {
-    const authHeader = req.headers.get("Authorization")!;
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData } = await supabaseClient.auth.getUser(token);
-    const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated");
-
-    console.log(`🔍 Verificando assinatura para usuário: ${user.email}`);
-
-    // Verificar se a chave do Stripe existe
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) {
-      console.error("❌ STRIPE_SECRET_KEY não encontrada!");
-      throw new Error("STRIPE_SECRET_KEY não configurada");
+    let user = null;
+    
+    // Tentar obter usuário autenticado (pode não existir se for checkout de convidado)
+    const authHeader = req.headers.get("Authorization");
+    if (authHeader) {
+      try {
+        const token = authHeader.replace("Bearer ", "");
+        const { data: userData } = await supabaseClient.auth.getUser(token);
+        user = userData.user;
+      } catch (error) {
+        console.log('Sem usuário autenticado, verificando pagamentos de convidado');
+      }
     }
-    console.log(`✅ Stripe key encontrada: ${stripeKey.substring(0, 10)}...`);
 
-    const stripe = new Stripe(stripeKey, {
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
     });
 
-    // Buscar customer no Stripe
-    console.log(`🔎 Buscando customer no Stripe para: ${user.email}`);
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    
-    if (customers.data.length === 0) {
-      console.log("❌ Nenhum customer encontrado no Stripe, mantendo plano gratuito");
+    let planType = 'free';
+    let messagesLimit = 30;
+    let isUnlimited = false;
+    let customerEmail = user?.email;
+
+    // Se não há usuário autenticado, verificar últimos pagamentos
+    if (!user) {
+      console.log('Verificando últimos checkouts para identificar email do pagamento...');
       
-      // Primeiro, verificar se já existe um registro
-      const { data: existingSubscription } = await supabaseClient
-        .from("subscriptions")
-        .select("id")
-        .eq("user_id", user.id)
-        .single();
-
-      if (existingSubscription) {
-        // Atualizar registro existente
-        await supabaseClient
-          .from("subscriptions")
-          .update({
-            plan_type: 'free',
-            status: 'active',
-            messages_used: 0,
-            messages_limit: 30,
-            is_unlimited: false,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("user_id", user.id);
-      } else {
-        // Inserir novo registro
-        await supabaseClient
-          .from("subscriptions")
-          .insert({
-            user_id: user.id,
-            plan_type: 'free',
-            status: 'active',
-            messages_used: 0,
-            messages_limit: 30,
-            is_unlimited: false,
-            updated_at: new Date().toISOString(),
-          });
+      // Buscar sessões de checkout recentes (últimas 24 horas)
+      const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+      
+      try {
+        const sessions = await stripe.checkout.sessions.list({
+          limit: 100,
+          created: { gte: twentyFourHoursAgo }
+        });
+        
+        // Encontrar a sessão mais recente com pagamento bem-sucedido
+        const recentSession = sessions.data.find(session => 
+          session.payment_status === 'paid' && 
+          session.customer_email &&
+          session.mode === 'subscription'
+        );
+        
+        if (recentSession) {
+          customerEmail = recentSession.customer_email;
+          console.log('Email encontrado em checkout recente:', customerEmail);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar sessões de checkout:', error);
       }
+    }
 
+    if (!customerEmail) {
+      console.log('Nenhum email encontrado para verificação');
       return new Response(JSON.stringify({ 
         subscribed: false, 
         plan_type: 'free',
-        debug: 'No Stripe customer found'
+        message: 'Nenhum email encontrado'
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
+    console.log(`Verificando assinatura para: ${customerEmail}`);
+
+    // Buscar customer no Stripe
+    const customers = await stripe.customers.list({ email: customerEmail, limit: 1 });
+    
+    if (customers.data.length === 0) {
+      console.log('Nenhum customer encontrado no Stripe');
+      
+      // Garantir que existe registro na tabela subscriptions
+      await supabaseClient
+        .from("subscriptions")
+        .upsert({
+          user_id: user?.id || null,
+          plan_type: 'free',
+          status: 'active',
+          messages_used: 0,
+          messages_limit: 30,
+          is_unlimited: false,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: user?.id ? 'user_id' : undefined });
+
+      return new Response(JSON.stringify({ 
+        subscribed: false, 
+        plan_type: 'free'
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,
@@ -92,120 +115,88 @@ serve(async (req) => {
     }
 
     const customerId = customers.data[0].id;
-    console.log(`✅ Customer encontrado: ${customerId}`);
+    console.log(`Customer encontrado: ${customerId}`);
 
     // Buscar assinaturas ativas
-    console.log(`🔎 Buscando assinaturas ativas para customer: ${customerId}`);
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: "active",
       limit: 10,
     });
 
-    console.log(`📊 Encontradas ${subscriptions.data.length} assinaturas ativas`);
-    
-    // Log detalhado das assinaturas
-    subscriptions.data.forEach((sub, index) => {
-      console.log(`📋 Assinatura ${index + 1}:`);
-      console.log(`   - ID: ${sub.id}`);
-      console.log(`   - Status: ${sub.status}`);
-      console.log(`   - Price ID: ${sub.items.data[0].price.id}`);
-      console.log(`   - Valor: ${sub.items.data[0].price.unit_amount}`);
-      console.log(`   - Período atual: ${new Date(sub.current_period_start * 1000).toISOString()} até ${new Date(sub.current_period_end * 1000).toISOString()}`);
-    });
-
-    let planType = 'free';
-    let messagesLimit = 30;
-    let isUnlimited = false;
+    console.log(`Encontradas ${subscriptions.data.length} assinaturas ativas`);
 
     if (subscriptions.data.length > 0) {
       const subscription = subscriptions.data[0];
       const priceId = subscription.items.data[0].price.id;
       
-      console.log(`💰 Price ID da assinatura ativa: ${priceId}`);
+      console.log(`Price ID da assinatura ativa: ${priceId}`);
       
-      // Mapear price ID para plano com limite correto
+      // Mapear price ID para plano
       if (priceId === "price_1RVbYyPpmCy5gtzzPUjXC12Z") {
         planType = 'pro';
-        messagesLimit = 10000; // Corrigido de 1000 para 10000
-        console.log("🎯 Plano identificado: Pro (10.000 mensagens)");
+        messagesLimit = 10000;
       } else if (priceId === "price_1RVfjlPpmCy5gtzzfOMaqUJO") {
         planType = 'ultra';
         messagesLimit = 999999;
         isUnlimited = true;
-        console.log("🎯 Plano identificado: Ultra");
-      } else {
-        console.log(`⚠️ Price ID desconhecido: ${priceId}`);
       }
-    } else {
-      console.log("❌ Nenhuma assinatura ativa encontrada");
     }
 
-    // Atualizar no Supabase
-    console.log(`💾 Atualizando Supabase: ${planType}, limite: ${messagesLimit}, ilimitado: ${isUnlimited}`);
-    
-    // Primeiro, verificar se já existe um registro
-    const { data: existingSubscription } = await supabaseClient
-      .from("subscriptions")
-      .select("id")
-      .eq("user_id", user.id)
-      .single();
+    console.log(`Atualizando banco: ${planType}, limite: ${messagesLimit}`);
 
-    let upsertError;
-    if (existingSubscription) {
-      // Atualizar registro existente
-      const { error } = await supabaseClient
+    // Atualizar ou criar registro na tabela subscriptions
+    if (user?.id) {
+      // Usuário autenticado - atualizar por user_id
+      await supabaseClient
         .from("subscriptions")
-        .update({
-          plan_type: planType,
-          status: 'active',
-          messages_limit: messagesLimit,
-          is_unlimited: isUnlimited,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", user.id);
-      upsertError = error;
-    } else {
-      // Inserir novo registro
-      const { error } = await supabaseClient
-        .from("subscriptions")
-        .insert({
+        .upsert({
           user_id: user.id,
           plan_type: planType,
           status: 'active',
           messages_limit: messagesLimit,
           is_unlimited: isUnlimited,
           updated_at: new Date().toISOString(),
-        });
-      upsertError = error;
+        }, { onConflict: 'user_id' });
+    } else {
+      // Checkout de convidado - criar registro temporário que será associado quando o usuário se registrar
+      console.log('Salvando dados de assinatura para futuro registro');
+      
+      // Verificar se já existe um usuário com este email
+      const { data: existingUser } = await supabaseClient.auth.admin.listUsers();
+      const userWithEmail = existingUser.users.find(u => u.email === customerEmail);
+      
+      if (userWithEmail) {
+        // Usuário já existe, atualizar sua assinatura
+        await supabaseClient
+          .from("subscriptions")
+          .upsert({
+            user_id: userWithEmail.id,
+            plan_type: planType,
+            status: 'active',
+            messages_limit: messagesLimit,
+            is_unlimited: isUnlimited,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'user_id' });
+      }
     }
 
-    if (upsertError) {
-      console.error("❌ Erro ao atualizar subscription:", upsertError);
-      throw upsertError;
-    }
-
-    console.log(`✅ Subscription atualizada com sucesso para ${user.email}: ${planType}`);
+    console.log(`Verificação concluída para ${customerEmail}: ${planType}`);
 
     return new Response(JSON.stringify({
       subscribed: planType !== 'free',
       plan_type: planType,
       messages_limit: messagesLimit,
       is_unlimited: isUnlimited,
-      debug: {
-        stripe_customer_id: customerId,
-        active_subscriptions: subscriptions.data.length,
-        price_ids: subscriptions.data.map(s => s.items.data[0].price.id)
-      }
+      customer_email: customerEmail
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
-    console.error("💥 Error verifying subscription:", error);
+    console.error("Erro ao verificar assinatura:", error);
     return new Response(JSON.stringify({ 
-      error: error.message,
-      debug: 'Check function logs for details'
+      error: error.message
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,

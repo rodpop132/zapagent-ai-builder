@@ -20,129 +20,77 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('🚀 AUTH PROVIDER: Starting initialization');
-    
     let mounted = true;
-    
-    // Get initial session
-    const getInitialSession = async () => {
+
+    // Função para buscar sessão inicial
+    const initializeAuth = async () => {
       try {
-        console.log('🔍 AUTH: Getting initial session...');
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
         
         if (!mounted) return;
         
         if (error) {
-          console.error('❌ AUTH: Error getting initial session:', error);
-        } else {
-          console.log('📋 AUTH: Initial session found:', !!initialSession);
-          if (initialSession) {
-            setSession(initialSession);
-            setUser(initialSession.user);
-            console.log('✅ AUTH: User set from initial session:', initialSession.user.email);
-          }
+          console.error('Erro ao obter sessão:', error);
+        } else if (session) {
+          setSession(session);
+          setUser(session.user);
         }
         
         setLoading(false);
       } catch (error) {
-        console.error('💥 AUTH: Failed to get initial session:', error);
-        if (mounted) {
-          setLoading(false);
-        }
+        console.error('Erro na inicialização:', error);
+        if (mounted) setLoading(false);
       }
     };
 
-    getInitialSession();
+    initializeAuth();
 
-    // Set up auth state listener
+    // Listener para mudanças de estado
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, session) => {
         if (!mounted) return;
-        
-        console.log('🔔 AUTH EVENT:', event, 'Session exists:', !!currentSession);
-        
-        if (event === 'SIGNED_IN' && currentSession) {
-          console.log('✅ AUTH: User signed in:', currentSession.user.email);
-          setSession(currentSession);
-          setUser(currentSession.user);
+
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          setSession(session);
+          setUser(session?.user ?? null);
         } else if (event === 'SIGNED_OUT') {
-          console.log('🚪 AUTH: User signed out');
           setSession(null);
           setUser(null);
-        } else if (event === 'TOKEN_REFRESHED' && currentSession) {
-          console.log('🔄 AUTH: Token refreshed');
-          setSession(currentSession);
-          setUser(currentSession.user);
         }
       }
     );
 
     return () => {
       mounted = false;
-      console.log('🧹 AUTH: Cleaning up subscription');
       subscription.unsubscribe();
     };
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    try {
-      console.log('📝 AUTH: Attempting sign up for:', email);
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          }
-        },
-      });
-      
-      if (error) {
-        console.error('❌ AUTH: Sign up error:', error);
-      } else {
-        console.log('✅ AUTH: Sign up successful');
-      }
-      
-      return { data, error };
-    } catch (error) {
-      console.error('💥 AUTH: Sign up exception:', error);
-      return { data: null, error };
-    }
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+        }
+      },
+    });
+    return { data, error };
   };
 
   const signIn = async (email: string, password: string) => {
-    try {
-      console.log('🔑 AUTH: Attempting sign in for:', email);
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) {
-        console.error('❌ AUTH: Sign in error:', error);
-      } else {
-        console.log('✅ AUTH: Sign in successful for:', email);
-      }
-      
-      return { data, error };
-    } catch (error) {
-      console.error('💥 AUTH: Sign in exception:', error);
-      return { data: null, error };
-    }
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    return { data, error };
   };
 
   const signOut = async () => {
-    try {
-      console.log('🚪 AUTH: Manual sign out requested');
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error('❌ AUTH: Sign out error:', error);
-      } else {
-        console.log('✅ AUTH: Manual sign out successful');
-      }
-    } catch (error) {
-      console.error('💥 AUTH: Sign out exception:', error);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Erro no logout:', error);
     }
   };
 

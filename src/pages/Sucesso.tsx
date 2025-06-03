@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,24 +12,17 @@ const Sucesso = () => {
   const [loading, setLoading] = useState(true);
   const [countdown, setCountdown] = useState(5);
   const [verified, setVerified] = useState(false);
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
 
   useEffect(() => {
     const verifyPayment = async () => {
-      if (!user) {
-        navigate('/auth');
-        return;
-      }
-
       console.log('Iniciando verificação de pagamento...');
       console.log('Session ID:', sessionId);
-      console.log('User:', user.email);
 
       try {
-        // Aguardar um pouco mais para o Stripe processar
+        // Aguardar processamento do Stripe
         await new Promise(resolve => setTimeout(resolve, 3000));
         
         console.log('Verificando assinatura...');
@@ -44,7 +38,7 @@ const Sucesso = () => {
           if (data?.subscribed) {
             toast.success(`Pagamento confirmado! Plano ${data.plan_type} ativado com sucesso.`);
           } else {
-            // Se ainda não estiver ativo, tentar novamente após mais alguns segundos
+            // Tentar novamente após alguns segundos
             setTimeout(async () => {
               console.log('Tentando verificar novamente...');
               const { data: retryData } = await supabase.functions.invoke('verify-subscription');
@@ -62,8 +56,9 @@ const Sucesso = () => {
       }
     };
 
+    // Sempre verificar pagamento, mesmo sem usuário logado
     verifyPayment();
-  }, [user, navigate, sessionId]);
+  }, [sessionId]);
 
   // Countdown para redirecionamento automático
   useEffect(() => {

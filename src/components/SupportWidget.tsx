@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { MessageCircle, X, Send, Ticket } from 'lucide-react';
+import { X, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -22,7 +22,7 @@ const SupportWidget = () => {
 
     setLoading(true);
     try {
-      // Criar ticket sem verificar user_permissions para evitar recursão
+      // Criar ticket
       const { data: ticket, error: ticketError } = await supabase
         .from('tickets')
         .insert({
@@ -36,7 +36,7 @@ const SupportWidget = () => {
         .single();
 
       if (ticketError) {
-        console.error('Erro detalhado ao criar ticket:', ticketError);
+        console.error('Erro ao criar ticket:', ticketError);
         throw ticketError;
       }
 
@@ -52,7 +52,7 @@ const SupportWidget = () => {
         });
 
       if (messageError) {
-        console.error('Erro detalhado ao criar mensagem:', messageError);
+        console.error('Erro ao criar mensagem:', messageError);
         throw messageError;
       }
 
@@ -72,24 +72,28 @@ const SupportWidget = () => {
 
   return (
     <>
-      {/* Support Button - Otimizado para mobile */}
+      {/* Support Button */}
       <div className="fixed bottom-4 right-4 z-50">
         <Button
           onClick={() => setIsOpen(true)}
-          className="h-14 w-14 md:h-16 md:w-16 rounded-full bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden animate-float"
+          className="h-14 w-14 md:h-16 md:w-16 rounded-full bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 shadow-lg hover:shadow-xl transition-all duration-300 group relative overflow-hidden"
           size="icon"
         >
-          {/* Logo do SaaS */}
+          {/* Logo customizado */}
           <div className="relative z-10 flex flex-col items-center justify-center">
             <div className="w-6 h-6 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center mb-0.5 md:mb-1 group-hover:scale-110 transition-transform duration-300">
-              <Ticket className="w-3 h-3 md:w-5 md:h-5 text-green-600" />
+              <img 
+                src="/lovable-uploads/39b28839-0adb-4c96-be58-c66537953b63.png" 
+                alt="Support" 
+                className="w-4 h-4 md:w-6 md:h-6 object-contain"
+              />
             </div>
             <span className="text-[8px] md:text-[10px] text-white font-medium opacity-90">
               Suporte
             </span>
           </div>
           
-          {/* Efeito de hover animado */}
+          {/* Efeito de hover */}
           <div className="absolute inset-0 bg-gradient-to-br from-green-400 to-green-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           
           {/* Pulso animado */}
@@ -97,14 +101,18 @@ const SupportWidget = () => {
         </Button>
       </div>
 
-      {/* Chat Modal - Otimizado para mobile */}
+      {/* Chat Modal */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center p-0 md:p-4 animate-fade-in">
-          <Card className="w-full max-w-md max-h-[90vh] md:max-h-[80vh] overflow-hidden animate-scale-in rounded-t-2xl md:rounded-2xl">
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center p-0 md:p-4">
+          <Card className="w-full max-w-md max-h-[90vh] md:max-h-[80vh] overflow-hidden rounded-t-2xl md:rounded-2xl">
             <CardHeader className="flex flex-row items-center justify-between bg-gradient-to-r from-green-600 to-green-700 text-white px-4 py-3 md:px-6 md:py-4">
               <div className="flex items-center gap-2 md:gap-3">
-                <div className="w-6 h-6 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center animate-pulse">
-                  <Ticket className="w-3 h-3 md:w-5 md:h-5 text-green-600" />
+                <div className="w-6 h-6 md:w-8 md:h-8 bg-white rounded-full flex items-center justify-center">
+                  <img 
+                    src="/lovable-uploads/39b28839-0adb-4c96-be58-c66537953b63.png" 
+                    alt="Support" 
+                    className="w-4 h-4 md:w-6 md:h-6 object-contain"
+                  />
                 </div>
                 <CardTitle className="text-base md:text-lg">Suporte ZapAgent</CardTitle>
               </div>
@@ -118,14 +126,14 @@ const SupportWidget = () => {
               </Button>
             </CardHeader>
             <CardContent className="p-4 md:p-6 overflow-y-auto">
-              <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200 animate-slide-in-top">
+              <div className="mb-4 p-3 bg-green-50 rounded-lg border border-green-200">
                 <p className="text-sm text-green-700">
                   👋 Olá! Como podemos te ajudar hoje? Nossa equipe responde em até 2 horas.
                 </p>
               </div>
               
               <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
-                <div className="animate-slide-in-left delay-200">
+                <div>
                   <label className="block text-sm font-medium mb-1 md:mb-2">
                     Assunto
                   </label>
@@ -134,10 +142,10 @@ const SupportWidget = () => {
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder="Descreva brevemente sua dúvida"
                     required
-                    className="focus:ring-green-500 focus:border-green-500 text-sm md:text-base transition-all duration-300"
+                    className="focus:ring-green-500 focus:border-green-500 text-sm md:text-base"
                   />
                 </div>
-                <div className="animate-slide-in-right delay-300">
+                <div>
                   <label className="block text-sm font-medium mb-1 md:mb-2">
                     Mensagem
                   </label>
@@ -147,22 +155,22 @@ const SupportWidget = () => {
                     placeholder="Descreva sua dúvida em detalhes..."
                     rows={3}
                     required
-                    className="focus:ring-green-500 focus:border-green-500 text-sm md:text-base resize-none transition-all duration-300"
+                    className="focus:ring-green-500 focus:border-green-500 text-sm md:text-base resize-none"
                   />
                 </div>
-                <div className="flex gap-2 pt-2 animate-slide-in-bottom delay-400">
+                <div className="flex gap-2 pt-2">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setIsOpen(false)}
-                    className="flex-1 text-sm md:text-base hover:scale-105 transition-transform duration-200"
+                    className="flex-1 text-sm md:text-base"
                   >
                     Cancelar
                   </Button>
                   <Button
                     type="submit"
                     disabled={loading || !subject.trim() || !message.trim()}
-                    className="flex-1 bg-green-600 hover:bg-green-700 text-sm md:text-base hover:scale-105 transition-all duration-200"
+                    className="flex-1 bg-green-600 hover:bg-green-700 text-sm md:text-base"
                   >
                     {loading ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
