@@ -68,9 +68,14 @@ const Dashboard = () => {
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ DASHBOARD: Erro ao buscar agentes:', error);
+        throw error;
+      }
+      
       console.log('✅ DASHBOARD: Agentes carregados:', data?.length || 0);
       setAgents(data || []);
+      return data || [];
     } catch (error) {
       console.error('❌ DASHBOARD: Erro ao buscar agentes:', error);
       toast({
@@ -78,6 +83,7 @@ const Dashboard = () => {
         description: "Não foi possível carregar os agentes",
         variant: "destructive"
       });
+      return [];
     }
   };
 
@@ -93,7 +99,12 @@ const Dashboard = () => {
 
       if (error && error.code !== 'PGRST116') {
         console.error('❌ DASHBOARD: Erro ao buscar assinatura:', error);
-        // Se não encontrar assinatura, criar uma padrão gratuita
+        throw error;
+      }
+
+      if (error && error.code === 'PGRST116') {
+        // Não encontrou assinatura, criar uma padrão gratuita
+        console.log('📝 DASHBOARD: Criando assinatura gratuita padrão...');
         const { data: newSub, error: createError } = await supabase
           .from('subscriptions')
           .insert({
@@ -109,6 +120,16 @@ const Dashboard = () => {
         
         if (createError) {
           console.error('❌ DASHBOARD: Erro ao criar assinatura:', createError);
+          // Se falhar ao criar, usar valores padrão
+          const defaultSub = {
+            plan_type: 'free',
+            status: 'active',
+            messages_used: 0,
+            messages_limit: 30,
+            is_unlimited: false
+          };
+          setSubscription(defaultSub);
+          console.log('⚠️ DASHBOARD: Usando assinatura padrão offline');
         } else {
           console.log('✅ DASHBOARD: Assinatura gratuita criada');
           setSubscription(newSub);
@@ -119,6 +140,16 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error('❌ DASHBOARD: Erro na busca de assinatura:', error);
+      // Usar valores padrão em caso de erro
+      const defaultSub = {
+        plan_type: 'free',
+        status: 'active',
+        messages_used: 0,
+        messages_limit: 30,
+        is_unlimited: false
+      };
+      setSubscription(defaultSub);
+      console.log('⚠️ DASHBOARD: Usando assinatura padrão devido a erro');
     }
   };
 
@@ -133,24 +164,51 @@ const Dashboard = () => {
   };
 
   const canCreateAgent = () => {
-    const planType = subscription?.plan_type || 'free';
+    // Aguardar carregamento dos dados
+    if (loading || !subscription) {
+      console.log('⏳ VERIFICAÇÃO LIMITE: Ainda carregando dados...');
+      return false;
+    }
+
+    const planType = subscription.plan_type || 'free';
     const currentAgentCount = agents.length;
     const agentLimit = getAgentLimitByPlan(planType);
+    
+    const canCreate = currentAgentCount < agentLimit;
     
     console.log('🔍 VERIFICAÇÃO LIMITE:', {
       planType,
       currentAgentCount,
       agentLimit,
-      canCreate: currentAgentCount < agentLimit
+      canCreate,
+      subscriptionLoaded: !!subscription,
+      agentsLoaded: agents !== null
     });
     
-    return currentAgentCount < agentLimit;
+    return canCreate;
   };
 
   const handleCreateAgent = () => {
+    console.log('🎯 Tentativa de criar agente...');
+    
+    if (loading) {
+      toast({
+        title: "Aguarde",
+        description: "Carregando informações do usuário...",
+        variant: "default"
+      });
+      return;
+    }
+
     if (!canCreateAgent()) {
       const planType = subscription?.plan_type || 'free';
       const agentLimit = getAgentLimitByPlan(planType);
+      
+      console.log('❌ Limite atingido:', {
+        planType,
+        currentCount: agents.length,
+        limit: agentLimit
+      });
       
       toast({
         title: "Limite atingido",
@@ -160,11 +218,14 @@ const Dashboard = () => {
       setShowUpgradeModal(true);
       return;
     }
+    
+    console.log('✅ Pode criar agente, abrindo modal...');
     setShowCreateModal(true);
   };
 
-  const onAgentCreated = () => {
-    fetchAgents();
+  const onAgentCreated = async () => {
+    console.log('🔄 Agente criado, recarregando lista...');
+    await fetchAgents();
     setShowCreateModal(false);
   };
 
@@ -364,11 +425,11 @@ const Dashboard = () => {
             <Button 
               onClick={handleCreateAgent}
               className="bg-brand-green hover:bg-brand-green/90 text-white transition-all duration-200 hover:scale-105 w-full sm:w-auto"
-              disabled={!canCreateAgent()}
+              disabled={loading || !canCreateAgent()}
             >
               <Plus className="h-4 w-4 mr-2" />
-              Criar Agente
-              {!canCreateAgent() && (
+              {loading ? 'Carregando...' : 'Criar Agente'}
+              {!loading && !canCreateAgent() && (
                 <span className="ml-2 text-xs">
                   (Limite atingido)
                 </span>
@@ -377,7 +438,7 @@ const Dashboard = () => {
           </div>
 
           {/* Plan info message */}
-          {!canCreateAgent() && (
+          {!loading && !canCreateAgent() && (
             <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-sm text-yellow-800">
                 <strong>Limite atingido:</strong> No plano {getPlanDisplayName(planType)} você pode criar até {agentLimit} agente{agentLimit > 1 ? 's' : ''}. 
@@ -404,10 +465,10 @@ const Dashboard = () => {
                 <Button 
                   onClick={handleCreateAgent}
                   className="bg-brand-green hover:bg-brand-green/90 text-white transition-all duration-200 hover:scale-105"
-                  disabled={!canCreateAgent()}
+                  disabled={loading || !canCreateAgent()}
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Criar Primeiro Agente
+                  {loading ? 'Carregando...' : 'Criar Primeiro Agente'}
                 </Button>
               </CardContent>
             </Card>
