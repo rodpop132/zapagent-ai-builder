@@ -49,8 +49,13 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
-    // Detectar o domínio correto da requisição
-    const origin = req.headers.get("origin") || req.headers.get("referer")?.split('/').slice(0, 3).join('/') || "https://zapagent-ai.lovable.site";
+    // Detectar o domínio correto da requisição - usar apenas origin ou referer sem fallback fixo
+    const origin = req.headers.get("origin") || req.headers.get("referer")?.split('/').slice(0, 3).join('/');
+    
+    if (!origin) {
+      throw new Error("Não foi possível determinar o domínio da aplicação");
+    }
+
     console.log("Origin detected:", origin);
     console.log("All headers:", Object.fromEntries(req.headers.entries()));
 
