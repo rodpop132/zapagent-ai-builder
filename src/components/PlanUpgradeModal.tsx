@@ -20,7 +20,7 @@ const PlanUpgradeModal = ({ isOpen, onClose, currentPlan }: PlanUpgradeModalProp
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
 
-  const plans = [
+  const allPlans = [
     {
       id: 'pro',
       name: 'Pro',
@@ -66,6 +66,52 @@ const PlanUpgradeModal = ({ isOpen, onClose, currentPlan }: PlanUpgradeModalProp
     }
   ];
 
+  // Filtrar planos baseado no plano atual
+  const availablePlans = allPlans.filter(plan => {
+    if (currentPlan === 'free') {
+      return plan.id === 'pro' || plan.id === 'ultra';
+    } else if (currentPlan === 'pro') {
+      return plan.id === 'ultra';
+    }
+    return false; // Se já tem ultra, não mostra nenhum plano
+  });
+
+  // Se já tem plano ultra, não permitir upgrade
+  if (currentPlan === 'ultra') {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold text-center">
+              Plano Máximo Atingido
+            </DialogTitle>
+          </DialogHeader>
+          <div className="text-center py-8">
+            <Zap className="h-16 w-16 text-purple-600 mx-auto mb-4" />
+            <p className="text-gray-600 mb-6">
+              Você já possui o plano Ultra, nosso plano mais completo!
+            </p>
+            <Button onClick={onClose} className="bg-brand-green hover:bg-brand-green/90">
+              Fechar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Se não há planos disponíveis, não mostrar modal
+  if (availablePlans.length === 0) {
+    return null;
+  }
+
+  // Definir plano selecionado inicial baseado no disponível
+  useState(() => {
+    if (availablePlans.length > 0) {
+      setSelectedPlan(availablePlans[0].id);
+    }
+  });
+
   const handleUpgrade = async (planId: string) => {
     if (!user) {
       toast.error('Você precisa estar logado para assinar um plano');
@@ -99,20 +145,36 @@ const PlanUpgradeModal = ({ isOpen, onClose, currentPlan }: PlanUpgradeModalProp
     }
   };
 
+  const getModalTitle = () => {
+    if (currentPlan === 'free') {
+      return 'Atualize seu Plano';
+    } else if (currentPlan === 'pro') {
+      return 'Upgrade para Ultra';
+    }
+    return 'Atualize seu Plano';
+  };
+
+  const getModalDescription = () => {
+    if (currentPlan === 'pro') {
+      return 'Desbloqueie recursos ilimitados com o plano Ultra';
+    }
+    return 'Escolha o plano ideal para suas necessidades';
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-center">
-            Atualize seu Plano
+            {getModalTitle()}
           </DialogTitle>
           <p className="text-center text-gray-600">
-            Escolha o plano ideal para suas necessidades
+            {getModalDescription()}
           </p>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-          {plans.map((plan) => {
+        <div className={`grid grid-cols-1 ${availablePlans.length > 1 ? 'md:grid-cols-2' : ''} gap-6 mt-6 ${availablePlans.length === 1 ? 'max-w-md mx-auto' : ''}`}>
+          {availablePlans.map((plan) => {
             const Icon = plan.icon;
             const isSelected = selectedPlan === plan.id;
             

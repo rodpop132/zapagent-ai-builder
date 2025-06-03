@@ -151,6 +151,18 @@ const Dashboard = () => {
     return `${subscription?.messages_used || 0}/${subscription?.messages_limit || 30}`;
   };
 
+  const shouldShowUpgradeButton = () => {
+    if (subscription?.is_unlimited) return false;
+    return subscription?.plan_type === 'free' || subscription?.plan_type === 'pro';
+  };
+
+  const getUpgradeButtonText = () => {
+    if (subscription?.plan_type === 'pro') {
+      return 'Upgrade para Ultra';
+    }
+    return 'Atualizar Plano';
+  };
+
   const handleSignOut = async () => {
     console.log('🚪 DASHBOARD: Fazendo logout...');
     await signOut();
@@ -186,7 +198,7 @@ const Dashboard = () => {
                 <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-medium`}>
                   {getPlanDisplayName(subscription?.plan_type || 'free')}
                 </Badge>
-                {subscription?.plan_type === 'free' && !subscription?.is_unlimited && (
+                {shouldShowUpgradeButton() && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -194,7 +206,7 @@ const Dashboard = () => {
                     className="text-brand-green border-brand-green hover:bg-brand-green hover:text-white transition-all duration-200 hover:scale-105"
                   >
                     <Crown className="h-4 w-4 mr-1" />
-                    Atualizar Plano
+                    {getUpgradeButtonText()}
                   </Button>
                 )}
               </div>
@@ -227,7 +239,7 @@ const Dashboard = () => {
                   <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-medium`}>
                     {getPlanDisplayName(subscription?.plan_type || 'free')}
                   </Badge>
-                  {subscription?.plan_type === 'free' && !subscription?.is_unlimited && (
+                  {shouldShowUpgradeButton() && (
                     <Button
                       variant="outline"
                       size="sm"
