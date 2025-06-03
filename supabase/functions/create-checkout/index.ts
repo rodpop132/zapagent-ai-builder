@@ -89,16 +89,15 @@ serve(async (req) => {
       allow_promotion_codes: true,
     };
 
-    // Se tiver customer ID, usar ele, senão permitir que o Stripe crie
+    // Se tiver customer ID, usar ele
     if (customerId) {
       sessionConfig.customer = customerId;
-    } else {
-      // Para checkout de convidado ou novo usuário, permitir entrada de email
-      sessionConfig.customer_creation = 'always';
-      if (user?.email) {
-        sessionConfig.customer_email = user.email;
-      }
+    } else if (user?.email) {
+      // Se for usuário autenticado mas sem customer, usar o email
+      sessionConfig.customer_email = user.email;
     }
+    // Para checkout de convidado, não definir customer nem customer_email
+    // O Stripe vai pedir o email durante o checkout
 
     // Metadados para identificar o usuário se estiver logado
     if (user) {
