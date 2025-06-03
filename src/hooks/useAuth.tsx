@@ -18,28 +18,67 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    // Configurar listener de auth - SIMPLES e direto
+    let isMounted = true;
+
+    // Função para atualizar o estado de auth
+    const updateAuthState = (currentSession: Session | null) => {
+      if (!isMounted) return;
+      
+      console.log('Updating auth state:', currentSession ? 'authenticated' : 'not authenticated');
+      setSession(currentSession);
+      setUser(currentSession?.user || null);
+      
+      if (!initialized) {
+        setLoading(false);
+        setInitialized(true);
+      }
+    };
+
+    // Configurar listener de mudanças de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
-        console.log('Auth state changed:', event);
+        console.log('Auth event:', event);
         
-        // Atualizar estado baseado na sessão atual
-        setSession(currentSession);
-        setUser(currentSession?.user || null);
-        setLoading(false);
+        // Só processar eventos importantes, ignorar TOKEN_REFRESHED excessivos
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'INITIAL_SESSION') {
+          updateAuthState(currentSession);
+        } else if (event === 'TOKEN_REFRESHED' && currentSession) {
+          // Para TOKEN_REFRESHED, só atualizar se realmente mudou
+          if (currentSession.user?.id !== user?.id) {
+            updateAuthState(currentSession);
+          }
+        }
       }
     );
 
-    // Verificar sessão inicial apenas uma vez
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      setSession(initialSession);
-      setUser(initialSession?.user || null);
-      setLoading(false);
-    });
+    // Obter sessão inicial
+    const getInitialSession = async () => {
+      try {
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Erro ao obter sessão inicial:', error);
+        }
+        
+        if (isMounted) {
+          updateAuthState(initialSession);
+        }
+      } catch (error) {
+        console.error('Falha na inicialização da sessão:', error);
+        if (isMounted) {
+          setLoading(false);
+          setInitialized(true);
+        }
+      }
+    };
+
+    getInitialSession();
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -78,7 +117,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      console.log('Iniciando logout...');
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Erro no logout:', error);
+      } else {
+        console.log('Logout realizado com sucesso');
+      }
     } catch (error) {
       console.error('SignOut error:', error);
     }

@@ -1,6 +1,6 @@
 
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,9 +13,19 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+
+  // Redirecionar se já estiver autenticado
+  useEffect(() => {
+    if (user) {
+      const from = location.state?.from?.pathname || '/dashboard';
+      console.log('User authenticated, redirecting to:', from);
+      navigate(from, { replace: true });
+    }
+  }, [user, navigate, location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,29 +33,35 @@ const Auth = () => {
 
     try {
       if (isLogin) {
+        console.log('Tentando fazer login...');
         const { error } = await signIn(email, password);
         if (error) {
+          console.error('Erro no login:', error.message);
           toast({
             title: "Erro no login",
             description: error.message,
             variant: "destructive"
           });
         } else {
+          console.log('Login realizado com sucesso!');
           toast({
             title: "Login realizado com sucesso!",
             description: "Bem-vindo de volta ao ZapAgent AI"
           });
-          navigate('/dashboard');
+          // O redirecionamento será feito pelo useEffect acima
         }
       } else {
+        console.log('Tentando fazer cadastro...');
         const { error } = await signUp(email, password, fullName);
         if (error) {
+          console.error('Erro no cadastro:', error.message);
           toast({
             title: "Erro no cadastro",
             description: error.message,
             variant: "destructive"
           });
         } else {
+          console.log('Cadastro realizado com sucesso!');
           toast({
             title: "Cadastro realizado!",
             description: "Verifique seu email para confirmar a conta"
@@ -53,6 +69,7 @@ const Auth = () => {
         }
       }
     } catch (error) {
+      console.error('Erro geral:', error);
       toast({
         title: "Erro",
         description: "Algo deu errado. Tente novamente.",
