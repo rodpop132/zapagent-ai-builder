@@ -3,6 +3,9 @@ import { useState, useEffect } from "react";
 
 const Dashboard = () => {
   const [currentConversationIndex, setCurrentConversationIndex] = useState(0);
+  const [newMessageCount, setNewMessageCount] = useState(1247);
+  const [clientCount, setClientCount] = useState(156);
+  const [responseRate, setResponseRate] = useState(94);
   
   const conversations = [
     { name: "João Silva", message: "Qual o horário de funcionamento?", time: "2 min", status: "online" },
@@ -10,14 +13,31 @@ const Dashboard = () => {
     { name: "Pedro Costa", message: "Gostaria de saber sobre os preços", time: "8 min", status: "read" },
     { name: "Ana Oliveira", message: "Produtos disponíveis hoje?", time: "12 min", status: "online" },
     { name: "Carlos Mendes", message: "Prazo de entrega para SP?", time: "15 min", status: "delivered" },
-    { name: "Lucia Ferreira", message: "Aceita cartão de crédito?", time: "18 min", status: "online" }
+    { name: "Lucia Ferreira", message: "Aceita cartão de crédito?", time: "18 min", status: "online" },
+    { name: "Roberto Silva", message: "Tem desconto para atacado?", time: "20 min", status: "typing" },
+    { name: "Fernanda Lima", message: "Como funciona a garantia?", time: "22 min", status: "online" },
+    { name: "Marcos Oliveira", message: "Fazem instalação?", time: "25 min", status: "read" }
   ];
 
-  // Simular novas conversas chegando
+  // Simular novas conversas chegando e estatísticas atualizando
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentConversationIndex((prev) => (prev + 1) % conversations.length);
-    }, 3000); // Troca a cada 3 segundos
+      
+      // Simular crescimento das estatísticas
+      const shouldUpdate = Math.random() > 0.7; // 30% chance de atualizar
+      if (shouldUpdate) {
+        setNewMessageCount(prev => prev + Math.floor(Math.random() * 3) + 1);
+        
+        if (Math.random() > 0.8) { // 20% chance de novo cliente
+          setClientCount(prev => prev + 1);
+        }
+        
+        if (Math.random() > 0.9) { // 10% chance de taxa de resposta mudar
+          setResponseRate(prev => Math.min(100, prev + (Math.random() > 0.5 ? 1 : -1)));
+        }
+      }
+    }, 2000); // Troca a cada 2 segundos para mais dinamismo
 
     return () => clearInterval(interval);
   }, [conversations.length]);
@@ -61,17 +81,27 @@ const Dashboard = () => {
 
         <div className="bg-white rounded-2xl shadow-2xl p-4 md:p-8 max-w-4xl mx-auto hover:shadow-3xl transition-all duration-500 animate-in scale-in-95 duration-700 delay-300 group">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-            <div className="bg-brand-green/10 rounded-lg p-4 md:p-6 text-center hover:bg-brand-green/15 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-left-6 duration-500 delay-500 group">
-              <div className="text-2xl md:text-3xl font-bold text-brand-green mb-2 group-hover:scale-110 transition-transform duration-300 animate-glow">1.247</div>
+            <div className="bg-brand-green/10 rounded-lg p-4 md:p-6 text-center hover:bg-brand-green/15 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-left-6 duration-500 delay-500 group relative overflow-hidden">
+              <div className="text-2xl md:text-3xl font-bold text-brand-green mb-2 group-hover:scale-110 transition-transform duration-300 animate-glow">
+                {newMessageCount.toLocaleString()}
+              </div>
               <div className="text-brand-gray text-sm md:text-base">Mensagens enviadas</div>
+              {/* Pulse indicator for new messages */}
+              <div className="absolute top-2 right-2 w-3 h-3 bg-green-500 rounded-full animate-ping"></div>
             </div>
             <div className="bg-blue-50 rounded-lg p-4 md:p-6 text-center hover:bg-blue-100 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-bottom-6 duration-500 delay-700 group">
-              <div className="text-2xl md:text-3xl font-bold text-blue-600 mb-2 group-hover:scale-110 transition-transform duration-300">94%</div>
+              <div className="text-2xl md:text-3xl font-bold text-blue-600 mb-2 group-hover:scale-110 transition-transform duration-300">{responseRate}%</div>
               <div className="text-brand-gray text-sm md:text-base">Taxa de resposta</div>
             </div>
-            <div className="bg-purple-50 rounded-lg p-4 md:p-6 text-center hover:bg-purple-100 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-right-6 duration-500 delay-900 group">
-              <div className="text-2xl md:text-3xl font-bold text-purple-600 mb-2 group-hover:scale-110 transition-transform duration-300">156</div>
+            <div className="bg-purple-50 rounded-lg p-4 md:p-6 text-center hover:bg-purple-100 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-right-6 duration-500 delay-900 group relative overflow-hidden">
+              <div className="text-2xl md:text-3xl font-bold text-purple-600 mb-2 group-hover:scale-110 transition-transform duration-300">{clientCount}</div>
               <div className="text-brand-gray text-sm md:text-base">Clientes atendidos</div>
+              {/* New client indicator */}
+              {clientCount % 10 === 0 && (
+                <div className="absolute top-2 right-2 bg-purple-500 text-white text-xs px-2 py-1 rounded-full animate-bounce">
+                  +1
+                </div>
+              )}
             </div>
           </div>
 
@@ -87,14 +117,15 @@ const Dashboard = () => {
             </div>
             
             <div className="space-y-3 max-h-80 overflow-hidden">
-              {conversations.slice(0, 3).map((conversation, index) => {
-                const isActive = index === currentConversationIndex % 3;
+              {conversations.slice(0, 4).map((conversation, index) => {
+                const isActive = index === currentConversationIndex % 4;
+                const isNewMessage = index === 0 && currentConversationIndex % conversations.length === 0;
                 return (
                   <div 
-                    key={`${conversation.name}-${index}`}
-                    className={`flex items-center justify-between bg-white p-3 rounded-lg transition-all duration-500 cursor-pointer group ${
+                    key={`${conversation.name}-${index}-${currentConversationIndex}`}
+                    className={`flex items-center justify-between bg-white p-3 rounded-lg transition-all duration-500 cursor-pointer group relative ${
                       isActive ? 'ring-2 ring-brand-green shadow-lg scale-102 animate-pulse' : 'hover:shadow-md hover:scale-102'
-                    }`}
+                    } ${isNewMessage ? 'border-l-4 border-green-500' : ''}`}
                   >
                     <div className="flex items-center space-x-3">
                       <div className={`relative w-8 h-8 md:w-10 md:h-10 bg-brand-green rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300 ${
@@ -136,18 +167,35 @@ const Dashboard = () => {
                         {getStatusText(conversation.status)}
                       </span>
                     </div>
+                    {/* New message indicator */}
+                    {isNewMessage && (
+                      <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center animate-bounce">
+                        !
+                      </div>
+                    )}
                   </div>
                 );
               })}
             </div>
 
-            {/* Nova conversa chegando indicator */}
-            <div className="mt-4 p-2 bg-gradient-to-r from-brand-green/10 to-blue-500/10 rounded-lg border border-brand-green/20 animate-slide-in-bottom">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-brand-green rounded-full animate-pulse"></div>
-                <span className="text-xs text-brand-gray">Nova conversa aguardando...</span>
-                <div className="ml-auto">
-                  <div className="w-6 h-6 border-2 border-brand-green border-t-transparent rounded-full animate-spin"></div>
+            {/* Nova conversa chegando indicator - mais dinâmico */}
+            <div className="mt-4 p-3 bg-gradient-to-r from-brand-green/10 to-blue-500/10 rounded-lg border border-brand-green/20 animate-slide-in-bottom">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-brand-green rounded-full animate-pulse"></div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-brand-dark">
+                      {Math.floor(Math.random() * 3) + 1} novas mensagens chegando...
+                    </span>
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-brand-green rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-brand-green rounded-full animate-bounce delay-100"></div>
+                      <div className="w-2 h-2 bg-brand-green rounded-full animate-bounce delay-200"></div>
+                    </div>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                    <div className="bg-brand-green h-2 rounded-full animate-pulse" style={{width: `${Math.random() * 100}%`}}></div>
+                  </div>
                 </div>
               </div>
             </div>

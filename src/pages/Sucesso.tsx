@@ -10,6 +10,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const Sucesso = () => {
   const [loading, setLoading] = useState(true);
+  const [countdown, setCountdown] = useState(5);
   const [verified, setVerified] = useState(false);
   const { user, refreshSubscription } = useAuth();
   const navigate = useNavigate();
@@ -69,6 +70,23 @@ const Sucesso = () => {
     verifyPayment();
   }, [user, navigate, sessionId, refreshSubscription]);
 
+  // Countdown para redirecionamento automático
+  useEffect(() => {
+    if (!loading && verified) {
+      const timer = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            navigate('/auth');
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+  }, [loading, verified, navigate]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -100,7 +118,7 @@ const Sucesso = () => {
             <CheckCircle className="h-10 w-10 text-green-600" />
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">
-            Pagamento Confirmado!
+            ✅ Transação Realizada!
           </CardTitle>
           <CardDescription className="text-lg">
             Sua assinatura foi ativada com sucesso
@@ -111,17 +129,19 @@ const Sucesso = () => {
             <p className="text-gray-600">
               Agora você tem acesso a todos os recursos do seu novo plano.
             </p>
-            <p className="text-sm text-gray-500">
-              Você pode gerenciar sua assinatura a qualquer momento no painel.
-            </p>
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <p className="text-sm text-blue-700 font-medium">
+                Redirecionando para o painel de login em {countdown} segundos...
+              </p>
+            </div>
           </div>
           
           <div className="space-y-3">
             <Button 
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/auth')}
               className="w-full bg-green-600 hover:bg-green-700"
             >
-              Ir para Dashboard
+              Ir para Login
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
             <Button 

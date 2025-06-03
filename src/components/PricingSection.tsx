@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, Loader2 } from "lucide-react";
@@ -69,7 +70,7 @@ const PricingSection = () => {
   const plans = [
     {
       name: "Grátis",
-      price: "R$ 0",
+      price: "€0",
       period: "para sempre",
       description: "Perfeito para testar e começar",
       features: [
@@ -85,7 +86,8 @@ const PricingSection = () => {
     },
     {
       name: "Pro",
-      price: "R$ 49",
+      originalPrice: "€10",
+      price: "€49",
       period: "/mês",
       description: "Ideal para pequenos negócios",
       features: [
@@ -98,11 +100,13 @@ const PricingSection = () => {
       ],
       cta: "Escolher Pro",
       popular: true,
-      planType: "pro"
+      planType: "pro",
+      promotion: true
     },
     {
       name: "Ultra",
-      price: "R$ 99",
+      originalPrice: "€250",
+      price: "€99",
       period: "/mês", 
       description: "Para negócios em crescimento",
       features: [
@@ -116,7 +120,8 @@ const PricingSection = () => {
       ],
       cta: "Escolher Ultra",
       popular: false,
-      planType: "ultra"
+      planType: "ultra",
+      promotion: true
     }
   ];
 
@@ -150,12 +155,28 @@ const PricingSection = () => {
                   </span>
                 </div>
               )}
+
+              {plan.promotion && (
+                <div className="absolute -top-2 -right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold animate-pulse">
+                  PROMOÇÃO
+                </div>
+              )}
               
               <div className="text-center mb-6 md:mb-8">
                 <h3 className={`text-xl md:text-2xl font-bold mb-2 ${plan.popular ? 'text-white' : 'text-brand-dark'}`}>
                   {plan.name}
                 </h3>
                 <div className="mb-2">
+                  {plan.promotion && plan.originalPrice && (
+                    <div className="flex items-center justify-center gap-2 mb-1">
+                      <span className={`text-lg line-through ${plan.popular ? 'text-white/60' : 'text-gray-400'}`}>
+                        {plan.originalPrice}
+                      </span>
+                      <span className="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
+                        -80%
+                      </span>
+                    </div>
+                  )}
                   <span className={`text-3xl md:text-4xl font-bold ${plan.popular ? 'text-white' : 'text-brand-dark'}`}>
                     {plan.price}
                   </span>

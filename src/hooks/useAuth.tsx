@@ -24,6 +24,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return;
     
     try {
+      console.log('🔄 Atualizando assinatura silenciosamente...');
       await supabase.functions.invoke('verify-subscription');
     } catch (error) {
       console.error('Erro ao atualizar assinatura:', error);
@@ -54,7 +55,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
           // Verificar assinatura se o usuário estiver logado
           if (initialSession?.user) {
-            refreshSubscription();
+            setTimeout(() => {
+              refreshSubscription();
+            }, 0);
           }
         }
       } catch (error) {
@@ -79,9 +82,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user || null);
         setLoading(false);
         
-        // Verificar assinatura quando usuário faz login
+        // Verificar assinatura quando usuário faz login - usando setTimeout para evitar deadlock
         if (event === 'SIGNED_IN' && session?.user) {
-          refreshSubscription();
+          setTimeout(() => {
+            refreshSubscription();
+          }, 0);
         }
         
         // Log session details for debugging
@@ -101,6 +106,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Auto-refresh da assinatura periodicamente para usuários logados
+  useEffect(() => {
+    if (!user) return;
+
+    const interval = setInterval(() => {
+      refreshSubscription();
+    }, 30000); // A cada 30 segundos
+
+    return () => clearInterval(interval);
+  }, [user]);
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
