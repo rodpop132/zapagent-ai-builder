@@ -10,7 +10,6 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<any>;
   signOut: () => Promise<void>;
   loading: boolean;
-  refreshSubscription: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,21 +19,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const refreshSubscription = async () => {
-    if (!user) return;
-    
-    try {
-      console.log('🔄 Atualizando assinatura...');
-      await supabase.functions.invoke('verify-subscription');
-    } catch (error) {
-      console.error('Erro ao atualizar assinatura:', error);
-    }
-  };
-
   useEffect(() => {
     let mounted = true;
 
-    // Configurar listener de auth primeiro
+    // Configurar listener de auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
         console.log('Auth state changed:', event);
@@ -48,22 +36,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
 
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
           setSession(currentSession);
           setUser(currentSession?.user || null);
           setLoading(false);
-          
-          // Verificar assinatura apenas no login, não no refresh
-          if (event === 'SIGNED_IN') {
-            setTimeout(() => {
-              refreshSubscription();
-            }, 1000);
-          }
         }
       }
     );
 
-    // Verificar sessão inicial
+    // Verificar sessão inicial apenas uma vez
     const getInitialSession = async () => {
       try {
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
@@ -100,17 +81,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       subscription.unsubscribe();
     };
   }, []);
-
-  // Verificação periódica menos agressiva - apenas a cada 2 minutos
-  useEffect(() => {
-    if (!user) return;
-
-    const interval = setInterval(() => {
-      refreshSubscription();
-    }, 120000); // 2 minutos
-
-    return () => clearInterval(interval);
-  }, [user]);
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
@@ -164,8 +134,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       signUp,
       signIn,
       signOut,
-      loading,
-      refreshSubscription
+      loading
     }}>
       {children}
     </AuthContext.Provider>

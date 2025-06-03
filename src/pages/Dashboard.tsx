@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Bot, MessageCircle, Settings, BarChart3, Crown, LogOut, Menu, RefreshCw } from 'lucide-react';
+import { Plus, Bot, MessageCircle, Settings, BarChart3, Crown, LogOut, Menu } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import AgentCard from '@/components/AgentCard';
@@ -33,7 +34,6 @@ const Dashboard = () => {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -81,42 +81,6 @@ const Dashboard = () => {
       setSubscription(data);
     } catch (error) {
       console.error('Error fetching subscription:', error);
-    }
-  };
-
-  const refreshSubscriptionStatus = async () => {
-    if (!user) return;
-    
-    setRefreshing(true);
-    try {
-      console.log('🔄 Verificação manual de assinatura...');
-      const { data, error } = await supabase.functions.invoke('verify-subscription');
-      
-      if (error) {
-        console.error('❌ Erro ao verificar assinatura:', error);
-        toast({
-          title: "Erro",
-          description: "Erro ao verificar assinatura",
-          variant: "destructive"
-        });
-      } else {
-        console.log('✅ Resposta da verificação:', data);
-        await fetchSubscription();
-        
-        toast({
-          title: "Sucesso",
-          description: "Assinatura verificada!",
-        });
-      }
-    } catch (error) {
-      console.error('❌ Erro na verificação:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao processar verificação",
-        variant: "destructive"
-      });
-    } finally {
-      setRefreshing(false);
     }
   };
 
@@ -174,7 +138,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center animate-in fade-in-50 duration-500">
+        <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green mx-auto mb-4"></div>
           <p className="text-gray-600">Carregando dashboard...</p>
         </div>
@@ -185,7 +149,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200 animate-in slide-in-from-top-4 duration-300">
+      <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center space-x-3">
@@ -198,19 +162,9 @@ const Dashboard = () => {
             {/* Desktop Header Content */}
             <div className="hidden md:flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-medium animate-in scale-in-50 duration-200`}>
+                <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-medium`}>
                   {getPlanDisplayName(subscription?.plan_type || 'free')}
                 </Badge>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={refreshSubscriptionStatus}
-                  disabled={refreshing}
-                  className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                >
-                  <RefreshCw className={`h-4 w-4 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
-                  {refreshing ? 'Verificando...' : 'Verificar'}
-                </Button>
                 {subscription?.plan_type === 'free' && !subscription?.is_unlimited && (
                   <Button
                     variant="outline"
@@ -246,22 +200,12 @@ const Dashboard = () => {
 
           {/* Mobile Menu */}
           {mobileMenuOpen && (
-            <div className="md:hidden border-t border-gray-200 py-4 animate-in slide-in-from-top-4 duration-200">
+            <div className="md:hidden border-t border-gray-200 py-4">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-medium`}>
                     {getPlanDisplayName(subscription?.plan_type || 'free')}
                   </Badge>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={refreshSubscriptionStatus}
-                    disabled={refreshing}
-                    className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                  >
-                    <RefreshCw className={`h-4 w-4 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
-                    Verificar
-                  </Button>
                   {subscription?.plan_type === 'free' && !subscription?.is_unlimited && (
                     <Button
                       variant="outline"
@@ -296,33 +240,29 @@ const Dashboard = () => {
         {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
           {[
-            { icon: Bot, label: 'Agentes', value: agents.length, color: 'text-brand-green', delay: 0 },
+            { icon: Bot, label: 'Agentes', value: agents.length, color: 'text-brand-green' },
             { 
               icon: MessageCircle, 
               label: 'Mensagens', 
               value: getMessagesDisplay(), 
-              color: 'text-blue-600',
-              delay: 100 
+              color: 'text-blue-600'
             },
             { 
               icon: BarChart3, 
               label: 'Plano', 
               value: getPlanDisplayName(subscription?.plan_type || 'free'), 
-              color: 'text-purple-600',
-              delay: 200 
+              color: 'text-purple-600'
             },
             { 
               icon: Settings, 
               label: 'Ativos', 
               value: agents.filter(agent => agent.is_active).length, 
-              color: 'text-orange-600',
-              delay: 300 
+              color: 'text-orange-600'
             }
           ].map((stat, index) => (
             <Card 
               key={index} 
-              className="animate-in slide-in-from-bottom-4 duration-300 hover:shadow-lg transition-all hover:scale-105"
-              style={{ animationDelay: `${stat.delay}ms` }}
+              className="hover:shadow-lg transition-all hover:scale-105"
             >
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center">
@@ -338,7 +278,7 @@ const Dashboard = () => {
         </div>
 
         {/* Agents Section */}
-        <div className="mb-8 animate-in fade-in-50 duration-500 delay-400">
+        <div className="mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
             <h2 className="text-xl md:text-2xl font-bold text-gray-900">Meus Agentes</h2>
             <Button 
@@ -351,7 +291,7 @@ const Dashboard = () => {
           </div>
 
           {agents.length === 0 ? (
-            <Card className="animate-in scale-in-50 duration-500">
+            <Card>
               <CardContent className="p-8 md:p-12 text-center">
                 <Bot className="h-12 w-12 md:h-16 md:w-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -371,17 +311,12 @@ const Dashboard = () => {
             </Card>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
-              {agents.map((agent, index) => (
-                <div
+              {agents.map((agent) => (
+                <AgentCard
                   key={agent.id}
-                  className="animate-in slide-in-from-bottom-4 duration-300"
-                  style={{ animationDelay: `${500 + (index * 100)}ms` }}
-                >
-                  <AgentCard
-                    agent={agent}
-                    onUpdate={fetchAgents}
-                  />
-                </div>
+                  agent={agent}
+                  onUpdate={fetchAgents}
+                />
               ))}
             </div>
           )}
