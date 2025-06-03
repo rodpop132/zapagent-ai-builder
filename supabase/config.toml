@@ -16,10 +16,14 @@ additional_redirect_urls = ["https://zapagent-ai.lovable.site"]
 jwt_expiry = 3600
 refresh_token_rotation_enabled = true
 refresh_token_reuse_interval = 10
-# Reduzir o tempo de expiração do OTP para corrigir o warning
+enable_signup = true
+enable_confirmations = false
+enable_manual_linking = false
+# Configuração correta do OTP
 otp_expiry = 3600
-# Habilitar proteção contra senhas vazadas
-enable_leaked_password_protection = true
+otp_length = 6
+# Configuração correta da proteção de senhas vazadas
+enable_leaked_password_protection = false
 
 [edge_functions]
 enabled = true

@@ -17,7 +17,7 @@ const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Redirecionar se já estiver autenticado
+  // Redirecionar usuários autenticados
   useEffect(() => {
     if (user) {
       const from = location.state?.from?.pathname || '/dashboard';
@@ -28,28 +28,49 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error('Preencha todos os campos obrigatórios');
+      return;
+    }
+    
+    if (!isLogin && !fullName) {
+      toast.error('Nome completo é obrigatório para cadastro');
+      return;
+    }
+    
     setLoading(true);
 
     try {
       if (isLogin) {
         console.log('🔑 AUTH PAGE: Tentando login...');
         const { error } = await signIn(email, password);
+        
         if (error) {
           console.error('❌ AUTH PAGE: Erro no login:', error.message);
-          toast.error(`Erro no login: ${error.message}`);
+          if (error.message.includes('Invalid login credentials')) {
+            toast.error('Email ou senha incorretos');
+          } else {
+            toast.error(`Erro no login: ${error.message}`);
+          }
         } else {
-          console.log('✅ AUTH PAGE: Login bem-sucedido!');
+          console.log('✅ AUTH PAGE: Login bem-sucedido');
           toast.success('Login realizado com sucesso!');
         }
       } else {
         console.log('📝 AUTH PAGE: Tentando cadastro...');
         const { error } = await signUp(email, password, fullName);
+        
         if (error) {
           console.error('❌ AUTH PAGE: Erro no cadastro:', error.message);
-          toast.error(`Erro no cadastro: ${error.message}`);
+          if (error.message.includes('User already registered')) {
+            toast.error('Este email já está cadastrado. Tente fazer login.');
+          } else {
+            toast.error(`Erro no cadastro: ${error.message}`);
+          }
         } else {
-          console.log('✅ AUTH PAGE: Cadastro bem-sucedido!');
-          toast.success('Cadastro realizado! Verifique seu email para confirmar a conta');
+          console.log('✅ AUTH PAGE: Cadastro bem-sucedido');
+          toast.success('Cadastro realizado com sucesso!');
         }
       }
     } catch (error) {
@@ -60,7 +81,7 @@ const Auth = () => {
     }
   };
 
-  // Não renderizar nada se o usuário já estiver autenticado
+  // Loading state para usuários autenticados
   if (user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -157,6 +178,7 @@ const Auth = () => {
               <button
                 onClick={() => setIsLogin(!isLogin)}
                 className="text-brand-green hover:text-brand-green/80 text-sm font-medium"
+                disabled={loading}
               >
                 {isLogin ? 'Não tem conta? Cadastre-se' : 'Já tem conta? Faça login'}
               </button>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -60,6 +59,7 @@ const Staff = () => {
 
   const checkStaffPermissions = async () => {
     try {
+      console.log('🔍 STAFF: Verificando permissões para:', user?.email);
       const { data, error } = await supabase
         .from('user_permissions')
         .select('*')
@@ -68,13 +68,15 @@ const Staff = () => {
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('Erro ao verificar permissões:', error);
+        console.error('❌ STAFF: Erro ao verificar permissões:', error);
         setIsStaff(false);
       } else {
-        setIsStaff(!!data);
+        const hasPermission = !!data;
+        console.log(hasPermission ? '✅ STAFF: Acesso autorizado' : '🔒 STAFF: Acesso negado');
+        setIsStaff(hasPermission);
       }
     } catch (error) {
-      console.error('Erro crítico ao verificar permissões:', error);
+      console.error('💥 STAFF: Erro crítico:', error);
       setIsStaff(false);
     } finally {
       setLoading(false);
@@ -83,21 +85,24 @@ const Staff = () => {
 
   const loadTickets = async () => {
     try {
+      console.log('🎫 STAFF: Carregando tickets...');
       const { data, error } = await supabase
         .from('tickets')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
+      console.log('✅ STAFF: Tickets carregados:', data?.length || 0);
       setTickets(data || []);
     } catch (error) {
-      console.error('Erro ao carregar tickets:', error);
+      console.error('❌ STAFF: Erro ao carregar tickets:', error);
       toast.error('Erro ao carregar tickets');
     }
   };
 
   const loadMessages = async (ticketId: string) => {
     try {
+      console.log('💬 STAFF: Carregando mensagens para ticket:', ticketId);
       const { data, error } = await supabase
         .from('ticket_messages')
         .select('*')
@@ -105,9 +110,10 @@ const Staff = () => {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
+      console.log('✅ STAFF: Mensagens carregadas:', data?.length || 0);
       setMessages(data || []);
     } catch (error) {
-      console.error('Erro ao carregar mensagens:', error);
+      console.error('❌ STAFF: Erro ao carregar mensagens:', error);
       toast.error('Erro ao carregar mensagens');
     }
   };
@@ -117,6 +123,7 @@ const Staff = () => {
 
     setSending(true);
     try {
+      console.log('📤 STAFF: Enviando mensagem...');
       const { error } = await supabase
         .from('ticket_messages')
         .insert({
@@ -142,10 +149,11 @@ const Staff = () => {
 
       setNewMessage('');
       loadMessages(selectedTicket.id);
-      loadTickets(); // Recarregar tickets para atualizar status
+      loadTickets();
+      console.log('✅ STAFF: Mensagem enviada');
       toast.success('Mensagem enviada!');
     } catch (error) {
-      console.error('Erro ao enviar mensagem:', error);
+      console.error('❌ STAFF: Erro ao enviar mensagem:', error);
       toast.error('Erro ao enviar mensagem');
     } finally {
       setSending(false);
@@ -154,6 +162,7 @@ const Staff = () => {
 
   const updateTicketStatus = async (ticketId: string, newStatus: string) => {
     try {
+      console.log('🔄 STAFF: Atualizando status do ticket:', ticketId, 'para:', newStatus);
       const { error } = await supabase
         .from('tickets')
         .update({ 
@@ -165,9 +174,10 @@ const Staff = () => {
       if (error) throw error;
 
       loadTickets();
+      console.log('✅ STAFF: Status atualizado');
       toast.success('Status do ticket atualizado!');
     } catch (error) {
-      console.error('Erro ao atualizar status:', error);
+      console.error('❌ STAFF: Erro ao atualizar status:', error);
       toast.error('Erro ao atualizar status do ticket');
     }
   };
@@ -211,8 +221,8 @@ const Staff = () => {
 
   const handleLogout = async () => {
     if (confirm('Tem certeza que deseja sair?')) {
+      console.log('🚪 STAFF: Fazendo logout...');
       await signOut();
-      window.location.href = '/';
     }
   };
 

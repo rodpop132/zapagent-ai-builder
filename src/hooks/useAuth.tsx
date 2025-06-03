@@ -1,5 +1,5 @@
 
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -18,70 +18,84 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
 
+  // Inicializar estado de autenticação uma única vez
   useEffect(() => {
-    console.log('🔧 AUTH: Inicializando sistema de autenticação...');
-    
-    // Configurar listener de mudanças de estado primeiro
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('🔄 AUTH: Estado mudou:', event, session?.user?.email);
-        
-        if (event === 'SIGNED_IN' && session) {
-          console.log('✅ AUTH: Usuário logado:', session.user.email);
-          setSession(session);
-          setUser(session.user);
-        } else if (event === 'SIGNED_OUT') {
-          console.log('🚪 AUTH: Usuário deslogado');
-          setSession(null);
-          setUser(null);
-        } else if (event === 'TOKEN_REFRESHED' && session) {
-          console.log('🔄 AUTH: Token atualizado');
-          setSession(session);
-          setUser(session.user);
-        }
-        
-        setLoading(false);
-      }
-    );
+    let mounted = true;
 
-    // Verificar sessão existente depois
     const initializeAuth = async () => {
       try {
-        console.log('🔍 AUTH: Verificando sessão existente...');
+        console.log('🔧 AUTH: Inicializando autenticação...');
+        
+        // Obter sessão atual
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
         
         if (error) {
           console.error('❌ AUTH: Erro ao obter sessão:', error);
-          setLoading(false);
-          return;
-        }
-        
-        if (currentSession) {
-          console.log('✅ AUTH: Sessão encontrada:', currentSession.user.email);
+        } else if (currentSession) {
+          console.log('✅ AUTH: Sessão ativa encontrada:', currentSession.user.email);
           setSession(currentSession);
           setUser(currentSession.user);
         } else {
-          console.log('ℹ️ AUTH: Nenhuma sessão encontrada');
+          console.log('ℹ️ AUTH: Nenhuma sessão ativa');
+          setSession(null);
+          setUser(null);
         }
-        
-        setLoading(false);
       } catch (error) {
         console.error('💥 AUTH: Erro na inicialização:', error);
-        setLoading(false);
+        if (mounted) {
+          setSession(null);
+          setUser(null);
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+          setInitialized(true);
+        }
       }
     };
 
     initializeAuth();
 
     return () => {
-      console.log('🧹 AUTH: Limpando subscription');
-      subscription.unsubscribe();
+      mounted = false;
     };
   }, []);
 
+  // Configurar listener de mudanças de estado APÓS inicialização
+  useEffect(() => {
+    if (!initialized) return;
+
+    console.log('🔧 AUTH: Configurando listener de estado...');
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('🔄 AUTH: Mudança de estado:', event, session?.user?.email || 'sem usuário');
+        
+        if (event === 'SIGNED_IN' && session) {
+          setSession(session);
+          setUser(session.user);
+        } else if (event === 'SIGNED_OUT' || !session) {
+          setSession(null);
+          setUser(null);
+        } else if (event === 'TOKEN_REFRESHED' && session) {
+          setSession(session);
+          setUser(session.user);
+        }
+      }
+    );
+
+    return () => {
+      console.log('🧹 AUTH: Removendo listener');
+      subscription.unsubscribe();
+    };
+  }, [initialized]);
+
   const signUp = async (email: string, password: string, fullName: string) => {
-    console.log('📝 AUTH: Tentando cadastro para:', email);
+    console.log('📝 AUTH: Iniciando cadastro para:', email);
     
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -97,7 +111,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) {
         console.error('❌ AUTH: Erro no cadastro:', error);
       } else {
-        console.log('✅ AUTH: Cadastro realizado com sucesso');
+        console.log('✅ AUTH: Cadastro realizado');
       }
       
       return { data, error };
@@ -108,7 +122,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signIn = async (email: string, password: string) => {
-    console.log('🔑 AUTH: Tentando login para:', email);
+    console.log('🔑 AUTH: Iniciando login para:', email);
     
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -119,7 +133,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error) {
         console.error('❌ AUTH: Erro no login:', error);
       } else {
-        console.log('✅ AUTH: Login realizado com sucesso');
+        console.log('✅ AUTH: Login realizado');
       }
       
       return { data, error };
@@ -130,14 +144,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
-    console.log('🚪 AUTH: Realizando logout...');
+    console.log('🚪 AUTH: Iniciando logout...');
     
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('❌ AUTH: Erro no logout:', error);
       } else {
-        console.log('✅ AUTH: Logout realizado com sucesso');
+        console.log('✅ AUTH: Logout realizado');
+        setSession(null);
+        setUser(null);
       }
     } catch (error) {
       console.error('💥 AUTH: Erro inesperado no logout:', error);

@@ -41,40 +41,50 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (user) {
-      console.log('📊 DASHBOARD: Loading data for user:', user.email);
-      fetchAgents();
-      fetchSubscription();
+      console.log('📊 DASHBOARD: Carregando dados para:', user.email);
+      loadData();
     }
   }, [user]);
 
+  const loadData = async () => {
+    try {
+      await Promise.all([
+        fetchAgents(),
+        fetchSubscription()
+      ]);
+    } catch (error) {
+      console.error('❌ DASHBOARD: Erro ao carregar dados:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchAgents = async () => {
     try {
-      console.log('🤖 DASHBOARD: Fetching agents...');
-      const { data, error } = await (supabase as any)
+      console.log('🤖 DASHBOARD: Buscando agentes...');
+      const { data, error } = await supabase
         .from('agents')
         .select('*')
         .eq('user_id', user?.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      console.log('✅ DASHBOARD: Agents loaded:', data?.length || 0);
+      console.log('✅ DASHBOARD: Agentes carregados:', data?.length || 0);
       setAgents(data || []);
     } catch (error) {
-      console.error('❌ DASHBOARD: Error fetching agents:', error);
+      console.error('❌ DASHBOARD: Erro ao buscar agentes:', error);
       toast({
         title: "Erro",
         description: "Não foi possível carregar os agentes",
         variant: "destructive"
       });
-    } finally {
-      setLoading(false);
     }
   };
 
   const fetchSubscription = async () => {
     try {
-      console.log('💳 DASHBOARD: Fetching subscription (local only)...');
-      const { data, error } = await (supabase as any)
+      console.log('💳 DASHBOARD: Buscando assinatura...');
+      const { data, error } = await supabase
         .from('subscriptions')
         .select('*')
         .eq('user_id', user?.id)
@@ -82,24 +92,22 @@ const Dashboard = () => {
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('❌ DASHBOARD: Error fetching subscription:', error);
+        console.error('❌ DASHBOARD: Erro ao buscar assinatura:', error);
       } else {
-        console.log('✅ DASHBOARD: Subscription loaded:', data?.plan_type || 'none');
+        console.log('✅ DASHBOARD: Assinatura carregada:', data?.plan_type || 'none');
         setSubscription(data);
       }
     } catch (error) {
-      console.error('❌ DASHBOARD: Subscription fetch error:', error);
+      console.error('❌ DASHBOARD: Erro na busca de assinatura:', error);
     }
   };
 
   const handleCreateAgent = () => {
-    // Verificar se é usuário ilimitado
     if (subscription?.is_unlimited) {
       setShowCreateModal(true);
       return;
     }
 
-    // Verificar limites para usuários normais
     if (subscription?.plan_type === 'free' && agents.length >= 1) {
       toast({
         title: "Limite atingido",
@@ -141,6 +149,11 @@ const Dashboard = () => {
       return '∞ Ilimitado';
     }
     return `${subscription?.messages_used || 0}/${subscription?.messages_limit || 30}`;
+  };
+
+  const handleSignOut = async () => {
+    console.log('🚪 DASHBOARD: Fazendo logout...');
+    await signOut();
   };
 
   if (loading) {
@@ -189,7 +202,7 @@ const Dashboard = () => {
               <span className="text-sm text-gray-600 hidden lg:block">Olá, {user?.email}</span>
               <Button 
                 variant="outline" 
-                onClick={signOut}
+                onClick={handleSignOut}
                 className="hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all duration-200"
               >
                 <LogOut className="h-4 w-4 mr-2" />
@@ -232,7 +245,7 @@ const Dashboard = () => {
                 <p className="text-sm text-gray-600">Olá, {user?.email}</p>
                 <Button 
                   variant="outline" 
-                  onClick={signOut}
+                  onClick={handleSignOut}
                   className="w-full justify-center hover:bg-red-50 hover:text-red-600 hover:border-red-200"
                 >
                   <LogOut className="h-4 w-4 mr-2" />

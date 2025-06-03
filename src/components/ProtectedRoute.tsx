@@ -10,10 +10,14 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  console.log('🛡️ PROTECTED: Verificando acesso...', { user: user?.email, loading });
+  console.log('🛡️ PROTECTED: Verificando acesso...', { 
+    userEmail: user?.email, 
+    loading,
+    path: location.pathname 
+  });
 
   if (loading) {
-    console.log('⏳ PROTECTED: Aguardando autenticação...');
+    console.log('⏳ PROTECTED: Carregando autenticação...');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -25,11 +29,11 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   if (!user) {
-    console.log('🔒 PROTECTED: Usuário não autenticado, redirecionando...');
+    console.log('🔒 PROTECTED: Redirecionando para login...');
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
-  console.log('✅ PROTECTED: Acesso autorizado para:', user.email);
+  console.log('✅ PROTECTED: Acesso autorizado');
   return <>{children}</>;
 };
 

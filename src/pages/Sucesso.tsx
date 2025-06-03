@@ -12,51 +12,58 @@ const Sucesso = () => {
   const [loading, setLoading] = useState(true);
   const [countdown, setCountdown] = useState(5);
   const [verified, setVerified] = useState(false);
+  const [planInfo, setPlanInfo] = useState<string>('');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
 
   useEffect(() => {
     const verifyPayment = async () => {
-      console.log('Iniciando verificação de pagamento...');
-      console.log('Session ID:', sessionId);
+      console.log('💳 SUCESSO: Iniciando verificação de pagamento...');
+      console.log('💳 SUCESSO: Session ID:', sessionId);
 
       try {
-        // Aguardar processamento do Stripe
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        // Aguardar um pouco para o webhook processar
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
-        console.log('Verificando assinatura...');
+        console.log('💳 SUCESSO: Verificando assinatura...');
         const { data, error } = await supabase.functions.invoke('verify-subscription');
         
         if (error) {
-          console.error('Erro ao verificar assinatura:', error);
+          console.error('❌ SUCESSO: Erro ao verificar assinatura:', error);
           toast.error('Erro ao verificar pagamento');
         } else {
-          console.log('Resposta da verificação:', data);
+          console.log('✅ SUCESSO: Resposta da verificação:', data);
           setVerified(true);
           
           if (data?.subscribed) {
-            toast.success(`Pagamento confirmado! Plano ${data.plan_type} ativado com sucesso.`);
+            const planName = data.plan_type === 'pro' ? 'Pro' : 
+                           data.plan_type === 'ultra' ? 'Ultra' : 'Premium';
+            setPlanInfo(planName);
+            toast.success(`Pagamento confirmado! Plano ${planName} ativado com sucesso.`);
           } else {
+            console.log('⏳ SUCESSO: Aguardando processamento...');
             // Tentar novamente após alguns segundos
             setTimeout(async () => {
-              console.log('Tentando verificar novamente...');
+              console.log('🔄 SUCESSO: Verificando novamente...');
               const { data: retryData } = await supabase.functions.invoke('verify-subscription');
               if (retryData?.subscribed) {
-                toast.success(`Pagamento confirmado! Plano ${retryData.plan_type} ativado com sucesso.`);
+                const planName = retryData.plan_type === 'pro' ? 'Pro' : 
+                               retryData.plan_type === 'ultra' ? 'Ultra' : 'Premium';
+                setPlanInfo(planName);
+                toast.success(`Pagamento confirmado! Plano ${planName} ativado com sucesso.`);
               }
-            }, 5000);
+            }, 3000);
           }
         }
       } catch (error) {
-        console.error('Erro na verificação:', error);
+        console.error('💥 SUCESSO: Erro na verificação:', error);
         toast.error('Erro ao verificar pagamento');
       } finally {
         setLoading(false);
       }
     };
 
-    // Sempre verificar pagamento, mesmo sem usuário logado
     verifyPayment();
   }, [sessionId]);
 
@@ -116,12 +123,19 @@ const Sucesso = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center space-y-2">
+            {planInfo && (
+              <div className="bg-green-50 p-3 rounded-lg mb-4">
+                <p className="text-green-700 font-medium">
+                  Plano {planInfo} ativado!
+                </p>
+              </div>
+            )}
             <p className="text-gray-600">
               Agora você tem acesso a todos os recursos do seu novo plano.
             </p>
             <div className="bg-blue-50 p-3 rounded-lg">
               <p className="text-sm text-blue-700 font-medium">
-                Redirecionando para o painel de login em {countdown} segundos...
+                Redirecionando para o login em {countdown} segundos...
               </p>
             </div>
           </div>
