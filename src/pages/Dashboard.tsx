@@ -89,7 +89,7 @@ const Dashboard = () => {
     
     setRefreshing(true);
     try {
-      console.log('🔄 Forçando verificação de assinatura...');
+      console.log('🔄 Verificação manual de assinatura...');
       const { data, error } = await supabase.functions.invoke('verify-subscription');
       
       if (error) {
@@ -103,17 +103,10 @@ const Dashboard = () => {
         console.log('✅ Resposta da verificação:', data);
         await fetchSubscription();
         
-        if (data?.subscribed) {
-          toast({
-            title: "Sucesso",
-            description: `Assinatura verificada! Plano ${data.plan_type} ativo.`,
-          });
-        } else {
-          toast({
-            title: "Info",
-            description: "Nenhuma assinatura ativa encontrada",
-          });
-        }
+        toast({
+          title: "Sucesso",
+          description: "Assinatura verificada!",
+        });
       }
     } catch (error) {
       console.error('❌ Erro na verificação:', error);

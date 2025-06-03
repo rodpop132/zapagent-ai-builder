@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return;
     
     try {
-      console.log('🔄 Atualizando assinatura silenciosamente...');
+      console.log('🔄 Atualizando assinatura...');
       await supabase.functions.invoke('verify-subscription');
     } catch (error) {
       console.error('Erro ao atualizar assinatura:', error);
@@ -34,12 +34,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     let mounted = true;
 
-    const initializeAuth = async () => {
+    // Configurar listener de auth primeiro
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, currentSession) => {
+        console.log('Auth state changed:', event);
+        
+        if (!mounted) return;
+        
+        if (event === 'SIGNED_OUT' || !currentSession) {
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          setSession(currentSession);
+          setUser(currentSession?.user || null);
+          setLoading(false);
+          
+          // Verificar assinatura apenas no login, não no refresh
+          if (event === 'SIGNED_IN') {
+            setTimeout(() => {
+              refreshSubscription();
+            }, 1000);
+          }
+        }
+      }
+    );
+
+    // Verificar sessão inicial
+    const getInitialSession = async () => {
       try {
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error getting initial session:', error);
+          console.error('Error getting session:', error);
           if (mounted) {
             setSession(null);
             setUser(null);
@@ -52,13 +82,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setSession(initialSession);
           setUser(initialSession?.user || null);
           setLoading(false);
-
-          // Verificar assinatura se o usuário estiver logado
-          if (initialSession?.user) {
-            setTimeout(() => {
-              refreshSubscription();
-            }, 0);
-          }
         }
       } catch (error) {
         console.error('Session initialization failed:', error);
@@ -70,36 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     };
 
-    // Set up auth state listener FIRST
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('Auth state changed:', event, 'Session:', !!session);
-        
-        if (!mounted) return;
-        
-        // Update state immediately for all events
-        setSession(session);
-        setUser(session?.user || null);
-        setLoading(false);
-        
-        // Verificar assinatura quando usuário faz login - usando setTimeout para evitar deadlock
-        if (event === 'SIGNED_IN' && session?.user) {
-          setTimeout(() => {
-            refreshSubscription();
-          }, 0);
-        }
-        
-        // Log session details for debugging
-        if (session) {
-          console.log('User authenticated:', session.user.email);
-        } else {
-          console.log('User logged out or session expired');
-        }
-      }
-    );
-
-    // THEN check for existing session
-    initializeAuth();
+    getInitialSession();
 
     return () => {
       mounted = false;
@@ -107,13 +101,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  // Auto-refresh da assinatura periodicamente para usuários logados
+  // Verificação periódica menos agressiva - apenas a cada 2 minutos
   useEffect(() => {
     if (!user) return;
 
     const interval = setInterval(() => {
       refreshSubscription();
-    }, 30000); // A cada 30 segundos
+    }, 120000); // 2 minutos
 
     return () => clearInterval(interval);
   }, [user]);
@@ -152,29 +146,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     try {
-      // Limpa os estados localmente primeiro
+      await supabase.auth.signOut();
       setSession(null);
       setUser(null);
-      
-      // Tenta fazer logout no Supabase
-      const { error } = await supabase.auth.signOut();
-      
-      // Se der erro de sessão ausente, ignora pois já limpamos localmente
-      if (error && error.message.includes('Auth session missing')) {
-        console.log('Session already cleared, logout successful');
-        return;
-      }
-      
-      if (error) {
-        console.error('SignOut error:', error);
-        // Mesmo com erro, mantem os estados limpos
-        return;
-      }
-      
-      console.log('Logout successful');
     } catch (error) {
-      console.error('SignOut failed:', error);
-      // Mesmo com erro, mantem os estados limpos para permitir "logout forçado"
+      console.error('SignOut error:', error);
+      // Forçar logout local mesmo se houver erro
+      setSession(null);
+      setUser(null);
     }
   };
 
