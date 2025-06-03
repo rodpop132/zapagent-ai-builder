@@ -18,16 +18,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     console.log('🚀 AUTH PROVIDER: Starting initialization');
     
-    // Get initial session first
+    let mounted = true;
+    
+    // Get initial session
     const getInitialSession = async () => {
       try {
         console.log('🔍 AUTH: Getting initial session...');
         const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
         
         if (error) {
           console.error('❌ AUTH: Error getting initial session:', error);
@@ -41,46 +44,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
         
         setLoading(false);
-        setInitialized(true);
       } catch (error) {
         console.error('💥 AUTH: Failed to get initial session:', error);
-        setLoading(false);
-        setInitialized(true);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     getInitialSession();
 
-    // Set up auth state listener after getting initial session
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
+        if (!mounted) return;
+        
         console.log('🔔 AUTH EVENT:', event, 'Session exists:', !!currentSession);
         
-        // Only update state if we're initialized to avoid race conditions
-        if (initialized) {
-          if (event === 'SIGNED_IN' && currentSession) {
-            console.log('✅ AUTH: User signed in:', currentSession.user.email);
-            setSession(currentSession);
-            setUser(currentSession.user);
-          } else if (event === 'SIGNED_OUT') {
-            console.log('🚪 AUTH: User signed out');
-            setSession(null);
-            setUser(null);
-          } else if (event === 'TOKEN_REFRESHED' && currentSession) {
-            console.log('🔄 AUTH: Token refreshed, maintaining session');
-            // Don't change state on token refresh to avoid logout
-            setSession(currentSession);
-            setUser(currentSession.user);
-          }
+        if (event === 'SIGNED_IN' && currentSession) {
+          console.log('✅ AUTH: User signed in:', currentSession.user.email);
+          setSession(currentSession);
+          setUser(currentSession.user);
+        } else if (event === 'SIGNED_OUT') {
+          console.log('🚪 AUTH: User signed out');
+          setSession(null);
+          setUser(null);
+        } else if (event === 'TOKEN_REFRESHED' && currentSession) {
+          console.log('🔄 AUTH: Token refreshed');
+          setSession(currentSession);
+          setUser(currentSession.user);
         }
       }
     );
 
     return () => {
+      mounted = false;
       console.log('🧹 AUTH: Cleaning up subscription');
       subscription.unsubscribe();
     };
-  }, [initialized]);
+  }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
