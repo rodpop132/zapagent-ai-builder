@@ -1,13 +1,14 @@
+
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bot, Settings, Trash2, Play, Pause, MessageCircle, QrCode } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Bot, Settings, MessageCircle, Phone, Users, MoreVertical, Edit } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import WhatsAppStatus from './WhatsAppStatus';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import EditAgentModal from './EditAgentModal';
 
 interface Agent {
   id: string;
@@ -17,49 +18,45 @@ interface Agent {
   phone_number: string;
   is_active: boolean;
   created_at: string;
-  whatsapp_status?: string;
   prompt?: string;
   messages_used?: number;
   messages_limit?: number;
 }
 
+interface Subscription {
+  plan_type: string;
+  messages_used: number;
+  messages_limit: number;
+  status: string;
+  is_unlimited?: boolean;
+}
+
 interface AgentCardProps {
   agent: Agent;
   onUpdate: () => void;
-  subscription?: {
-    plan_type: string;
-    messages_used: number;
-    messages_limit: number;
-    is_unlimited?: boolean;
-  };
+  subscription: Subscription | null;
 }
 
 const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
-  const [loading, setLoading] = useState(false);
-  const [whatsappStatus, setWhatsappStatus] = useState<'connected' | 'pending'>(
-    (agent.whatsapp_status as 'connected' | 'pending') || 'pending'
-  );
-  const [messagesCount, setMessagesCount] = useState(agent.messages_used || 0);
-  const [showQrModal, setShowQrModal] = useState(false);
-  const [qrCode, setQrCode] = useState<string>('');
-  const [qrLoading, setQrLoading] = useState(false);
-  const [showLimitAlert, setShowLimitAlert] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [whatsappStatus, setWhatsappStatus] = useState<'connected' | 'pending'>('pending');
   const { toast } = useToast();
 
-  const handleToggleActive = async () => {
-    // Só permite ativar se estiver conectado ao WhatsApp
-    if (!agent.is_active && whatsappStatus !== 'connected') {
-      toast({
-        title: "Conexão necessária",
-        description: "O agente precisa estar conectado ao WhatsApp para ser ativado",
-        variant: "destructive"
-      });
-      return;
+  const getMessagesLimitByPlan = (planType: string) => {
+    switch (planType) {
+      case 'free': return 30;
+      case 'pro': return 10000; // Corrigido para 10.000
+      case 'ultra': return 999999;
+      case 'unlimited': return 999999;
+      default: return 30;
     }
+  };
 
-    setLoading(true);
+  const handleToggleActive = async () => {
+    setIsLoading(true);
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('agents')
         .update({ is_active: !agent.is_active })
         .eq('id', agent.id);
@@ -67,29 +64,32 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
       if (error) throw error;
 
       toast({
-        title: agent.is_active ? "Agente pausado" : "Agente ativado",
-        description: `O agente foi ${agent.is_active ? 'pausado' : 'ativado'} com sucesso`
+        title: "Sucesso",
+        description: `Agente ${!agent.is_active ? 'ativado' : 'desativado'} com sucesso`,
+        variant: "default"
       });
-
+      
       onUpdate();
     } catch (error) {
-      console.error('Error toggling agent:', error);
+      console.error('Erro ao atualizar agente:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível alterar o status do agente",
+        description: "Não foi possível atualizar o agente",
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Tem certeza que deseja excluir este agente?')) return;
+  const handleDeleteAgent = async () => {
+    if (!confirm('Tem certeza que deseja excluir este agente? Esta ação não pode ser desfeita.')) {
+      return;
+    }
 
-    setLoading(true);
+    setIsLoading(true);
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('agents')
         .delete()
         .eq('id', agent.id);
@@ -97,78 +97,63 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
       if (error) throw error;
 
       toast({
-        title: "Agente excluído",
-        description: "O agente foi removido com sucesso"
+        title: "Sucesso",
+        description: "Agente excluído com sucesso",
+        variant: "default"
       });
-
+      
       onUpdate();
     } catch (error) {
-      console.error('Error deleting agent:', error);
+      console.error('Erro ao excluir agente:', error);
       toast({
         title: "Erro",
         description: "Não foi possível excluir o agente",
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleWhatsAppStatusChange = async (status: 'connected' | 'pending') => {
-    setWhatsappStatus(status);
-    
-    try {
-      const { error } = await (supabase as any)
-        .from('agents')
-        .update({ 
-          whatsapp_status: status,
-          // Se desconectou, pausar o agente automaticamente
-          is_active: status === 'connected' ? agent.is_active : false
-        })
-        .eq('id', agent.id);
-
-      if (error) {
-        console.error('Error updating WhatsApp status:', error);
-      } else {
-        // Se desconectou, atualizar a UI
-        if (status === 'pending' && agent.is_active) {
-          onUpdate();
-          toast({
-            title: "Agente pausado",
-            description: "O agente foi pausado automaticamente ao desconectar do WhatsApp"
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error updating WhatsApp status:', error);
-    }
-  };
-
-  const testAgentResponse = async () => {
-    if (!agent.phone_number || !agent.prompt) {
+  const handleSendTestMessage = async () => {
+    if (whatsappStatus !== 'connected') {
       toast({
-        title: "Erro",
-        description: "Agente precisa ter número e prompt configurados",
+        title: "WhatsApp não conectado",
+        description: "Conecte o WhatsApp primeiro para testar mensagens",
         variant: "destructive"
       });
       return;
     }
 
-    setLoading(true);
+    // Verificar limite de mensagens
+    const planType = subscription?.plan_type || 'free';
+    const limit = getMessagesLimitByPlan(planType);
+    const used = agent.messages_used || 0;
+
+    if (!subscription?.is_unlimited && used >= limit) {
+      toast({
+        title: "Limite de mensagens atingido",
+        description: `Você atingiu o limite de ${limit} mensagens do plano ${planType}. Faça upgrade para continuar.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsLoading(true);
     try {
-      console.log('🤖 Testando resposta do agente:', agent.phone_number);
+      console.log('🧪 Enviando mensagem de teste para agente:', agent.phone_number);
       
-      // Remover qualquer caractere não numérico do número (incluindo + e espaços)
-      const cleanNumber = agent.phone_number.replace(/\D/g, '');
+      // Preparar número (remover + e espaços)
+      const numero = agent.phone_number.replace(/[\s+]/g, '');
       
-      const response = await fetch(`https://zapagent-api.onrender.com/responder/${cleanNumber}`, {
+      const response = await fetch(`https://zapagent-api.onrender.com/responder/${numero}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          msg: "Olá, este é um teste do agente IA",
-          prompt: agent.prompt
+          msg: 'Olá! Esta é uma mensagem de teste do sistema.',
+          prompt: agent.prompt || `Você é um assistente virtual para ${agent.business_type}. Seja prestativo e educado.`
         })
       });
 
@@ -176,318 +161,195 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
         throw new Error(`Erro na API: ${response.status}`);
       }
 
-      const data = await response.json();
-      console.log('✅ Resposta do agente:', data);
+      const result = await response.text();
+      console.log('✅ Resposta da API:', result);
 
-      // Verificar se a resposta indica limite atingido
-      if (data.message && data.message.includes('Limite de mensagens')) {
-        setShowLimitAlert(true);
+      // Verificar se atingiu o limite
+      if (result.includes('Limite de mensagens do plano') && result.includes('atingido')) {
         toast({
           title: "⚠️ Limite atingido",
-          description: "O limite de mensagens do seu plano foi atingido",
+          description: `Limite de mensagens do plano ${planType} atingido. Considere fazer upgrade.`,
           variant: "destructive"
         });
         return;
       }
 
-      // Incrementar contador de mensagens localmente
-      setMessagesCount(prev => prev + 1);
-      
-      // Atualizar contador no banco se necessário
-      await updateMessageCount();
-
-      toast({
-        title: "✅ Teste realizado",
-        description: "O agente respondeu com sucesso!",
-      });
-
-    } catch (error) {
-      console.error('❌ Erro ao testar agente:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível testar o agente",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const updateMessageCount = async () => {
-    try {
-      const { error } = await supabase
+      // Atualizar contador de mensagens usado
+      const { error: updateError } = await supabase
         .from('agents')
         .update({ 
-          messages_used: messagesCount + 1,
-          updated_at: new Date().toISOString()
+          messages_used: (agent.messages_used || 0) + 1 
         })
         .eq('id', agent.id);
 
-      if (error) {
-        console.error('Erro ao atualizar contador:', error);
-      }
-    } catch (error) {
-      console.error('Erro ao atualizar contador:', error);
-    }
-  };
-
-  const fetchQrCode = async (attempt = 1) => {
-    try {
-      setQrLoading(true);
-      console.log(`🔄 Tentativa ${attempt} - Buscando QR code para AgentCard:`, agent.phone_number);
-      
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
-      
-      const response = await fetch(`https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(agent.phone_number)}`, {
-        signal: controller.signal,
-        headers: {
-          'Accept': 'text/html',
-        }
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (!response.ok) {
-        throw new Error('Erro ao buscar QR code');
-      }
-      
-      const htmlContent = await response.text();
-      
-      // Verificar se retornou mensagem de QR não encontrado
-      if (htmlContent.includes('QR não encontrado')) {
-        toast({
-          title: "Agente Conectado",
-          description: "Este agente já está conectado ao WhatsApp",
-        });
-        setWhatsappStatus('connected');
-        handleWhatsAppStatusChange('connected');
-        return;
-      }
-      
-      // Extrair a imagem base64 do HTML
-      const imgMatch = htmlContent.match(/src\s*=\s*["'](data:image\/[^;]+;base64,[^"']+)["']/i);
-      if (imgMatch && imgMatch[1]) {
-        setQrCode(imgMatch[1]);
-        setShowQrModal(true);
-        setWhatsappStatus('pending');
-        handleWhatsAppStatusChange('pending');
+      if (updateError) {
+        console.error('Erro ao atualizar contador:', updateError);
       } else {
-        if (attempt < 3) {
-          console.log(`🔄 QR não encontrado, tentando novamente em ${attempt * 2} segundos...`);
-          setTimeout(() => fetchQrCode(attempt + 1), attempt * 2000);
-          return;
-        }
-        throw new Error('QR code não encontrado');
+        console.log('✅ Contador de mensagens atualizado');
+        onUpdate(); // Recarregar dados
       }
-    } catch (error) {
-      console.error('Erro ao buscar QR code:', error);
-      
-      if (attempt < 3) {
-        console.log(`🔄 Erro na tentativa ${attempt}, tentando novamente em ${attempt * 2} segundos...`);
-        setTimeout(() => fetchQrCode(attempt + 1), attempt * 3000);
-        return;
-      }
-      
+
       toast({
-        title: "Erro",
-        description: error instanceof Error ? error.message : "Não foi possível carregar o QR code",
+        title: "✅ Teste enviado",
+        description: "Mensagem de teste enviada com sucesso!",
+        variant: "default"
+      });
+
+    } catch (error) {
+      console.error('❌ Erro no teste:', error);
+      toast({
+        title: "Erro no teste",
+        description: "Não foi possível enviar a mensagem de teste",
         variant: "destructive"
       });
     } finally {
-      setQrLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const getMessageLimitColor = (count: number) => {
-    const limit = subscription?.messages_limit || 30;
-    const percentage = (count / limit) * 100;
-    
-    if (percentage >= 90) return 'text-red-600';
-    if (percentage >= 70) return 'text-yellow-600';
-    return 'text-green-600';
+  const formatPhoneNumber = (phone: string) => {
+    return phone.replace(/(\d{3})(\d{3})(\d{3})(\d{3})/, '+$1 $2 $3 $4');
   };
 
-  const isAgentActive = whatsappStatus === 'connected' && agent.is_active;
-  const messageLimit = subscription?.messages_limit || 30;
-  const isNearLimit = messagesCount >= messageLimit * 0.9;
+  const getBusinessTypeIcon = (type: string) => {
+    const icons: Record<string, string> = {
+      'Comércio': '🛍️',
+      'Restaurante': '🍽️',
+      'Serviços': '🔧',
+      'Saúde': '🏥',
+      'Educação': '🎓',
+      'Imobiliária': '🏠',
+      'Tecnologia': '💻',
+      'Outros': '📋'
+    };
+    return icons[type] || '📋';
+  };
+
+  const messagesUsed = agent.messages_used || 0;
+  const planType = subscription?.plan_type || 'free';
+  const messagesLimit = subscription?.is_unlimited ? '∞' : getMessagesLimitByPlan(planType);
 
   return (
     <>
-      <Card className="hover:shadow-lg transition-all duration-200 hover:scale-102">
+      <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-l-4 border-l-brand-green">
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-brand-green rounded-lg flex items-center justify-center">
-                <Bot className="h-6 w-6 text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-brand-green to-green-600 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
+                {getBusinessTypeIcon(agent.business_type)}
               </div>
-              <div>
-                <CardTitle className="text-lg">{agent.name}</CardTitle>
-                <CardDescription className="text-sm">
+              <div className="flex-1 min-w-0">
+                <CardTitle className="text-lg font-bold text-gray-900 truncate group-hover:text-brand-green transition-colors">
+                  {agent.name}
+                </CardTitle>
+                <p className="text-sm text-gray-600 flex items-center mt-1">
+                  <Users className="h-3 w-3 mr-1" />
                   {agent.business_type}
-                </CardDescription>
+                </p>
               </div>
             </div>
-            <Badge variant={isAgentActive ? "default" : "secondary"}>
-              {isAgentActive ? "Ativo" : "Pausado"}
-            </Badge>
+            
+            <div className="flex items-center space-x-2">
+              <Badge variant={agent.is_active ? "default" : "secondary"} className="text-xs">
+                {agent.is_active ? "Ativo" : "Inativo"}
+              </Badge>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-100">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem 
+                    onClick={() => setShowEditModal(true)}
+                    className="cursor-pointer hover:bg-gray-50"
+                  >
+                    <Edit className="h-4 w-4 mr-2" />
+                    Configurar Bot
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={handleToggleActive}
+                    disabled={isLoading}
+                    className="cursor-pointer hover:bg-gray-50"
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    {agent.is_active ? 'Desativar' : 'Ativar'}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={handleDeleteAgent}
+                    disabled={isLoading}
+                    className="cursor-pointer text-red-600 hover:bg-red-50 hover:text-red-700"
+                  >
+                    <Bot className="h-4 w-4 mr-2" />
+                    Excluir Agente
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-4">
           {agent.description && (
-            <p className="text-sm text-gray-600">{agent.description}</p>
+            <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+              {agent.description}
+            </p>
           )}
 
-          {/* Alerta de limite */}
-          {(showLimitAlert || isNearLimit) && (
-            <Alert className="border-yellow-200 bg-yellow-50">
-              <AlertDescription className="text-yellow-800">
-                {showLimitAlert ? 
-                  "⚠️ Limite de mensagens atingido. Faça upgrade do seu plano." :
-                  "⚠️ Próximo do limite de mensagens. Considere fazer upgrade."
-                }
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Contador de mensagens */}
-          <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-            <div className="flex items-center space-x-2">
-              <MessageCircle className="h-4 w-4 text-gray-500" />
-              <span className="text-sm text-gray-600">Mensagens:</span>
+          <div className="space-y-3">
+            <div className="flex items-center text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">
+              <Phone className="h-4 w-4 mr-2 text-brand-green" />
+              <span className="font-mono">{formatPhoneNumber(agent.phone_number)}</span>
             </div>
-            <span className={`text-sm font-medium ${getMessageLimitColor(messagesCount)}`}>
-              {subscription?.is_unlimited ? `${messagesCount}/∞` : `${messagesCount}/${messageLimit}`}
-            </span>
+
+            <WhatsAppStatus 
+              phoneNumber={agent.phone_number}
+              onStatusChange={setWhatsappStatus}
+            />
+
+            <div className="flex items-center justify-between text-sm bg-blue-50 p-2 rounded-lg">
+              <div className="flex items-center text-blue-700">
+                <MessageCircle className="h-4 w-4 mr-2" />
+                <span>Mensagens</span>
+              </div>
+              <span className="font-semibold text-blue-800">
+                {messagesUsed}/{messagesLimit}
+              </span>
+            </div>
           </div>
 
-          {agent.phone_number && (
-            <div className="space-y-2">
-              <div className="text-sm">
-                <span className="font-medium">WhatsApp:</span> {agent.phone_number}
-              </div>
-              <div className="flex items-center justify-between">
-                <WhatsAppStatus 
-                  phoneNumber={agent.phone_number}
-                  onStatusChange={handleWhatsAppStatusChange}
-                />
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => fetchQrCode(1)}
-                  disabled={qrLoading}
-                  className="text-xs"
-                >
-                  <QrCode className="w-3 h-3 mr-1" />
-                  {qrLoading ? 'Carregando...' : 'QR Code'}
-                </Button>
-              </div>
-            </div>
-          )}
-
-          <div className="text-xs text-gray-500">
-            Criado em {new Date(agent.created_at).toLocaleDateString('pt-BR')}
-          </div>
-
-          <div className="flex space-x-2">
+          <div className="flex gap-2 pt-2">
             <Button
-              variant={isAgentActive ? "secondary" : "default"}
               size="sm"
-              onClick={handleToggleActive}
-              disabled={loading || (whatsappStatus !== 'connected' && !agent.is_active)}
-              className="flex-1"
-              title={whatsappStatus !== 'connected' && !agent.is_active ? 
-                'Conecte ao WhatsApp primeiro' : ''
-              }
-            >
-              {isAgentActive ? (
-                <>
-                  <Pause className="h-4 w-4 mr-1" />
-                  Pausar
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4 mr-1" />
-                  Ativar
-                </>
-              )}
-            </Button>
-
-            {/* Botão de teste */}
-            {isAgentActive && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={testAgentResponse}
-                disabled={loading || messagesCount >= messageLimit}
-                className="bg-blue-50 hover:bg-blue-100 text-blue-700"
-              >
-                <MessageCircle className="h-4 w-4" />
-              </Button>
-            )}
-
-            <Button
               variant="outline"
-              size="sm"
-              disabled={loading}
+              onClick={handleSendTestMessage}
+              disabled={isLoading || whatsappStatus !== 'connected'}
+              className="flex-1 hover:bg-brand-green hover:text-white hover:border-brand-green transition-all duration-200"
             >
-              <Settings className="h-4 w-4" />
+              <MessageCircle className="h-4 w-4 mr-2" />
+              {isLoading ? 'Enviando...' : 'Testar'}
             </Button>
-
+            
             <Button
-              variant="outline"
               size="sm"
-              onClick={handleDelete}
-              disabled={loading}
-              className="hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+              variant="outline"
+              onClick={() => setShowEditModal(true)}
+              className="flex-1 hover:bg-blue-500 hover:text-white hover:border-blue-500 transition-all duration-200"
             >
-              <Trash2 className="h-4 w-4" />
+              <Settings className="h-4 w-4 mr-2" />
+              Configurar
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Modal do QR Code */}
-      <Dialog open={showQrModal} onOpenChange={setShowQrModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Conectar WhatsApp</DialogTitle>
-          </DialogHeader>
-          
-          <div className="text-center space-y-4">
-            <p className="text-sm text-gray-600">
-              Aponte a câmera do seu WhatsApp para conectar este agente
-            </p>
-            
-            {qrCode ? (
-              <div className="flex justify-center">
-                <img 
-                  src={qrCode} 
-                  alt="QR Code do WhatsApp" 
-                  className="max-w-full h-auto border rounded-lg shadow-lg"
-                />
-              </div>
-            ) : (
-              <div className="flex justify-center items-center h-64 bg-gray-100 rounded-lg">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green mx-auto mb-2"></div>
-                  <p className="text-sm text-gray-600">Carregando QR Code...</p>
-                </div>
-              </div>
-            )}
-            
-            <Button
-              onClick={() => fetchQrCode(1)}
-              variant="outline"
-              size="sm"
-              className="w-full"
-            >
-              Gerar Novo QR Code
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <EditAgentModal
+        agent={agent}
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        onAgentUpdated={onUpdate}
+      />
     </>
   );
 };

@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Bot, MessageCircle, Settings, BarChart3, Crown, LogOut, Menu } from 'lucide-react';
+import { Plus, Bot, MessageCircle, Settings, BarChart3, Crown, LogOut, Menu, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import AgentCard from '@/components/AgentCard';
@@ -40,6 +41,7 @@ const Dashboard = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [verifyingSubscription, setVerifyingSubscription] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -106,7 +108,6 @@ const Dashboard = () => {
       }
 
       if (error && error.code === 'PGRST116') {
-        // Não encontrou assinatura, criar uma padrão gratuita
         console.log('📝 DASHBOARD: Criando assinatura gratuita padrão...');
         const { data: newSub, error: createError } = await supabase
           .from('subscriptions')
@@ -123,7 +124,6 @@ const Dashboard = () => {
         
         if (createError) {
           console.error('❌ DASHBOARD: Erro ao criar assinatura:', createError);
-          // Se falhar ao criar, usar valores padrão
           const defaultSub = {
             plan_type: 'free',
             status: 'active',
@@ -143,7 +143,6 @@ const Dashboard = () => {
       }
     } catch (error) {
       console.error('❌ DASHBOARD: Erro na busca de assinatura:', error);
-      // Usar valores padrão em caso de erro
       const defaultSub = {
         plan_type: 'free',
         status: 'active',
@@ -159,15 +158,64 @@ const Dashboard = () => {
   const getAgentLimitByPlan = (planType: string) => {
     switch (planType) {
       case 'free': return 1;
-      case 'pro': return 10;
+      case 'pro': return 10; // Corrigido de 3 para 10
       case 'ultra': return 999999;
       case 'unlimited': return 999999;
       default: return 1;
     }
   };
 
+  const getMessagesLimitByPlan = (planType: string) => {
+    switch (planType) {
+      case 'free': return 30;
+      case 'pro': return 10000; // Corrigido de 1000 para 10000
+      case 'ultra': return 999999;
+      case 'unlimited': return 999999;
+      default: return 30;
+    }
+  };
+
+  const verifySubscription = async () => {
+    setVerifyingSubscription(true);
+    try {
+      console.log('🔄 DASHBOARD: Verificando assinatura no Stripe...');
+      
+      const response = await fetch('/api/verify-subscription', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ DASHBOARD: Verificação completa:', result);
+        
+        toast({
+          title: "Verificação completa",
+          description: `Plano atualizado: ${result.plan_type}`,
+          variant: "default"
+        });
+        
+        // Recarregar dados
+        await fetchSubscription();
+      } else {
+        throw new Error('Erro na verificação');
+      }
+    } catch (error) {
+      console.error('❌ DASHBOARD: Erro na verificação:', error);
+      toast({
+        title: "Erro na verificação",
+        description: "Não foi possível verificar sua assinatura",
+        variant: "destructive"
+      });
+    } finally {
+      setVerifyingSubscription(false);
+    }
+  };
+
   const canCreateAgent = () => {
-    // Aguardar carregamento dos dados
     if (loading || !subscription) {
       console.log('⏳ VERIFICAÇÃO LIMITE: Ainda carregando dados...');
       return false;
@@ -261,14 +309,15 @@ const Dashboard = () => {
       return '∞ Ilimitado';
     }
     const totalUsed = getTotalMessagesUsed();
-    return `${totalUsed}/${subscription?.messages_limit || 30}`;
+    const limit = getMessagesLimitByPlan(subscription?.plan_type || 'free');
+    return `${totalUsed}/${limit}`;
   };
 
   const shouldShowLimitWarning = () => {
     if (subscription?.is_unlimited) return false;
     const totalUsed = getTotalMessagesUsed();
-    const limit = subscription?.messages_limit || 30;
-    return totalUsed >= limit * 0.8; // Mostrar aviso quando usar 80% do limite
+    const limit = getMessagesLimitByPlan(subscription?.plan_type || 'free');
+    return totalUsed >= limit * 0.8;
   };
 
   const shouldShowUpgradeButton = () => {
@@ -321,6 +370,16 @@ const Dashboard = () => {
                 <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-medium`}>
                   {getPlanDisplayName(subscription?.plan_type || 'free')}
                 </Badge>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={verifySubscription}
+                  disabled={verifyingSubscription}
+                  className="text-blue-600 border-blue-600 hover:bg-blue-50 transition-all duration-200"
+                >
+                  <RefreshCw className={`h-4 w-4 mr-1 ${verifyingSubscription ? 'animate-spin' : ''}`} />
+                  {verifyingSubscription ? 'Verificando...' : 'Verificar Plano'}
+                </Button>
                 {shouldShowUpgradeButton() && (
                   <Button
                     variant="outline"
@@ -362,20 +421,32 @@ const Dashboard = () => {
                   <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-medium`}>
                     {getPlanDisplayName(subscription?.plan_type || 'free')}
                   </Badge>
-                  {shouldShowUpgradeButton() && (
+                  <div className="flex space-x-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        setShowUpgradeModal(true);
-                        setMobileMenuOpen(false);
-                      }}
-                      className="text-brand-green border-brand-green hover:bg-brand-green hover:text-white"
+                      onClick={verifySubscription}
+                      disabled={verifyingSubscription}
+                      className="text-blue-600 border-blue-600 hover:bg-blue-50"
                     >
-                      <Crown className="h-4 w-4 mr-1" />
-                      Upgrade
+                      <RefreshCw className={`h-4 w-4 mr-1 ${verifyingSubscription ? 'animate-spin' : ''}`} />
+                      Verificar
                     </Button>
-                  )}
+                    {shouldShowUpgradeButton() && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setShowUpgradeModal(true);
+                          setMobileMenuOpen(false);
+                        }}
+                        className="text-brand-green border-brand-green hover:bg-brand-green hover:text-white"
+                      >
+                        <Crown className="h-4 w-4 mr-1" />
+                        Upgrade
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <p className="text-sm text-gray-600">Olá, {user?.email}</p>
                 <Button 
