@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -174,26 +173,14 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
         return;
       }
 
-      // Atualizar contador de mensagens usado
-      const { error: updateError } = await supabase
-        .from('agents')
-        .update({ 
-          messages_used: (agent.messages_used || 0) + 1 
-        })
-        .eq('id', agent.id);
-
-      if (updateError) {
-        console.error('Erro ao atualizar contador:', updateError);
-      } else {
-        console.log('✅ Contador de mensagens atualizado');
-        onUpdate(); // Recarregar dados
-      }
-
       toast({
         title: "✅ Teste enviado",
         description: "Mensagem de teste enviada com sucesso!",
         variant: "default"
       });
+
+      // Recarregar dados para atualizar contador
+      onUpdate();
 
     } catch (error) {
       console.error('❌ Erro no teste:', error);
