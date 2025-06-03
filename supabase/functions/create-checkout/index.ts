@@ -49,10 +49,14 @@ serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
-    // Usar a origem da requisição, mas com fallback para o domínio de produção
-    const origin = req.headers.get("origin") || req.headers.get("referer")?.replace(/\/$/, '') || "https://zapagent-ai.lovable.site";
+    // Detectar o domínio correto da requisição
+    const origin = req.headers.get("origin") || req.headers.get("referer")?.split('/').slice(0, 3).join('/') || "https://zapagent-ai.lovable.site";
     console.log("Origin detected:", origin);
-    console.log("Referer:", req.headers.get("referer"));
+    console.log("All headers:", Object.fromEntries(req.headers.entries()));
+
+    // URLs de redirecionamento corretas
+    const successUrl = `${origin}/sucesso?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${origin}/cancelado`;
 
     // Criar sessão de checkout
     const session = await stripe.checkout.sessions.create({
@@ -65,8 +69,8 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      success_url: `${origin}/sucesso?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/cancelado`,
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       metadata: {
         user_id: user.id,
         user_email: user.email,
@@ -76,8 +80,8 @@ serve(async (req) => {
     });
 
     console.log("Checkout session created:", session.id);
-    console.log("Success URL:", `${origin}/sucesso?session_id={CHECKOUT_SESSION_ID}`);
-    console.log("Cancel URL:", `${origin}/cancelado`);
+    console.log("Success URL:", successUrl);
+    console.log("Cancel URL:", cancelUrl);
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
