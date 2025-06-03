@@ -20,64 +20,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-
-    // Configurar listener de auth
+    // Configurar listener de auth - SIMPLES e direto
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+      (event, currentSession) => {
         console.log('Auth state changed:', event);
         
-        if (!mounted) return;
-        
-        if (event === 'SIGNED_OUT' || !currentSession) {
-          setSession(null);
-          setUser(null);
-          setLoading(false);
-          return;
-        }
-
-        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-          setSession(currentSession);
-          setUser(currentSession?.user || null);
-          setLoading(false);
-        }
+        // Atualizar estado baseado na sessão atual
+        setSession(currentSession);
+        setUser(currentSession?.user || null);
+        setLoading(false);
       }
     );
 
     // Verificar sessão inicial apenas uma vez
-    const getInitialSession = async () => {
-      try {
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Error getting session:', error);
-          if (mounted) {
-            setSession(null);
-            setUser(null);
-            setLoading(false);
-          }
-          return;
-        }
-        
-        if (mounted) {
-          setSession(initialSession);
-          setUser(initialSession?.user || null);
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Session initialization failed:', error);
-        if (mounted) {
-          setSession(null);
-          setUser(null);
-          setLoading(false);
-        }
-      }
-    };
-
-    getInitialSession();
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      setSession(initialSession);
+      setUser(initialSession?.user || null);
+      setLoading(false);
+    });
 
     return () => {
-      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -117,13 +79,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signOut = async () => {
     try {
       await supabase.auth.signOut();
-      setSession(null);
-      setUser(null);
     } catch (error) {
       console.error('SignOut error:', error);
-      // Forçar logout local mesmo se houver erro
-      setSession(null);
-      setUser(null);
     }
   };
 

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,7 +11,7 @@ const Sucesso = () => {
   const [loading, setLoading] = useState(true);
   const [countdown, setCountdown] = useState(5);
   const [verified, setVerified] = useState(false);
-  const { user, refreshSubscription } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
@@ -42,9 +41,6 @@ const Sucesso = () => {
           console.log('Resposta da verificação:', data);
           setVerified(true);
           
-          // Forçar atualização da assinatura no contexto
-          await refreshSubscription();
-          
           if (data?.subscribed) {
             toast.success(`Pagamento confirmado! Plano ${data.plan_type} ativado com sucesso.`);
           } else {
@@ -53,7 +49,6 @@ const Sucesso = () => {
               console.log('Tentando verificar novamente...');
               const { data: retryData } = await supabase.functions.invoke('verify-subscription');
               if (retryData?.subscribed) {
-                await refreshSubscription();
                 toast.success(`Pagamento confirmado! Plano ${retryData.plan_type} ativado com sucesso.`);
               }
             }, 5000);
@@ -68,7 +63,7 @@ const Sucesso = () => {
     };
 
     verifyPayment();
-  }, [user, navigate, sessionId, refreshSubscription]);
+  }, [user, navigate, sessionId]);
 
   // Countdown para redirecionamento automático
   useEffect(() => {
