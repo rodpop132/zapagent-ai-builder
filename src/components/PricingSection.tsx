@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, Loader2 } from "lucide-react";
@@ -86,8 +85,8 @@ const PricingSection = () => {
     },
     {
       name: "Pro",
-      originalPrice: "R$59",
-      price: "R$149",
+      originalPrice: "R$100",
+      price: "R$49",
       period: "/mês",
       description: "Ideal para pequenos negócios",
       features: [
@@ -105,8 +104,8 @@ const PricingSection = () => {
     },
     {
       name: "Ultra",
-      originalPrice: "R$599",
-      price: "R$299",
+      originalPrice: "R$250",
+      price: "R$99",
       period: "/mês", 
       description: "Para negócios em crescimento",
       features: [
@@ -173,7 +172,7 @@ const PricingSection = () => {
                         {plan.originalPrice}
                       </span>
                       <span className="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
-                        -80%
+                        -50%
                       </span>
                     </div>
                   )}
