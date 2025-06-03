@@ -1,6 +1,7 @@
 
 import { useAuth } from '@/hooks/useAuth';
 import { Navigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -9,8 +10,25 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
   const location = useLocation();
+  const [shouldRedirect, setShouldRedirect] = useState(false);
+
+  useEffect(() => {
+    if (!loading && !user) {
+      console.log('🔒 User not authenticated, will redirect to auth');
+      // Pequeno delay para evitar redirecionamentos múltiplos
+      const timer = setTimeout(() => {
+        setShouldRedirect(true);
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    } else if (user) {
+      console.log('✅ User authenticated:', user.email);
+      setShouldRedirect(false);
+    }
+  }, [user, loading]);
 
   if (loading) {
+    console.log('⏳ Auth loading...');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -21,11 +39,12 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     );
   }
 
-  if (!user) {
-    console.log('User not authenticated, redirecting to auth');
+  if (shouldRedirect) {
+    console.log('🔄 Redirecting to auth page');
     return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
+  console.log('🎯 Rendering protected content');
   return <>{children}</>;
 };
 
