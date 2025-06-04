@@ -1,3 +1,4 @@
+
 const API_BASE_URL = 'https://zapagent-api.onrender.com';
 const BOT_BASE_URL = 'https://zapagent-bot.onrender.com';
 
@@ -220,100 +221,207 @@ export class ZapAgentService {
 
   static async getAgentStatus(numero: string): Promise<StatusResponse> {
     try {
+      console.log('📊 SERVICE: Buscando status do agente:', numero);
+      
       // Limpar número (remover + e espaços)
       const cleanNumber = numero.replace(/[\s+]/g, '');
+      console.log('📞 SERVICE: Número limpo para status:', cleanNumber);
+      console.log('🔗 SERVICE: URL status:', `${API_BASE_URL}/status/${cleanNumber}`);
       
-      const response = await fetch(`${API_BASE_URL}/status/${cleanNumber}`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        console.error('⏰ SERVICE: Timeout no status (15s)');
+        controller.abort();
+      }, 15000);
+      
+      const startTime = performance.now();
+      const response = await fetch(`${API_BASE_URL}/status/${cleanNumber}`, {
+        signal: controller.signal,
+        mode: 'cors'
+      });
+      
+      clearTimeout(timeoutId);
+      const endTime = performance.now();
+      
+      console.log(`⏱️ SERVICE: Tempo de resposta status: ${(endTime - startTime).toFixed(2)}ms`);
+      console.log('📊 SERVICE: Status code:', response.status);
       
       if (!response.ok) {
-        throw new Error(`Erro na API: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ SERVICE: Erro na resposta do status:', response.status, errorText);
+        throw new Error(`Erro na API status: ${response.status} - ${errorText}`);
       }
 
       const data: StatusResponse = await response.json();
+      console.log('✅ SERVICE: Status recebido:', data);
       return data;
     } catch (error) {
-      console.error('❌ ERRO AO BUSCAR STATUS DO AGENTE:', error);
+      console.error('❌ SERVICE: Erro ao buscar status do agente:', error);
+      if (error.name === 'AbortError') {
+        throw new Error('Timeout: Status demorou muito para responder');
+      }
       throw error;
     }
   }
 
   static async getAgentHistory(numero: string): Promise<ChatMessage[]> {
     try {
+      console.log('📜 SERVICE: Buscando histórico do agente:', numero);
       const statusData = await this.getAgentStatus(numero);
+      console.log('✅ SERVICE: Histórico obtido:', statusData.historico?.length || 0, 'mensagens');
       return statusData.historico || [];
     } catch (error) {
-      console.error('❌ ERRO AO BUSCAR HISTÓRICO:', error);
+      console.error('❌ SERVICE: Erro ao buscar histórico:', error);
       return [];
     }
   }
 
   static async getQrCode(numero: string): Promise<QrCodeResponse> {
     try {
-      console.log('🔄 BUSCANDO QR CODE PARA:', numero);
+      console.log('🔄 SERVICE: Buscando QR code para:', numero);
       
       const cleanNumber = numero.replace(/[\s+]/g, '');
-      const response = await fetch(`${BOT_BASE_URL}/qrcode?numero=${encodeURIComponent(cleanNumber)}`);
+      console.log('📞 SERVICE: Número limpo para QR:', cleanNumber);
+      console.log('🔗 SERVICE: URL QR:', `${BOT_BASE_URL}/qrcode?numero=${encodeURIComponent(cleanNumber)}`);
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        console.error('⏰ SERVICE: Timeout no QR code (20s)');
+        controller.abort();
+      }, 20000);
+      
+      const startTime = performance.now();
+      const response = await fetch(`${BOT_BASE_URL}/qrcode?numero=${encodeURIComponent(cleanNumber)}`, {
+        signal: controller.signal,
+        mode: 'cors',
+        headers: {
+          'Accept': 'text/html,application/json',
+          'Cache-Control': 'no-cache',
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      const endTime = performance.now();
+      
+      console.log(`⏱️ SERVICE: Tempo de resposta QR: ${(endTime - startTime).toFixed(2)}ms`);
+      console.log('📊 SERVICE: Status QR:', response.status);
+      console.log('📊 SERVICE: Headers QR:', Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
-        throw new Error(`Erro na API: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ SERVICE: Erro na resposta do QR:', response.status, errorText);
+        
+        if (response.status === 404 && errorText.includes('QR não encontrado')) {
+          console.log('⚠️ SERVICE: QR code ainda não gerado');
+          return {
+            conectado: false,
+            mensagem: 'QR code ainda não foi gerado. Aguarde alguns segundos.'
+          };
+        }
+        
+        throw new Error(`Erro na API QR: ${response.status} - ${errorText}`);
       }
 
       const contentType = response.headers.get('content-type');
+      console.log('📄 SERVICE: Content-Type:', contentType);
       
       if (contentType?.includes('application/json')) {
         // Resposta JSON (provavelmente já conectado)
         const data = await response.json();
+        console.log('✅ SERVICE: QR response (JSON):', data);
         return data;
       } else {
         // Resposta HTML com QR code
         const htmlContent = await response.text();
+        console.log('📄 SERVICE: HTML QR recebido (primeiros 200 chars):', htmlContent.substring(0, 200));
         
         // Verificar se já está conectado
-        if (htmlContent.includes('Número já conectado') || htmlContent.includes('QR não encontrado')) {
+        if (htmlContent.includes('Número já conectado') || htmlContent.includes('já está conectado')) {
+          console.log('✅ SERVICE: Agente já conectado (HTML)');
           return {
             conectado: true,
             mensagem: 'Agente já está conectado'
           };
         }
         
+        if (htmlContent.includes('QR não encontrado')) {
+          console.log('⚠️ SERVICE: QR não encontrado (HTML)');
+          return {
+            conectado: false,
+            mensagem: 'QR code ainda não foi gerado'
+          };
+        }
+        
         // Extrair QR code do HTML
         const imgMatch = htmlContent.match(/src\s*=\s*["'](data:image\/[^;]+;base64,[^"']+)["']/i);
         if (imgMatch && imgMatch[1]) {
+          console.log('✅ SERVICE: QR code extraído com sucesso, tamanho:', imgMatch[1].length);
           return {
             qr_code: imgMatch[1],
             conectado: false
           };
         }
         
+        console.error('❌ SERVICE: QR code não encontrado no HTML');
         throw new Error('QR code não encontrado no HTML');
       }
     } catch (error) {
-      console.error('❌ ERRO AO BUSCAR QR CODE:', error);
+      console.error('❌ SERVICE: Erro ao buscar QR code:', error);
+      if (error.name === 'AbortError') {
+        throw new Error('Timeout: QR code demorou muito para carregar');
+      }
       throw error;
     }
   }
 
   static async sendSimpleMessage(message: string, prompt: string): Promise<string> {
     try {
+      console.log('📤 SERVICE: Enviando mensagem simples à API');
+      console.log('🔗 SERVICE: URL simples:', `${API_BASE_URL}/responder`);
+      
+      const payload = {
+        msg: message,
+        prompt: prompt
+      };
+      console.log('📦 SERVICE: Payload simples:', JSON.stringify(payload, null, 2));
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        console.error('⏰ SERVICE: Timeout na mensagem simples (30s)');
+        controller.abort();
+      }, 30000);
+      
+      const startTime = performance.now();
       const response = await fetch(`${API_BASE_URL}/responder`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          msg: message,
-          prompt: prompt
-        })
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+        mode: 'cors'
       });
 
+      clearTimeout(timeoutId);
+      const endTime = performance.now();
+      
+      console.log(`⏱️ SERVICE: Tempo de resposta simples: ${(endTime - startTime).toFixed(2)}ms`);
+      console.log('📊 SERVICE: Status simples:', response.status);
+
       if (!response.ok) {
-        throw new Error(`Erro na API: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ SERVICE: Erro na resposta simples:', response.status, errorText);
+        throw new Error(`Erro na API simples: ${response.status} - ${errorText}`);
       }
 
       const data: ApiResponse = await response.json();
+      console.log('✅ SERVICE: Resposta simples:', data.resposta);
       return data.resposta;
     } catch (error) {
-      console.error('❌ ERRO AO ENVIAR MENSAGEM SIMPLES:', error);
+      console.error('❌ SERVICE: Erro ao enviar mensagem simples:', error);
+      if (error.name === 'AbortError') {
+        throw new Error('Timeout: Mensagem simples demorou muito');
+      }
       throw error;
     }
   }
