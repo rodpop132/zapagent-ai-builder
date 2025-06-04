@@ -19,7 +19,7 @@ interface Agent {
   phone_number: string;
   is_active: boolean;
   created_at: string;
-  prompt?: string;
+  personality_prompt?: string;
   messages_used?: number;
   messages_limit?: number;
 }
