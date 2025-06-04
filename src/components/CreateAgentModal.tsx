@@ -117,9 +117,8 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
   const checkPhoneNumberAvailability = async (phoneNumber: string) => {
     try {
-      console.log('📞 Verificando disponibilidade do número:', phoneNumber);
+      console.log('🔍 STEP 1: Verificando disponibilidade do número:', phoneNumber);
       
-      // Verificar se o número já está sendo usado por ESTE usuário
       const { data: existingAgent, error } = await supabase
         .from('agents')
         .select('id, user_id, name')
@@ -127,45 +126,45 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         .single();
 
       if (error && error.code !== 'PGRST116') {
-        console.error('❌ Erro ao verificar número:', error);
-        throw new Error('Erro ao verificar disponibilidade do número');
+        console.error('❌ STEP 1 ERROR: Erro ao verificar número no Supabase:', error);
+        throw new Error(`Erro ao verificar disponibilidade: ${error.message}`);
       }
 
       if (existingAgent) {
+        console.error('❌ STEP 1 ERROR: Número já em uso:', existingAgent);
         if (existingAgent.user_id === user?.id) {
-          // O próprio usuário já tem um agente com este número
           throw new Error(`Você já possui um agente (${existingAgent.name}) usando este número. Use um número diferente.`);
         } else {
-          // Outro usuário está usando este número
-          throw new Error('Este número já está sendo usado por outro usuário. Cada número pode ser usado apenas uma vez na plataforma.');
+          throw new Error('Este número já está sendo usado por outro usuário.');
         }
       }
 
-      console.log('✅ Número disponível para uso');
+      console.log('✅ STEP 1 SUCCESS: Número disponível para uso');
       return true;
     } catch (error) {
-      console.error('❌ Erro na verificação do número:', error);
+      console.error('❌ STEP 1 FINAL ERROR:', error);
       throw error;
     }
   };
 
   const createAgentAPI = async () => {
     try {
-      const userPlan = await getUserPlan();
+      console.log('🚀 STEP 2: Iniciando criação do agente na API externa');
       
-      // Verificar disponibilidade do número antes de criar
-      await checkPhoneNumberAvailability(formData.phone_number);
+      const userPlan = await getUserPlan();
+      console.log('📋 STEP 2.1: Plano do usuário obtido:', userPlan);
       
       // Mapear plano para os valores aceitos pela API
       let planValue = 'gratuito';
       if (userPlan === 'pro') planValue = 'standard';
       if (userPlan === 'ultra') planValue = 'ultra';
       
-      // Log do número com DDI para debug
-      console.log('📞 Número completo com DDI:', formData.phone_number);
+      console.log('📋 STEP 2.2: Plano mapeado para API:', planValue);
+      console.log('📞 STEP 2.3: Número completo com DDI:', formData.phone_number);
       
-      // Verificar se o número tem DDI (deve começar com código do país)
+      // Verificar se o número tem DDI
       if (!formData.phone_number || formData.phone_number.length < 10) {
+        console.error('❌ STEP 2.3 ERROR: Número inválido');
         throw new Error('Número do WhatsApp deve incluir o código do país (DDI)');
       }
       
@@ -174,18 +173,21 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         tipo: formData.business_type,
         descricao: formData.description,
         prompt: formData.personality_prompt || `Você é um assistente virtual para ${formData.business_type}. Seja sempre educado, prestativo e responda de forma clara e objetiva.`,
-        numero: formData.phone_number, // Este número já deve vir com DDI do CountryPhoneInput
+        numero: formData.phone_number,
         plano: planValue
       };
 
-      console.log('🚀 DEBUG: Criando agente na API externa');
-      console.log('🔗 URL:', 'https://zapagent-bot.onrender.com/zapagent');
-      console.log('📦 Payload completo:', JSON.stringify(payload, null, 2));
-
+      console.log('📦 STEP 2.4: Payload completo preparado:', JSON.stringify(payload, null, 2));
+      console.log('🔗 STEP 2.5: URL da API:', 'https://zapagent-bot.onrender.com/zapagent');
+      
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 45000); // Aumentar timeout
+      const timeoutId = setTimeout(() => {
+        console.error('⏰ STEP 2.6 TIMEOUT: Requisição cancelada por timeout (45s)');
+        controller.abort();
+      }, 45000);
       
       const startTime = performance.now();
+      console.log('📡 STEP 2.7: Enviando requisição para API externa...');
       
       const response = await fetch('https://zapagent-bot.onrender.com/zapagent', {
         method: 'POST',
@@ -201,15 +203,14 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       clearTimeout(timeoutId);
       const endTime = performance.now();
 
-      console.log(`⏱️ Tempo de resposta: ${(endTime - startTime).toFixed(2)}ms`);
-      console.log('📊 Status da resposta:', response.status);
-      console.log('📊 Headers da resposta:', Object.fromEntries(response.headers.entries()));
+      console.log(`⏱️ STEP 2.8: Tempo de resposta: ${(endTime - startTime).toFixed(2)}ms`);
+      console.log('📊 STEP 2.9: Status da resposta:', response.status);
+      console.log('📊 STEP 2.10: Headers da resposta:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Erro na resposta da API:', response.status, errorText);
+        console.error('❌ STEP 2.11 ERROR: Resposta não OK:', response.status, errorText);
         
-        // Tratar erros específicos da API
         if (response.status === 403) {
           throw new Error('Número já está sendo usado em outra conta ou serviço. Use um número diferente.');
         } else if (response.status === 429) {
@@ -222,24 +223,29 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       }
 
       const responseText = await response.text();
-      console.log('📥 Resposta bruta:', responseText);
+      console.log('📥 STEP 2.12: Resposta bruta recebida:', responseText.substring(0, 500));
       
       let result;
       try {
         result = JSON.parse(responseText);
-        console.log('✅ JSON parseado com sucesso:', result);
+        console.log('✅ STEP 2.13 SUCCESS: JSON parseado com sucesso:', result);
       } catch (parseError) {
-        console.error('❌ Erro ao parsear JSON:', parseError);
-        console.error('❌ Resposta que falhou no parse:', responseText);
+        console.error('❌ STEP 2.13 ERROR: Erro ao parsear JSON:', parseError);
+        console.error('❌ STEP 2.13 ERROR: Resposta que falhou no parse:', responseText.substring(0, 200));
         throw new Error(`Resposta inválida do servidor: ${responseText.substring(0, 100)}`);
       }
 
       return result;
     } catch (error) {
-      console.error('🚨 ERRO COMPLETO na createAgentAPI:', error);
+      console.error('🚨 STEP 2 FINAL ERROR na createAgentAPI:', error);
       
       if (error.name === 'AbortError') {
         throw new Error('Timeout: A requisição demorou muito para responder. Tente novamente.');
+      }
+      
+      if (error.message && error.message.includes('fetch')) {
+        console.error('🌐 STEP 2 NETWORK ERROR: Problema de conectividade detectado');
+        throw new Error('Erro de conectividade. Verifique sua internet e tente novamente.');
       }
       
       throw error;
@@ -389,7 +395,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       } else {
         console.error('❌ QR code não encontrado ou inválido no HTML');
         if (attempt < maxAttempts) {
-          const waitTime = Math.min(attempt * 3000, 10000);
+          const waitTime = Math.min(attempt * 4000, 15000);
           console.log(`🔄 Tentando novamente em ${waitTime/1000} segundos...`);
           setTimeout(() => fetchQrCode(attempt + 1, maxAttempts), waitTime);
           return;
@@ -423,36 +429,41 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     setLoading(true);
 
     try {
-      console.log('🎯 Iniciando criação do agente...');
-      console.log('📞 Número do telefone recebido:', formData.phone_number);
+      console.log('🎯 MAIN PROCESS: Iniciando criação completa do agente...');
+      console.log('📞 MAIN PROCESS: Número do telefone recebido:', formData.phone_number);
+      console.log('👤 MAIN PROCESS: Usuário logado:', user?.email);
       
       // Validação dos dados obrigatórios
+      console.log('🔍 VALIDATION: Validando dados obrigatórios...');
       if (!formData.name.trim()) {
+        console.error('❌ VALIDATION ERROR: Nome vazio');
         throw new Error('Nome do agente é obrigatório');
       }
       if (!formData.business_type) {
+        console.error('❌ VALIDATION ERROR: Tipo de negócio vazio');
         throw new Error('Tipo de negócio é obrigatório');
       }
       if (!formData.phone_number.trim()) {
+        console.error('❌ VALIDATION ERROR: Número vazio');
         throw new Error('Número do WhatsApp é obrigatório');
       }
 
-      // Verificar se o número tem pelo menos o formato mínimo com DDI
       if (formData.phone_number.length < 10) {
+        console.error('❌ VALIDATION ERROR: Número muito curto');
         throw new Error('Número deve incluir o código do país (DDI) e ter pelo menos 10 dígitos');
       }
+      console.log('✅ VALIDATION SUCCESS: Todos os dados obrigatórios estão preenchidos');
 
-      // 1. Verificar disponibilidade do número
-      console.log('🔍 Verificando disponibilidade do número...');
+      // STEP 1: Verificar disponibilidade do número
       await checkPhoneNumberAvailability(formData.phone_number);
 
-      // 2. Criar agente na API externa
-      console.log('📡 Chamando API externa com número:', formData.phone_number);
+      // STEP 2: Criar agente na API externa
+      console.log('📡 MAIN PROCESS: Iniciando STEP 2 - Criação na API externa');
       await createAgentAPI();
-      console.log('✅ API externa respondeu com sucesso');
+      console.log('✅ MAIN PROCESS: STEP 2 completado com sucesso');
 
-      // 3. Salvar no Supabase para persistência local
-      console.log('💾 Salvando no banco de dados local...');
+      // STEP 3: Salvar no Supabase
+      console.log('💾 STEP 3: Salvando no banco de dados local...');
       const { error: supabaseError } = await supabase
         .from('agents')
         .insert({
@@ -464,19 +475,21 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         });
 
       if (supabaseError) {
-        console.error('❌ Erro no Supabase:', supabaseError);
+        console.error('❌ STEP 3 ERROR: Erro no Supabase:', supabaseError);
         throw new Error(`Erro ao salvar no banco de dados: ${supabaseError.message}`);
       }
 
-      console.log('✅ Agente salvo no banco local com sucesso');
+      console.log('✅ STEP 3 SUCCESS: Agente salvo no banco local com sucesso');
 
       toast({
         title: "Agente criado com sucesso!",
         description: "Aguarde alguns segundos para o QR code aparecer..."
       });
 
-      // 4. Aguardar 8 segundos antes de buscar QR code (tempo para o backend processar)
+      // STEP 4: Aguardar e buscar QR code
+      console.log('⏳ STEP 4: Aguardando 8 segundos antes de buscar QR code...');
       setTimeout(async () => {
+        console.log('🔄 STEP 4: Iniciando busca do QR code...');
         await fetchQrCode(1, 5);
       }, 8000);
 
@@ -494,15 +507,18 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       setUploadedFiles([]);
 
     } catch (error) {
-      console.error('💥 Error creating agent:', error);
+      console.error('💥 MAIN PROCESS FINAL ERROR: Erro completo na criação do agente:', error);
+      console.error('💥 MAIN PROCESS ERROR STACK:', error.stack);
       
       if (error instanceof Error) {
+        console.error('💥 MAIN PROCESS ERROR MESSAGE:', error.message);
         toast({
           title: "Erro na Criação do Agente",
           description: error.message,
           variant: "destructive"
         });
       } else {
+        console.error('💥 MAIN PROCESS UNKNOWN ERROR:', error);
         toast({
           title: "Erro Inesperado",
           description: "Ocorreu um erro inesperado. Verifique o console para mais detalhes.",
