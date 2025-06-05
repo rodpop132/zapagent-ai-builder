@@ -20,123 +20,59 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-
-    const initializeAuth = async () => {
+    // Get initial session
+    const getInitialSession = async () => {
       try {
-        console.log('🔧 AUTH: Inicializando autenticação...');
-        
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        
-        if (!mounted) return;
-        
-        if (error) {
-          console.error('❌ AUTH: Erro ao obter sessão:', error);
-        }
-        
-        if (currentSession?.user) {
-          console.log('✅ AUTH: Sessão ativa encontrada:', currentSession.user.email);
-          setSession(currentSession);
-          setUser(currentSession.user);
-        } else {
-          console.log('ℹ️ AUTH: Nenhuma sessão ativa');
-          setSession(null);
-          setUser(null);
-        }
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user || null);
       } catch (error) {
-        console.error('💥 AUTH: Erro na inicialização:', error);
-        if (mounted) {
-          setSession(null);
-          setUser(null);
-        }
+        console.error('Error getting session:', error);
       } finally {
-        if (mounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 
-    initializeAuth();
+    getInitialSession();
 
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, newSession) => {
-        console.log('🔄 AUTH: Mudança de estado:', event);
-        
-        if (!mounted) return;
-        
-        setSession(newSession);
-        setUser(newSession?.user || null);
+      async (event, session) => {
+        console.log('Auth state changed:', event);
+        setSession(session);
+        setUser(session?.user || null);
         setLoading(false);
       }
     );
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    console.log('📝 AUTH: Iniciando cadastro para:', email);
-    
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
         },
-      });
-      
-      if (error) {
-        console.error('❌ AUTH: Erro no cadastro:', error);
-      } else {
-        console.log('✅ AUTH: Cadastro realizado');
-      }
-      
-      return { data, error };
-    } catch (error) {
-      console.error('💥 AUTH: Erro inesperado no cadastro:', error);
-      return { data: null, error };
-    }
+      },
+    });
+    return { data, error };
   };
 
   const signIn = async (email: string, password: string) => {
-    console.log('🔑 AUTH: Iniciando login para:', email);
-    
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) {
-        console.error('❌ AUTH: Erro no login:', error);
-      } else {
-        console.log('✅ AUTH: Login realizado');
-      }
-      
-      return { data, error };
-    } catch (error) {
-      console.error('💥 AUTH: Erro inesperado no login:', error);
-      return { data: null, error };
-    }
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    return { data, error };
   };
 
   const signOut = async () => {
-    console.log('🚪 AUTH: Iniciando logout...');
-    
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('❌ AUTH: Erro no logout:', error);
-      } else {
-        console.log('✅ AUTH: Logout realizado');
-      }
-    } catch (error) {
-      console.error('💥 AUTH: Erro inesperado no logout:', error);
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error signing out:', error);
     }
   };
 

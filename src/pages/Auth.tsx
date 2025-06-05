@@ -12,18 +12,33 @@ const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { signIn, signUp, user, loading: authLoading } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { signIn, signUp, user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
+  const from = location.state?.from?.pathname || '/dashboard';
+
   useEffect(() => {
-    if (user && !authLoading) {
-      const from = location.state?.from?.pathname || '/dashboard';
-      console.log('🎯 AUTH PAGE: Usuário autenticado, redirecionando para:', from);
+    if (user && !loading) {
       navigate(from, { replace: true });
     }
-  }, [user, authLoading, navigate, location]);
+  }, [user, loading, navigate, from]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (user) {
+    return null;
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,62 +53,41 @@ const Auth = () => {
       return;
     }
     
-    setLoading(true);
+    setIsSubmitting(true);
 
     try {
       if (isLogin) {
-        console.log('🔑 AUTH PAGE: Tentando login...');
         const { error } = await signIn(email, password);
         
         if (error) {
-          console.error('❌ AUTH PAGE: Erro no login:', error.message);
           if (error.message.includes('Invalid login credentials')) {
             toast.error('Email ou senha incorretos');
           } else {
             toast.error(`Erro no login: ${error.message}`);
           }
         } else {
-          console.log('✅ AUTH PAGE: Login bem-sucedido');
           toast.success('Login realizado com sucesso!');
         }
       } else {
-        console.log('📝 AUTH PAGE: Tentando cadastro...');
         const { error } = await signUp(email, password, fullName);
         
         if (error) {
-          console.error('❌ AUTH PAGE: Erro no cadastro:', error.message);
           if (error.message.includes('User already registered')) {
             toast.error('Este email já está cadastrado. Tente fazer login.');
           } else {
             toast.error(`Erro no cadastro: ${error.message}`);
           }
         } else {
-          console.log('✅ AUTH PAGE: Cadastro bem-sucedido');
           toast.success('Cadastro realizado com sucesso!');
         }
       }
     } catch (error) {
-      console.error('💥 AUTH PAGE: Erro inesperado:', error);
+      console.error('Error:', error);
       toast.error('Algo deu errado. Tente novamente.');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (user) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -134,6 +128,7 @@ const Auth = () => {
                     onChange={(e) => setFullName(e.target.value)}
                     required={!isLogin}
                     placeholder="Seu nome completo"
+                    disabled={isSubmitting}
                   />
                 </div>
               )}
@@ -149,6 +144,7 @@ const Auth = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   placeholder="seu@email.com"
+                  disabled={isSubmitting}
                 />
               </div>
 
@@ -164,15 +160,16 @@ const Auth = () => {
                   required
                   placeholder="Sua senha"
                   minLength={6}
+                  disabled={isSubmitting}
                 />
               </div>
 
               <Button 
                 type="submit" 
                 className="w-full bg-brand-green hover:bg-brand-green/90 text-white"
-                disabled={loading || authLoading}
+                disabled={isSubmitting}
               >
-                {loading ? 'Processando...' : (isLogin ? 'Entrar' : 'Criar conta')}
+                {isSubmitting ? 'Processando...' : (isLogin ? 'Entrar' : 'Criar conta')}
               </Button>
             </form>
 
@@ -180,7 +177,7 @@ const Auth = () => {
               <button
                 onClick={() => setIsLogin(!isLogin)}
                 className="text-brand-green hover:text-brand-green/80 text-sm font-medium"
-                disabled={loading || authLoading}
+                disabled={isSubmitting}
               >
                 {isLogin ? 'Não tem conta? Cadastre-se' : 'Já tem conta? Faça login'}
               </button>
