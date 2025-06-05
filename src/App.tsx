@@ -14,7 +14,6 @@ import Sucesso from "./pages/Sucesso";
 import Cancelado from "./pages/Cancelado";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
-import SupportWidget from "./components/SupportWidget";
 
 const queryClient = new QueryClient();
 
@@ -23,8 +22,8 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <AuthProvider>
-        <BrowserRouter>
+      <BrowserRouter>
+        <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
@@ -42,9 +41,8 @@ const App = () => (
             />
             <Route path="*" element={<NotFound />} />
           </Routes>
-          <SupportWidget />
-        </BrowserRouter>
-      </AuthProvider>
+        </AuthProvider>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );

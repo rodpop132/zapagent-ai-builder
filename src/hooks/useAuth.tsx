@@ -19,34 +19,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Verificar se estamos no navegador
-  const isBrowser = typeof window !== 'undefined';
-
-  // Inicializar estado de autenticação
   useEffect(() => {
-    if (!isBrowser) return;
-    
     let mounted = true;
 
     const initializeAuth = async () => {
       try {
         console.log('🔧 AUTH: Inicializando autenticação...');
         
-        // Obter sessão atual
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
         if (!mounted) return;
         
         if (error) {
           console.error('❌ AUTH: Erro ao obter sessão:', error);
-          setSession(null);
-          setUser(null);
-        } else if (currentSession?.user && currentSession?.access_token) {
+        }
+        
+        if (currentSession?.user) {
           console.log('✅ AUTH: Sessão ativa encontrada:', currentSession.user.email);
           setSession(currentSession);
           setUser(currentSession.user);
         } else {
-          console.log('ℹ️ AUTH: Nenhuma sessão ativa válida');
+          console.log('ℹ️ AUTH: Nenhuma sessão ativa');
           setSession(null);
           setUser(null);
         }
@@ -65,47 +58,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     initializeAuth();
 
-    return () => {
-      mounted = false;
-    };
-  }, [isBrowser]);
-
-  // Configurar listener de mudanças de estado
-  useEffect(() => {
-    if (!isBrowser) return;
-
-    console.log('🔧 AUTH: Configurando listener de estado...');
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('🔄 AUTH: Mudança de estado:', event, session?.user?.email || 'sem usuário');
+      (event, newSession) => {
+        console.log('🔄 AUTH: Mudança de estado:', event);
         
-        // Evitar loops desnecessários
-        if (event === 'SIGNED_IN' && session?.user && session?.access_token) {
-          setSession(session);
-          setUser(session.user);
-        } else if (event === 'SIGNED_OUT') {
-          setSession(null);
-          setUser(null);
-        } else if (event === 'TOKEN_REFRESHED' && session?.access_token) {
-          setSession(session);
-          setUser(session.user);
-        }
+        if (!mounted) return;
+        
+        setSession(newSession);
+        setUser(newSession?.user || null);
+        setLoading(false);
       }
     );
 
     return () => {
-      console.log('🧹 AUTH: Removendo listener');
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, [isBrowser]);
+  }, []);
 
   const signUp = async (email: string, password: string, fullName: string) => {
     console.log('📝 AUTH: Iniciando cadastro para:', email);
     
     try {
-      const redirectUrl = isBrowser ? `${window.location.origin}/` : undefined;
-      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -113,7 +87,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           data: {
             full_name: fullName,
           },
-          emailRedirectTo: redirectUrl
         },
       });
       
@@ -162,16 +135,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } else {
         console.log('✅ AUTH: Logout realizado');
       }
-      
-      // Limpar estado local
-      setSession(null);
-      setUser(null);
-      
     } catch (error) {
       console.error('💥 AUTH: Erro inesperado no logout:', error);
-      // Mesmo com erro, limpar estado local
-      setSession(null);
-      setUser(null);
     }
   };
 

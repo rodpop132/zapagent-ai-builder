@@ -13,18 +13,17 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Redirecionar usuários autenticados apenas uma vez
   useEffect(() => {
-    if (user && !loading) {
+    if (user && !authLoading) {
       const from = location.state?.from?.pathname || '/dashboard';
       console.log('🎯 AUTH PAGE: Usuário autenticado, redirecionando para:', from);
       navigate(from, { replace: true });
     }
-  }, [user, navigate, location, loading]);
+  }, [user, authLoading, navigate, location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +80,17 @@ const Auth = () => {
     }
   };
 
-  // Se usuário já está autenticado, não mostrar a página
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (user) {
     return null;
   }
@@ -161,7 +170,7 @@ const Auth = () => {
               <Button 
                 type="submit" 
                 className="w-full bg-brand-green hover:bg-brand-green/90 text-white"
-                disabled={loading}
+                disabled={loading || authLoading}
               >
                 {loading ? 'Processando...' : (isLogin ? 'Entrar' : 'Criar conta')}
               </Button>
@@ -171,7 +180,7 @@ const Auth = () => {
               <button
                 onClick={() => setIsLogin(!isLogin)}
                 className="text-brand-green hover:text-brand-green/80 text-sm font-medium"
-                disabled={loading}
+                disabled={loading || authLoading}
               >
                 {isLogin ? 'Não tem conta? Cadastre-se' : 'Já tem conta? Faça login'}
               </button>
