@@ -25,21 +25,6 @@ const Auth = () => {
     }
   }, [user, loading, navigate, from]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (user) {
-    return null;
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -89,15 +74,30 @@ const Auth = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (user) {
+    return null;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-10 h-10 bg-brand-green rounded-lg flex items-center justify-center">
+            <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold">ZA</span>
             </div>
-            <span className="text-2xl font-bold text-brand-dark">ZapAgent AI</span>
+            <span className="text-2xl font-bold text-gray-900">ZapAgent AI</span>
           </div>
           <h2 className="text-3xl font-bold text-gray-900">
             {isLogin ? 'Faça login' : 'Crie sua conta'}
@@ -166,7 +166,7 @@ const Auth = () => {
 
               <Button 
                 type="submit" 
-                className="w-full bg-brand-green hover:bg-brand-green/90 text-white"
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Processando...' : (isLogin ? 'Entrar' : 'Criar conta')}
@@ -176,7 +176,7 @@ const Auth = () => {
             <div className="mt-6 text-center">
               <button
                 onClick={() => setIsLogin(!isLogin)}
-                className="text-brand-green hover:text-brand-green/80 text-sm font-medium"
+                className="text-green-600 hover:text-green-700 text-sm font-medium"
                 disabled={isSubmitting}
               >
                 {isLogin ? 'Não tem conta? Cadastre-se' : 'Já tem conta? Faça login'}

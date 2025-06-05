@@ -48,7 +48,7 @@ const SupportWidget = () => {
         <Button
           onClick={() => setIsOpen(true)}
           size="lg"
-          className="rounded-full w-14 h-14 bg-brand-green hover:bg-brand-green/90 shadow-lg"
+          className="rounded-full w-14 h-14 bg-green-600 hover:bg-green-700 shadow-lg"
         >
           <MessageCircle className="w-6 h-6" />
         </Button>
@@ -113,7 +113,7 @@ const SupportWidget = () => {
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-brand-green hover:bg-brand-green/90"
+                  className="w-full bg-green-600 hover:bg-green-700"
                   disabled={loading}
                 >
                   {loading ? 'Enviando...' : 'Enviar Mensagem'}
