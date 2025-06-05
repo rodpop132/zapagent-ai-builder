@@ -9,6 +9,17 @@ export interface AgentStatusResponse {
   status: 'conectado' | 'desconectado' | 'pendente';
   conectado: boolean;
   message?: string;
+  mensagens_enviadas?: number;
+  historico?: Array<{
+    message: string;
+    response: string;
+    timestamp: string;
+  }>;
+  ultima_mensagem?: {
+    user?: string;
+    bot?: string;
+    timestamp?: string;
+  };
 }
 
 export class ZapAgentService {
@@ -46,6 +57,20 @@ export class ZapAgentService {
     }
   }
 
+  static async checkApiStatus(): Promise<boolean> {
+    console.log('🔍 ZapAgentService: Verificando status da API...');
+    
+    try {
+      const url = `${this.BASE_URL}/health`;
+      await this.makeRequest(url);
+      console.log('✅ ZapAgentService: API está online');
+      return true;
+    } catch (error) {
+      console.error('❌ ZapAgentService: API está offline:', error);
+      return false;
+    }
+  }
+
   static async getAgentStatus(phoneNumber: string): Promise<AgentStatusResponse> {
     console.log('🔍 ZapAgentService: Verificando status para:', phoneNumber);
     
@@ -59,6 +84,28 @@ export class ZapAgentService {
       return response;
     } catch (error) {
       console.error('❌ ZapAgentService: Erro ao verificar status:', error);
+      throw error;
+    }
+  }
+
+  static async sendMessage(phoneNumber: string, message: string, prompt: string): Promise<any> {
+    console.log('📤 ZapAgentService: Enviando mensagem para:', phoneNumber);
+    
+    try {
+      const url = `${this.BASE_URL}/message`;
+      const response = await this.makeRequest(url, {
+        method: 'POST',
+        body: JSON.stringify({
+          numero: phoneNumber,
+          mensagem: message,
+          prompt: prompt
+        }),
+      });
+      
+      console.log('✅ ZapAgentService: Mensagem enviada com sucesso');
+      return response;
+    } catch (error) {
+      console.error('❌ ZapAgentService: Erro ao enviar mensagem:', error);
       throw error;
     }
   }
