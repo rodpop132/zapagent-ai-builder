@@ -18,12 +18,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
 
   // Verificar se estamos no navegador
   const isBrowser = typeof window !== 'undefined';
 
-  // Inicializar estado de autenticação uma única vez
+  // Inicializar estado de autenticação
   useEffect(() => {
     if (!isBrowser) return;
     
@@ -33,20 +32,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         console.log('🔧 AUTH: Inicializando autenticação...');
         
-        // Limpar storage em caso de dados corrompidos (apenas desktop)
-        if (!navigator.userAgent.includes('Mobile')) {
-          try {
-            const storedSession = localStorage.getItem('sb-hagweqrpbrjbtsbbscbn-auth-token');
-            if (storedSession && storedSession.includes('undefined')) {
-              console.log('🧹 AUTH: Limpando sessão corrompida...');
-              localStorage.removeItem('sb-hagweqrpbrjbtsbbscbn-auth-token');
-              await supabase.auth.signOut();
-            }
-          } catch (error) {
-            console.warn('⚠️ AUTH: Erro ao verificar storage:', error);
-          }
-        }
-        
         // Obter sessão atual
         const { data: { session: currentSession }, error } = await supabase.auth.getSession();
         
@@ -54,7 +39,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         if (error) {
           console.error('❌ AUTH: Erro ao obter sessão:', error);
-          // Forçar logout em caso de erro
           setSession(null);
           setUser(null);
         } else if (currentSession?.user && currentSession?.access_token) {
@@ -75,7 +59,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } finally {
         if (mounted) {
           setLoading(false);
-          setInitialized(true);
         }
       }
     };
@@ -87,28 +70,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, [isBrowser]);
 
-  // Configurar listener de mudanças de estado APÓS inicialização
+  // Configurar listener de mudanças de estado
   useEffect(() => {
-    if (!isBrowser || !initialized) return;
+    if (!isBrowser) return;
 
     console.log('🔧 AUTH: Configurando listener de estado...');
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('🔄 AUTH: Mudança de estado:', event, session?.user?.email || 'sem usuário');
         
+        // Evitar loops desnecessários
         if (event === 'SIGNED_IN' && session?.user && session?.access_token) {
           setSession(session);
           setUser(session.user);
-        } else if (event === 'SIGNED_OUT' || !session || !session.access_token) {
+        } else if (event === 'SIGNED_OUT') {
           setSession(null);
           setUser(null);
-          // Limpar storage local
-          try {
-            localStorage.removeItem('sb-hagweqrpbrjbtsbbscbn-auth-token');
-          } catch (error) {
-            console.warn('⚠️ AUTH: Erro ao limpar storage:', error);
-          }
         } else if (event === 'TOKEN_REFRESHED' && session?.access_token) {
           setSession(session);
           setUser(session.user);
@@ -120,7 +98,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log('🧹 AUTH: Removendo listener');
       subscription.unsubscribe();
     };
-  }, [initialized, isBrowser]);
+  }, [isBrowser]);
 
   const signUp = async (email: string, password: string, fullName: string) => {
     console.log('📝 AUTH: Iniciando cadastro para:', email);
@@ -178,16 +156,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     console.log('🚪 AUTH: Iniciando logout...');
     
     try {
-      // Limpar storage primeiro
-      if (isBrowser) {
-        try {
-          localStorage.removeItem('sb-hagweqrpbrjbtsbbscbn-auth-token');
-          sessionStorage.clear();
-        } catch (error) {
-          console.warn('⚠️ AUTH: Erro ao limpar storage:', error);
-        }
-      }
-      
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('❌ AUTH: Erro no logout:', error);
@@ -195,16 +163,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.log('✅ AUTH: Logout realizado');
       }
       
-      // Forçar limpeza do estado
+      // Limpar estado local
       setSession(null);
       setUser(null);
       
-      // Recarregar página para garantir limpeza completa (apenas desktop)
-      if (isBrowser && !navigator.userAgent.includes('Mobile')) {
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
-      }
     } catch (error) {
       console.error('💥 AUTH: Erro inesperado no logout:', error);
       // Mesmo com erro, limpar estado local

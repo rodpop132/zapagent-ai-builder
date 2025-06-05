@@ -17,14 +17,14 @@ const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Redirecionar usuários autenticados
+  // Redirecionar usuários autenticados apenas uma vez
   useEffect(() => {
-    if (user) {
+    if (user && !loading) {
       const from = location.state?.from?.pathname || '/dashboard';
       console.log('🎯 AUTH PAGE: Usuário autenticado, redirecionando para:', from);
       navigate(from, { replace: true });
     }
-  }, [user, navigate, location]);
+  }, [user, navigate, location, loading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,16 +81,9 @@ const Auth = () => {
     }
   };
 
-  // Loading state para usuários autenticados
+  // Se usuário já está autenticado, não mostrar a página
   if (user) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green mx-auto mb-4"></div>
-          <p className="text-gray-600">Redirecionando...</p>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (
