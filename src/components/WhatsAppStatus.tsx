@@ -17,102 +17,91 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
   const [showQrModal, setShowQrModal] = useState(false);
   const [checking, setChecking] = useState(false);
   const [qrLoading, setQrLoading] = useState(false);
+  const [error, setError] = useState<string>('');
 
   const checkConnection = async () => {
+    if (!phoneNumber) return;
+    
     try {
       setChecking(true);
+      setError('');
       console.log('🔍 WhatsAppStatus: Verificando conexão para:', phoneNumber);
       
-      // Primeiro verificar o status do agente
       const statusResponse = await ZapAgentService.getAgentStatus(phoneNumber);
-      console.log('📊 WhatsAppStatus: Status response recebido:', statusResponse);
       
-      if (statusResponse.status === 'conectado') {
-        console.log('✅ WhatsAppStatus: Agente conectado via status');
-        setStatus('connected');
-        onStatusChange?.('connected');
-        return;
-      }
-      
-      // Se não conectado via status, tentar QR code
-      console.log('⏳ WhatsAppStatus: Tentando buscar QR code...');
-      const qrResponse = await ZapAgentService.getQrCode(phoneNumber);
-      console.log('📱 WhatsAppStatus: QR response recebido:', qrResponse);
-      
-      if (qrResponse.conectado) {
-        console.log('✅ WhatsAppStatus: Conectado via QR check');
+      if (statusResponse.conectado || statusResponse.status === 'conectado') {
+        console.log('✅ WhatsAppStatus: Agente conectado');
         setStatus('connected');
         onStatusChange?.('connected');
       } else {
-        console.log('⏳ WhatsAppStatus: Pendente de conexão');
+        console.log('⏳ WhatsAppStatus: Agente pendente');
         setStatus('pending');
         onStatusChange?.('pending');
-        if (qrResponse.qr_code) {
-          console.log('📱 WhatsAppStatus: QR code disponível');
-          setQrCode(qrResponse.qr_code);
-        }
       }
     } catch (error) {
       console.error('❌ WhatsAppStatus: Erro ao verificar conexão:', error);
       setStatus('pending');
       onStatusChange?.('pending');
+      setError(error instanceof Error ? error.message : 'Erro desconhecido');
     } finally {
       setChecking(false);
     }
   };
 
-  const handleShowQrCode = async () => {
-    console.log('🔄 WhatsAppStatus: Abrindo modal QR code...');
-    setShowQrModal(true);
-    
-    if (!qrCode || status === 'pending') {
-      console.log('🔄 WhatsAppStatus: QR code não disponível, buscando...');
-      await loadQrCode();
-    }
-  };
-
   const loadQrCode = async () => {
+    if (!phoneNumber) return;
+    
     try {
       setQrLoading(true);
-      console.log('🔄 WhatsAppStatus: Carregando QR code para:', phoneNumber);
+      setError('');
+      console.log('📱 WhatsAppStatus: Carregando QR code para:', phoneNumber);
       
       const qrResponse = await ZapAgentService.getQrCode(phoneNumber);
-      console.log('📱 WhatsAppStatus: Resposta QR recebida:', qrResponse);
       
       if (qrResponse.conectado) {
-        console.log('✅ WhatsAppStatus: Agente já conectado!');
+        console.log('✅ WhatsAppStatus: Agente já conectado via QR check');
         setStatus('connected');
         onStatusChange?.('connected');
         setQrCode('');
+        setShowQrModal(false);
       } else if (qrResponse.qr_code) {
         console.log('📱 WhatsAppStatus: QR code carregado com sucesso');
         setQrCode(qrResponse.qr_code);
-        setStatus('pending');
-        onStatusChange?.('pending');
       } else {
-        console.warn('⚠️ WhatsAppStatus: QR code não disponível na resposta');
         throw new Error('QR code não disponível');
       }
     } catch (error) {
       console.error('❌ WhatsAppStatus: Erro ao carregar QR code:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar QR code';
+      setError(errorMessage);
       setQrCode('');
     } finally {
       setQrLoading(false);
     }
   };
 
-  const generateNewQrCode = async () => {
-    console.log('🔄 WhatsAppStatus: Gerando novo QR Code...');
-    setQrCode(''); // Limpar QR atual
-    await loadQrCode();
+  const handleShowQrCode = async () => {
+    console.log('🔄 WhatsAppStatus: Abrindo modal QR code...');
+    setShowQrModal(true);
+    setError('');
+    
+    if (!qrCode) {
+      await loadQrCode();
+    }
   };
 
+  const handleCloseQrModal = () => {
+    setShowQrModal(false);
+    setQrCode('');
+    setError('');
+  };
+
+  // Verificar status inicialmente e a cada 30 segundos
   useEffect(() => {
     if (phoneNumber) {
       console.log('🚀 WhatsAppStatus: Iniciando verificação para:', phoneNumber);
       checkConnection();
       
-      // Verificar status a cada 30 segundos
       const interval = setInterval(() => {
         console.log('⏰ WhatsAppStatus: Verificação automática...');
         checkConnection();
@@ -144,6 +133,12 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
             {status === 'loading' ? 'Verificando...' : 
              status === 'connected' ? 'Conectado' : 'Desconectado'}
           </Badge>
+          
+          {error && (
+            <span className="text-xs text-red-600 max-w-xs truncate" title={error}>
+              {error}
+            </span>
+          )}
         </div>
 
         <div className="flex space-x-2">
@@ -170,7 +165,7 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
         </div>
       </div>
 
-      <Dialog open={showQrModal} onOpenChange={setShowQrModal}>
+      <Dialog open={showQrModal} onOpenChange={handleCloseQrModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Conectar WhatsApp</DialogTitle>
@@ -193,14 +188,16 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
                   Escaneie o QR Code abaixo com seu WhatsApp para conectar o agente
                 </p>
                 
-                {qrLoading ? (
+                {error ? (
+                  <div className="p-4 bg-red-50 rounded-lg border border-red-200">
+                    <p className="text-sm text-red-700 font-medium mb-2">Erro ao carregar QR Code</p>
+                    <p className="text-xs text-red-600">{error}</p>
+                  </div>
+                ) : qrLoading ? (
                   <div className="flex justify-center items-center h-64 bg-gray-100 rounded-lg">
                     <div className="text-center">
                       <RefreshCw className="h-8 w-8 animate-spin text-brand-green mx-auto mb-2" />
                       <p className="text-sm text-gray-600">Carregando QR Code...</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Conectando com a API...
-                      </p>
                     </div>
                   </div>
                 ) : qrCode ? (
@@ -210,9 +207,9 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
                         src={qrCode} 
                         alt="QR Code do WhatsApp" 
                         className="max-w-full h-auto border rounded-lg shadow-lg"
-                        onError={(e) => {
+                        onError={() => {
                           console.error('❌ WhatsAppStatus: Erro ao carregar imagem QR');
-                          setQrCode('');
+                          setError('Erro ao exibir QR code');
                         }}
                         onLoad={() => {
                           console.log('✅ WhatsAppStatus: QR code carregado na UI');
@@ -222,46 +219,29 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
                     
                     <div className="p-3 bg-blue-50 rounded-lg">
                       <p className="text-sm text-blue-800">
-                        📱 Abra o WhatsApp → Menu (3 pontos) → Aparelhos conectados → Conectar um aparelho
-                      </p>
-                      <p className="text-xs text-blue-600 mt-1">
-                        Escaneie o código e aguarde a conexão
+                        📱 WhatsApp → Menu → Aparelhos conectados → Conectar aparelho
                       </p>
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-3">
-                    <div className="flex justify-center items-center h-64 bg-gray-100 rounded-lg">
-                      <div className="text-center">
-                        <QrCode className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                        <p className="text-sm text-gray-600 mb-2">QR Code não disponível</p>
-                        <p className="text-xs text-gray-500">
-                          Clique em "Gerar QR Code" para tentar novamente
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="p-3 bg-yellow-50 rounded-lg">
-                      <p className="text-sm text-yellow-800">
-                        ⚠️ QR Code ainda não foi gerado ou expirou
-                      </p>
-                      <p className="text-xs text-yellow-600 mt-1">
-                        Aguarde alguns segundos após criar o agente
-                      </p>
+                  <div className="flex justify-center items-center h-64 bg-gray-100 rounded-lg">
+                    <div className="text-center">
+                      <QrCode className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                      <p className="text-sm text-gray-600">QR Code não disponível</p>
                     </div>
                   </div>
                 )}
                 
                 <div className="flex space-x-2">
                   <Button
-                    onClick={generateNewQrCode}
+                    onClick={loadQrCode}
                     variant="outline"
                     size="sm"
                     className="flex-1"
                     disabled={qrLoading}
                   >
                     <RefreshCw className={`h-4 w-4 mr-2 ${qrLoading ? 'animate-spin' : ''}`} />
-                    {qrLoading ? 'Carregando...' : 'Gerar QR Code'}
+                    {qrLoading ? 'Carregando...' : 'Atualizar QR'}
                   </Button>
                   
                   <Button
@@ -272,7 +252,7 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
                     disabled={checking}
                   >
                     <Wifi className={`h-4 w-4 mr-2 ${checking ? 'animate-spin' : ''}`} />
-                    {checking ? 'Verificando...' : 'Verificar Status'}
+                    Verificar Status
                   </Button>
                 </div>
               </>

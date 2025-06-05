@@ -430,68 +430,48 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
     try {
       console.log('🎯 MAIN PROCESS: Iniciando criação completa do agente...');
-      console.log('📞 MAIN PROCESS: Número do telefone recebido:', formData.phone_number);
-      console.log('👤 MAIN PROCESS: Usuário logado:', user?.email);
+      console.log('📞 MAIN PROCESS: Número do telefone:', formData.phone_number);
       
-      // Validação dos dados obrigatórios
-      console.log('🔍 VALIDATION: Validando dados obrigatórios...');
+      // Validação básica
       if (!formData.name.trim()) {
-        console.error('❌ VALIDATION ERROR: Nome vazio');
         throw new Error('Nome do agente é obrigatório');
       }
       if (!formData.business_type) {
-        console.error('❌ VALIDATION ERROR: Tipo de negócio vazio');
         throw new Error('Tipo de negócio é obrigatório');
       }
-      if (!formData.phone_number.trim()) {
-        console.error('❌ VALIDATION ERROR: Número vazio');
-        throw new Error('Número do WhatsApp é obrigatório');
+      if (!formData.phone_number.trim() || formData.phone_number.length < 10) {
+        throw new Error('Número do WhatsApp deve incluir o código do país (DDI) e ter pelo menos 10 dígitos');
       }
 
-      if (formData.phone_number.length < 10) {
-        console.error('❌ VALIDATION ERROR: Número muito curto');
-        throw new Error('Número deve incluir o código do país (DDI) e ter pelo menos 10 dígitos');
-      }
-      console.log('✅ VALIDATION SUCCESS: Todos os dados obrigatórios estão preenchidos');
-
-      // STEP 1: Verificar disponibilidade do número
+      // STEP 1: Verificar disponibilidade
       await checkPhoneNumberAvailability(formData.phone_number);
 
-      // STEP 2: Criar agente na API externa
-      console.log('📡 MAIN PROCESS: Iniciando STEP 2 - Criação na API externa');
+      // STEP 2: Criar na API externa
+      console.log('📡 MAIN PROCESS: Criando agente na API externa...');
       await createAgentAPI();
-      console.log('✅ MAIN PROCESS: STEP 2 completado com sucesso');
 
       // STEP 3: Salvar no Supabase
-      console.log('💾 STEP 3: Salvando no banco de dados local...');
+      console.log('💾 STEP 3: Salvando no banco de dados...');
       const { error: supabaseError } = await supabase
         .from('agents')
         .insert({
           ...formData,
-          training_data: formData.training_data,
           user_id: user?.id,
           personality_prompt: formData.personality_prompt || `Você é um assistente virtual para ${formData.business_type}. Seja sempre educado, prestativo e responda de forma clara e objetiva.`,
           whatsapp_status: 'pending'
         });
 
       if (supabaseError) {
-        console.error('❌ STEP 3 ERROR: Erro no Supabase:', supabaseError);
-        throw new Error(`Erro ao salvar no banco de dados: ${supabaseError.message}`);
+        console.error('❌ STEP 3 ERROR:', supabaseError);
+        throw new Error(`Erro ao salvar: ${supabaseError.message}`);
       }
 
-      console.log('✅ STEP 3 SUCCESS: Agente salvo no banco local com sucesso');
+      console.log('✅ STEP 3 SUCCESS: Agente salvo com sucesso');
 
       toast({
-        title: "Agente criado com sucesso!",
+        title: "✅ Agente criado com sucesso!",
         description: "Aguarde alguns segundos para o QR code aparecer..."
       });
-
-      // STEP 4: Aguardar e buscar QR code
-      console.log('⏳ STEP 4: Aguardando 8 segundos antes de buscar QR code...');
-      setTimeout(async () => {
-        console.log('🔄 STEP 4: Iniciando busca do QR code...');
-        await fetchQrCode(1, 5);
-      }, 8000);
 
       onAgentCreated();
       
@@ -506,32 +486,27 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       });
       setUploadedFiles([]);
 
+      // STEP 4: Buscar QR code após delay
+      setTimeout(async () => {
+        console.log('🔄 STEP 4: Buscando QR code...');
+        await fetchQrCode(1, 3);
+      }, 5000);
+
     } catch (error) {
-      console.error('💥 MAIN PROCESS FINAL ERROR: Erro completo na criação do agente:', error);
-      console.error('💥 MAIN PROCESS ERROR STACK:', error.stack);
+      console.error('💥 MAIN PROCESS ERROR:', error);
       
-      if (error instanceof Error) {
-        console.error('💥 MAIN PROCESS ERROR MESSAGE:', error.message);
-        toast({
-          title: "Erro na Criação do Agente",
-          description: error.message,
-          variant: "destructive"
-        });
-      } else {
-        console.error('💥 MAIN PROCESS UNKNOWN ERROR:', error);
-        toast({
-          title: "Erro Inesperado",
-          description: "Ocorreu um erro inesperado. Verifique o console para mais detalhes.",
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "❌ Erro na Criação",
+        description: error instanceof Error ? error.message : "Erro inesperado",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const handlePhoneChange = (fullNumber: string) => {
-    console.log('📱 Número atualizado no input:', fullNumber);
+    console.log('📱 Número atualizado:', fullNumber);
     setFormData({ ...formData, phone_number: fullNumber });
   };
 
@@ -551,7 +526,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto animate-in slide-in-from-bottom-4 duration-300">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Criar Novo Agente</DialogTitle>
             <DialogDescription>
@@ -615,14 +590,14 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
                 value={formData.phone_number}
                 onChange={handlePhoneChange}
                 placeholder="Digite o número"
-                className="transition-all duration-200 focus:scale-[1.01]"
+                className="w-full"
               />
               <p className="text-xs text-gray-500 mt-1">
-                ⚠️ IMPORTANTE: Selecione o país correto. O número deve incluir o DDI (código do país) para o QR code funcionar.
+                ⚠️ IMPORTANTE: O número deve incluir o DDI (código do país) completo
               </p>
               {formData.phone_number && (
                 <p className="text-xs text-green-600 mt-1">
-                  ✅ Número com DDI: {formData.phone_number}
+                  ✅ Número completo: {formData.phone_number}
                 </p>
               )}
             </div>
