@@ -24,7 +24,7 @@ export interface AgentStatusResponse {
 
 export class ZapAgentService {
   private static readonly BASE_URL = 'https://zapagent-bot.onrender.com';
-  private static readonly TIMEOUT = 30000; // 30 segundos
+  private static readonly TIMEOUT = 15000; // Reduzido para 15 segundos
 
   private static async makeRequest<T>(url: string, options: RequestInit = {}): Promise<T> {
     const controller = new AbortController();
@@ -32,7 +32,6 @@ export class ZapAgentService {
 
     try {
       console.log(`🔗 ZapAgentService: Fazendo requisição para: ${url}`);
-      console.log(`📦 ZapAgentService: Opções da requisição:`, options);
 
       const response = await fetch(url, {
         ...options,
@@ -49,12 +48,23 @@ export class ZapAgentService {
       clearTimeout(timeoutId);
 
       console.log(`📊 ZapAgentService: Status da resposta: ${response.status}`);
-      console.log(`📊 ZapAgentService: Headers da resposta:`, Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`❌ ZapAgentService: Erro HTTP ${response.status}:`, errorText);
-        throw new Error(`Erro HTTP ${response.status}: ${errorText || response.statusText}`);
+        
+        // Tratamento específico para diferentes códigos de erro
+        if (response.status >= 500) {
+          throw new Error('Servidor temporariamente indisponível. Tente novamente em alguns minutos.');
+        }
+        if (response.status === 404) {
+          throw new Error('Serviço não encontrado. O servidor pode estar em manutenção.');
+        }
+        if (response.status === 403) {
+          throw new Error('Acesso negado. Verifique suas credenciais.');
+        }
+        
+        throw new Error(`Erro do servidor: ${response.status}`);
       }
 
       const responseText = await response.text();
@@ -64,7 +74,7 @@ export class ZapAgentService {
         return JSON.parse(responseText);
       } catch (parseError) {
         console.error(`❌ ZapAgentService: Erro ao fazer parse do JSON:`, parseError);
-        throw new Error(`Resposta inválida do servidor: ${responseText.substring(0, 100)}`);
+        throw new Error('Resposta inválida do servidor');
       }
     } catch (error) {
       clearTimeout(timeoutId);
@@ -86,10 +96,27 @@ export class ZapAgentService {
     console.log('🔍 ZapAgentService: Verificando status da API...');
     
     try {
-      const url = `${this.BASE_URL}/health`;
-      await this.makeRequest(url);
-      console.log('✅ ZapAgentService: API está online');
-      return true;
+      // Tenta primeiro o endpoint de status, se não existir, tenta o de zapagent
+      const urls = [
+        `${this.BASE_URL}/status`,
+        `${this.BASE_URL}/zapagent`,
+        `${this.BASE_URL}/`
+      ];
+      
+      for (const url of urls) {
+        try {
+          console.log(`🔍 Tentando endpoint: ${url}`);
+          await this.makeRequest(url);
+          console.log('✅ ZapAgentService: API está online');
+          return true;
+        } catch (error) {
+          console.log(`❌ Endpoint ${url} falhou:`, error.message);
+          continue;
+        }
+      }
+      
+      console.error('❌ ZapAgentService: Todos os endpoints falharam');
+      return false;
     } catch (error) {
       console.error('❌ ZapAgentService: API está offline:', error);
       return false;
@@ -109,7 +136,12 @@ export class ZapAgentService {
       return response;
     } catch (error) {
       console.error('❌ ZapAgentService: Erro ao verificar status:', error);
-      throw error;
+      // Retorna um status padrão em caso de erro
+      return {
+        status: 'desconectado',
+        conectado: false,
+        message: 'Não foi possível verificar o status do agente'
+      };
     }
   }
 
@@ -162,7 +194,15 @@ export class ZapAgentService {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('❌ ZapAgentService: Erro na resposta do QR:', response.status, errorText);
-        throw new Error(`Erro ${response.status}: ${errorText}`);
+        
+        if (response.status >= 500) {
+          throw new Error('Servidor temporariamente indisponível');
+        }
+        if (response.status === 404) {
+          throw new Error('QR code ainda não foi gerado');
+        }
+        
+        throw new Error(`Erro ${response.status}: QR code indisponível`);
       }
 
       const contentType = response.headers.get('content-type');
@@ -217,11 +257,11 @@ export class ZapAgentService {
     console.log('📋 ZapAgentService: Dados do agente:', JSON.stringify(agentData, null, 2));
     
     try {
-      // Verificar se a API está online primeiro
+      // Verificar se a API está online primeiro com timeout menor
       console.log('🔍 ZapAgentService: Verificando se API está online...');
       const isOnline = await this.checkApiStatus();
       if (!isOnline) {
-        throw new Error('Serviço temporariamente indisponível. Tente novamente em alguns minutos.');
+        throw new Error('Serviço temporariamente indisponível. O servidor pode estar inicializando. Tente novamente em alguns minutos.');
       }
 
       const url = `${this.BASE_URL}/zapagent`;
@@ -235,9 +275,13 @@ export class ZapAgentService {
     } catch (error) {
       console.error('❌ ZapAgentService: Erro ao criar agente:', error);
       
-      // Melhorar as mensagens de erro
-      if (error.message?.includes('Erro de conectividade')) {
-        throw new Error('Não foi possível conectar ao servidor. Verifique sua conexão com a internet e tente novamente.');
+      // Melhorar as mensagens de erro baseadas no erro específico
+      if (error.message?.includes('Erro de conectividade') || error.message?.includes('Failed to fetch')) {
+        throw new Error('Não foi possível conectar ao servidor. O serviço pode estar inicializando ou em manutenção. Tente novamente em alguns minutos.');
+      }
+      
+      if (error.message?.includes('Timeout')) {
+        throw new Error('O servidor demorou muito para responder. Tente novamente em alguns minutos.');
       }
       
       if (error.message?.includes('403')) {
@@ -252,7 +296,14 @@ export class ZapAgentService {
         throw new Error('Servidor temporariamente indisponível. Tente novamente em alguns minutos.');
       }
       
-      throw error;
+      // Se a mensagem já é adequada, mantém ela
+      if (error.message?.includes('temporariamente indisponível') || 
+          error.message?.includes('não encontrado') ||
+          error.message?.includes('manutenção')) {
+        throw error;
+      }
+      
+      throw new Error('Serviço temporariamente indisponível. Tente novamente em alguns minutos.');
     }
   }
 }
