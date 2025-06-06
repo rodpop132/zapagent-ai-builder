@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, X, FileText, QrCode, Lock, Wifi, AlertCircle } from 'lucide-react';
+import { Upload, X, FileText, QrCode, Lock, Wifi, AlertCircle, RefreshCw, Server } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -67,9 +67,14 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       
       if (!status) {
         toast({
-          title: "⚠️ Serviço Indisponível",
-          description: "O servidor está temporariamente indisponível. Tente novamente em alguns minutos.",
+          title: "🔄 Servidor Inicializando",
+          description: "O servidor está inicializando. Isso pode levar 1-2 minutos. Aguarde e tente novamente.",
           variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "✅ Servidor Online",
+          description: "O servidor está funcionando normalmente.",
         });
       }
     } catch (error) {
@@ -325,11 +330,6 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     try {
       console.log('🎯 MAIN PROCESS: Iniciando criação completa do agente...');
       
-      // Verificar se a API está online
-      if (apiStatus === false) {
-        throw new Error('Serviço temporariamente indisponível. Tente novamente em alguns minutos.');
-      }
-      
       // Validação básica
       if (!formData.name.trim()) {
         throw new Error('Nome do agente é obrigatório');
@@ -339,6 +339,14 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       }
       if (!formData.phone_number.trim() || formData.phone_number.length < 10) {
         throw new Error('Número do WhatsApp deve incluir o código do país (DDI) e ter pelo menos 10 dígitos');
+      }
+
+      // Mostrar aviso sobre servidor se offline
+      if (apiStatus === false) {
+        toast({
+          title: "⚠️ Tentando Conectar",
+          description: "O servidor pode estar inicializando. Aguarde...",
+        });
       }
 
       // STEP 1: Verificar disponibilidade
@@ -393,11 +401,25 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     } catch (error) {
       console.error('💥 MAIN PROCESS ERROR:', error);
       
-      toast({
-        title: "❌ Erro na Criação",
-        description: error instanceof Error ? error.message : "Erro inesperado",
-        variant: "destructive"
-      });
+      let errorMessage = 'Erro inesperado';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      // Se for erro de servidor inicializando, dar instruções específicas
+      if (errorMessage.includes('inicializando') || errorMessage.includes('indisponível')) {
+        toast({
+          title: "🔄 Servidor Inicializando",
+          description: "O servidor está inicializando (normal em serviços gratuitos). Aguarde 1-2 minutos e tente novamente.",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "❌ Erro na Criação",
+          description: errorMessage,
+          variant: "destructive"
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -433,10 +455,33 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
           {/* Status da API */}
           {apiStatus === false && (
-            <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <AlertCircle className="h-4 w-4 text-red-600" />
-              <span className="text-sm text-red-700">
-                Serviço temporariamente indisponível. Tente novamente em alguns minutos.
+            <div className="flex items-center space-x-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <AlertCircle className="h-4 w-4 text-yellow-600" />
+              <div className="flex-1">
+                <span className="text-sm text-yellow-700 font-medium">
+                  Servidor Inicializando
+                </span>
+                <p className="text-xs text-yellow-600 mt-1">
+                  O servidor pode estar inicializando (normal em serviços gratuitos). Isso leva 1-2 minutos.
+                </p>
+              </div>
+              <Button
+                onClick={checkApiStatus}
+                variant="outline"
+                size="sm"
+                className="ml-2"
+              >
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Verificar
+              </Button>
+            </div>
+          )}
+
+          {apiStatus === true && (
+            <div className="flex items-center space-x-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <Server className="h-4 w-4 text-green-600" />
+              <span className="text-sm text-green-700">
+                ✅ Servidor Online - Pronto para criar agentes
               </span>
             </div>
           )}
@@ -616,13 +661,15 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
               </Button>
               <Button
                 type="submit"
-                disabled={loading || !formData.name || !formData.business_type || !formData.phone_number || apiStatus === false}
+                disabled={loading || !formData.name || !formData.business_type || !formData.phone_number}
                 className="flex-1 bg-brand-green hover:bg-brand-green/90 text-white transition-all duration-200 hover:scale-105 disabled:hover:scale-100"
               >
                 {loading ? (
                   <div className="flex items-center space-x-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Criando...</span>
+                    <span>
+                      {apiStatus === false ? 'Aguardando servidor...' : 'Criando...'}
+                    </span>
                   </div>
                 ) : (
                   'Criar Agente'
