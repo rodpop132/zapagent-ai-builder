@@ -19,17 +19,23 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
   const [qrLoading, setQrLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
+  // Função para limpar número (apenas dígitos)
+  const cleanPhoneNumber = (phone: string) => {
+    return phone.replace(/\D/g, '');
+  };
+
   const checkConnection = async () => {
     if (!phoneNumber) return;
     
     try {
       setChecking(true);
       setError('');
-      console.log('🔍 WhatsAppStatus: Verificando conexão para:', phoneNumber);
+      const numeroLimpo = cleanPhoneNumber(phoneNumber);
+      console.log('🔍 WhatsAppStatus: Verificando conexão para:', numeroLimpo);
       
-      const statusResponse = await ZapAgentService.getAgentStatus(phoneNumber);
+      const statusResponse = await ZapAgentService.verifyConnection(numeroLimpo);
       
-      if (statusResponse.conectado || statusResponse.status === 'conectado') {
+      if (statusResponse.conectado === true) {
         console.log('✅ WhatsAppStatus: Agente conectado');
         setStatus('connected');
         onStatusChange?.('connected');
@@ -54,22 +60,14 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
     try {
       setQrLoading(true);
       setError('');
-      console.log('📱 WhatsAppStatus: Carregando QR code para:', phoneNumber);
+      const numeroLimpo = cleanPhoneNumber(phoneNumber);
+      console.log('📱 WhatsAppStatus: Carregando QR code para:', numeroLimpo);
       
-      const qrResponse = await ZapAgentService.getQrCode(phoneNumber);
+      // Usar a rota direta da imagem
+      const qrImageUrl = `https://zapagent-bot.onrender.com/qrcode-imagem?numero=${numeroLimpo}`;
+      console.log('📱 WhatsAppStatus: URL do QR Code:', qrImageUrl);
+      setQrCode(qrImageUrl);
       
-      if (qrResponse.conectado) {
-        console.log('✅ WhatsAppStatus: Agente já conectado via QR check');
-        setStatus('connected');
-        onStatusChange?.('connected');
-        setQrCode('');
-        setShowQrModal(false);
-      } else if (qrResponse.qr_code) {
-        console.log('📱 WhatsAppStatus: QR code carregado com sucesso');
-        setQrCode(qrResponse.qr_code);
-      } else {
-        throw new Error('QR code não disponível');
-      }
     } catch (error) {
       console.error('❌ WhatsAppStatus: Erro ao carregar QR code:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar QR code';
@@ -206,7 +204,8 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
                       <img 
                         src={qrCode} 
                         alt="QR Code do WhatsApp" 
-                        className="max-w-full h-auto border rounded-lg shadow-lg"
+                        style={{ width: '300px', height: '300px' }}
+                        className="border rounded-lg shadow-lg"
                         onError={() => {
                           console.error('❌ WhatsAppStatus: Erro ao carregar imagem QR');
                           setError('Erro ao exibir QR code');

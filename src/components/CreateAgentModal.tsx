@@ -131,6 +131,11 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     }
   };
 
+  // Função para limpar número (apenas dígitos)
+  const cleanPhoneNumber = (phoneNumber: string) => {
+    return phoneNumber.replace(/\D/g, '');
+  };
+
   const checkPhoneNumberAvailability = async (phoneNumber: string) => {
     try {
       console.log('🔍 STEP 1: Verificando disponibilidade do número:', phoneNumber);
@@ -165,21 +170,24 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
   const createAgentAPI = async () => {
     try {
-      console.log('🚀 STEP 2: Criando agente via nova API integrada');
+      console.log('🚀 STEP 2: Criando agente via API ZapAgent');
       
       const userPlan = await getUserPlan();
       let planValue = 'gratuito';
       if (userPlan === 'pro') planValue = 'standard';
       if (userPlan === 'ultra') planValue = 'ultra';
       
-      const webhook = formData.webhook || `${window.location.origin}/webhook/${formData.phone_number}`;
+      const webhook = formData.webhook || `${window.location.origin}/webhook/${cleanPhoneNumber(formData.phone_number)}`;
+      
+      // Limpar número para enviar apenas dígitos
+      const numeroLimpo = cleanPhoneNumber(formData.phone_number);
       
       const payload = {
         nome: formData.name,
         tipo: formData.business_type,
         descricao: formData.description,
         prompt: formData.personality_prompt || `Você é um assistente virtual para ${formData.business_type}. Seja sempre educado, prestativo e responda de forma clara e objetiva.`,
-        numero: formData.phone_number,
+        numero: numeroLimpo,
         plano: planValue,
         webhook: webhook
       };
@@ -192,14 +200,16 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       if (result.status === 'ok') {
         console.log('✅ STEP 2: Agente criado com sucesso');
         
-        // Usar a nova rota de QR Code com imagem PNG
-        if (result.qrcodeUrl || formData.phone_number) {
-          const qrImageUrl = `https://zapagent-bot.onrender.com/qrcode-imagem?numero=${encodeURIComponent(formData.phone_number)}`;
-          console.log('📱 STEP 2: URL da imagem QR Code:', qrImageUrl);
-          setQrCodeUrl(qrImageUrl);
-          setShowQrModal(true);
-          startStatusPolling();
-        }
+        // Salvar dados no localStorage para uso futuro
+        localStorage.setItem('zapagent_numero', numeroLimpo);
+        localStorage.setItem('zapagent_plano', planValue);
+        
+        // Usar a rota direta da imagem QR Code
+        const qrImageUrl = `https://zapagent-bot.onrender.com/qrcode-imagem?numero=${numeroLimpo}`;
+        console.log('📱 STEP 2: URL da imagem QR Code:', qrImageUrl);
+        setQrCodeUrl(qrImageUrl);
+        setShowQrModal(true);
+        startStatusPolling(numeroLimpo);
         
         toast({
           title: "✅ Agente criado com sucesso!",
@@ -216,11 +226,12 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     }
   };
 
-  const checkConnectionStatus = async () => {
+  const checkConnectionStatus = async (numero?: string) => {
     try {
-      console.log('🔍 Verificando status de conexão para:', formData.phone_number);
+      const numeroParaVerificar = numero || cleanPhoneNumber(formData.phone_number);
+      console.log('🔍 Verificando status de conexão para:', numeroParaVerificar);
       
-      const connectionData = await ZapAgentService.verifyConnection(formData.phone_number);
+      const connectionData = await ZapAgentService.verifyConnection(numeroParaVerificar);
       console.log('📊 Status de conexão recebido:', connectionData);
       
       if (connectionData.conectado === true) {
@@ -250,14 +261,14 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     }
   };
 
-  const startStatusPolling = () => {
+  const startStatusPolling = (numero: string) => {
     console.log('🔄 Iniciando polling de status a cada 10 segundos...');
     
     setTimeout(() => {
-      checkConnectionStatus();
+      checkConnectionStatus(numero);
     }, 10000);
     
-    const interval = setInterval(checkConnectionStatus, 10000);
+    const interval = setInterval(() => checkConnectionStatus(numero), 10000);
     setStatusCheckInterval(interval);
     
     setTimeout(() => {
@@ -340,8 +351,8 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       if (!formData.business_type) {
         throw new Error('Tipo de negócio é obrigatório');
       }
-      if (!formData.phone_number.trim() || formData.phone_number.length < 10) {
-        throw new Error('Número do WhatsApp deve incluir o código do país (DDI) e ter pelo menos 10 dígitos');
+      if (!formData.phone_number.trim() || cleanPhoneNumber(formData.phone_number).length < 10) {
+        throw new Error('Número do WhatsApp deve ter pelo menos 10 dígitos');
       }
 
       // Verificar se API está online
@@ -353,7 +364,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       // STEP 1: Verificar disponibilidade
       await checkPhoneNumberAvailability(formData.phone_number);
 
-      // STEP 2: Criar na API externa (nova integração)
+      // STEP 2: Criar na API externa
       console.log('📡 MAIN PROCESS: Criando agente na API externa...');
       const apiResult = await createAgentAPI();
 
@@ -534,9 +545,14 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
                 ⚠️ IMPORTANTE: O número deve incluir o DDI (código do país) completo
               </p>
               {formData.phone_number && (
-                <p className="text-xs text-green-600 mt-1">
-                  ✅ Número completo: {formData.phone_number}
-                </p>
+                <div className="text-xs mt-1 space-y-1">
+                  <p className="text-green-600">
+                    ✅ Número completo: {formData.phone_number}
+                  </p>
+                  <p className="text-blue-600">
+                    📞 Será enviado como: {cleanPhoneNumber(formData.phone_number)}
+                  </p>
+                </div>
               )}
             </div>
 
@@ -687,7 +703,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
           <DialogHeader>
             <DialogTitle>Conectar WhatsApp</DialogTitle>
             <DialogDescription>
-              Escaneie o QR Code ou aguarde a conexão automática
+              Escaneie o QR Code para conectar seu agente
             </DialogDescription>
           </DialogHeader>
           
@@ -706,6 +722,9 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
                       description: "Erro ao carregar QR code. Verifique se o número está correto.",
                       variant: "destructive"
                     });
+                  }}
+                  onLoad={() => {
+                    console.log('✅ QR Code carregado com sucesso');
                   }}
                 />
               </div>
@@ -729,7 +748,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
                   <div className="text-center">
                     <div className="text-blue-600 font-medium text-base mb-1">⏳ Aguardando conexão...</div>
                     <p className="text-blue-600 text-sm">
-                      {qrCodeUrl ? 'Escaneie o QR code acima' : 'Verificando status automaticamente...'}
+                      Escaneie o QR code com seu WhatsApp
                     </p>
                   </div>
                 )}
