@@ -308,7 +308,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         console.log('✅ QR code válido extraído');
         setQrCodeUrl(qrResponse.qr_code);
         setShowQrModal(true);
-        startStatusPolling();
+        startStatusPolling(formData.phone_number);
       } else {
         if (attempt < maxAttempts) {
           const waitTime = attempt * 3000;
