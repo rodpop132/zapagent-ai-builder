@@ -189,14 +189,14 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       const result = await ZapAgentService.createAgent(payload);
       console.log('✅ STEP 2: Resposta da API:', result);
       
-      // Verificar se a criação foi bem-sucedida
       if (result.status === 'ok') {
         console.log('✅ STEP 2: Agente criado com sucesso');
         
-        // Se há qrcodeUrl na resposta, usar diretamente
-        if (result.qrcodeUrl) {
-          console.log('📱 STEP 2: QR Code URL recebido:', result.qrcodeUrl);
-          setQrCodeUrl(result.qrcodeUrl);
+        // Usar a nova rota de QR Code com imagem PNG
+        if (result.qrcodeUrl || formData.phone_number) {
+          const qrImageUrl = `https://zapagent-bot.onrender.com/qrcode-imagem?numero=${encodeURIComponent(formData.phone_number)}`;
+          console.log('📱 STEP 2: URL da imagem QR Code:', qrImageUrl);
+          setQrCodeUrl(qrImageUrl);
           setShowQrModal(true);
           startStatusPolling();
         }
@@ -694,11 +694,19 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
           <div className="text-center space-y-4">
             {qrCodeUrl ? (
               <div className="flex justify-center">
-                <iframe 
-                  src={qrCodeUrl} 
-                  style={{border: 'none', width: '300px', height: '300px'}}
-                  title="QR Code do WhatsApp"
+                <img 
+                  src={qrCodeUrl}
+                  alt="QR Code do WhatsApp"
+                  style={{ width: '300px', height: '300px' }}
                   className="border rounded-lg shadow-lg"
+                  onError={(e) => {
+                    console.error('Erro ao carregar QR Code:', e);
+                    toast({
+                      title: "Erro no QR Code",
+                      description: "Erro ao carregar QR code. Verifique se o número está correto.",
+                      variant: "destructive"
+                    });
+                  }}
                 />
               </div>
             ) : (
