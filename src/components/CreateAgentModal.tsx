@@ -593,7 +593,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
             <div className="animate-in fade-in-50 duration-300 delay-500">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Webhook URL
-                {userPlan === 'free' && (
+                {(userPlan === 'free') && (
                   <span className="ml-2 inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
                     <Lock className="w-3 h-3 mr-1" />
                     Pro/Ultra
