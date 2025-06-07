@@ -226,12 +226,11 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     }
   };
 
-  const checkConnectionStatus = async (numero?: string) => {
+  const checkConnectionStatus = async (numero: string) => {
     try {
-      const numeroParaVerificar = numero || cleanPhoneNumber(formData.phone_number);
-      console.log('🔍 Verificando status de conexão para:', numeroParaVerificar);
+      console.log('🔍 Verificando status de conexão para:', numero);
       
-      const connectionData = await ZapAgentService.verifyConnection(numeroParaVerificar);
+      const connectionData = await ZapAgentService.verifyConnection(numero);
       console.log('📊 Status de conexão recebido:', connectionData);
       
       if (connectionData.conectado === true) {
@@ -436,7 +435,8 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
   const handleRetryQrCode = () => {
     setQrCodeUrl('');
     console.log('🔄 Verificando status de conexão novamente...');
-    checkConnectionStatus();
+    const numeroLimpo = cleanPhoneNumber(formData.phone_number);
+    checkConnectionStatus(numeroLimpo);
   };
 
   return (
