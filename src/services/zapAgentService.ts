@@ -2,7 +2,38 @@
 export interface QrCodeResponse {
   conectado: boolean;
   qr_code?: string;
+  qrcodeUrl?: string;
   message?: string;
+}
+
+export interface CreateAgentResponse {
+  status: string;
+  msg?: string;
+  error?: string;
+  qrcodeUrl?: string;
+  numero?: string;
+}
+
+export interface VerifyConnectionResponse {
+  conectado: boolean;
+  status?: string;
+  message?: string;
+}
+
+export interface MessagesUsageResponse {
+  mensagensUsadas: number;
+  plano: string;
+  agentesAtivos: number;
+  limite?: number;
+}
+
+export interface HistoryResponse {
+  conversas: Array<{
+    user?: string;
+    bot?: string;
+    timestamp?: string;
+  }>;
+  memoria_ultima_mensagem?: string;
 }
 
 export interface AgentStatusResponse {
@@ -24,8 +55,9 @@ export interface AgentStatusResponse {
 
 export class ZapAgentService {
   private static readonly BASE_URL = 'https://zapagent-bot.onrender.com';
-  private static readonly TIMEOUT = 20000; // 20 segundos
-  private static readonly QUICK_TIMEOUT = 8000; // 8 segundos para verificação rápida
+  private static readonly API_URL = 'https://zapagent-api.onrender.com';
+  private static readonly TIMEOUT = 30000; // 30 segundos
+  private static readonly QUICK_TIMEOUT = 10000; // 10 segundos para verificação rápida
 
   private static async makeRequest<T>(url: string, options: RequestInit = {}): Promise<T> {
     const controller = new AbortController();
@@ -111,10 +143,7 @@ export class ZapAgentService {
       
       clearTimeout(timeoutId);
       
-      // Se chegou até aqui e teve resposta (mesmo que não seja 200), servidor está respondendo
-      console.log(`✅ ZapAgentService: Servidor respondeu com status ${response.status}`);
-      
-      // Considerar como online se responder, mesmo com códigos diferentes de 200
+      // Considerar como online se responder com status 200, 404 ou 405
       if (response.status === 200 || response.status === 404 || response.status === 405) {
         console.log('✅ ZapAgentService: API está online e funcional');
         return true;
@@ -125,29 +154,144 @@ export class ZapAgentService {
       
     } catch (error) {
       console.error('❌ ZapAgentService: Erro ao verificar status:', error);
-      
-      if (error.name === 'AbortError') {
-        console.log('❌ ZapAgentService: Timeout na verificação de status');
-      }
-      
       return false;
     }
   }
 
+  // 1. Criar agente (POST /zapagent)
+  static async createAgent(agentData: {
+    nome: string;
+    tipo: string;
+    descricao: string;
+    prompt: string;
+    numero: string;
+    plano: string;
+    webhook?: string;
+  }): Promise<CreateAgentResponse> {
+    console.log('🚀 ZapAgentService: Criando agente:', agentData.nome);
+    
+    try {
+      const isOnline = await this.checkApiStatus();
+      if (!isOnline) {
+        throw new Error('API não está disponível no momento. Tente novamente em alguns segundos.');
+      }
+      
+      const url = `${this.BASE_URL}/zapagent`;
+      const response = await this.makeRequest<CreateAgentResponse>(url, {
+        method: 'POST',
+        body: JSON.stringify(agentData),
+      });
+      
+      console.log('✅ ZapAgentService: Agente criado com sucesso:', response);
+      return response;
+    } catch (error) {
+      console.error('❌ ZapAgentService: Erro ao criar agente:', error);
+      throw error;
+    }
+  }
+
+  // 2. Verificar conexão do número (GET /verificar)
+  static async verifyConnection(phoneNumber: string): Promise<VerifyConnectionResponse> {
+    console.log('🔍 ZapAgentService: Verificando conexão para:', phoneNumber);
+    
+    if (!phoneNumber) {
+      throw new Error('Número do telefone é obrigatório');
+    }
+    
+    try {
+      const encodedNumber = encodeURIComponent(phoneNumber);
+      const url = `${this.BASE_URL}/verificar?numero=${encodedNumber}`;
+      
+      const response = await this.makeRequest<VerifyConnectionResponse>(url);
+      console.log('📊 ZapAgentService: Status de conexão:', response);
+      
+      return response;
+    } catch (error) {
+      console.error('❌ ZapAgentService: Erro ao verificar conexão:', error);
+      throw error;
+    }
+  }
+
+  // 3. Consultar mensagens usadas (GET /mensagens-usadas)
+  static async getMessagesUsage(phoneNumber: string): Promise<MessagesUsageResponse> {
+    console.log('📊 ZapAgentService: Consultando uso de mensagens para:', phoneNumber);
+    
+    if (!phoneNumber) {
+      throw new Error('Número do telefone é obrigatório');
+    }
+    
+    try {
+      const encodedNumber = encodeURIComponent(phoneNumber);
+      const url = `${this.BASE_URL}/mensagens-usadas?numero=${encodedNumber}`;
+      
+      const response = await this.makeRequest<MessagesUsageResponse>(url);
+      console.log('📊 ZapAgentService: Uso de mensagens:', response);
+      
+      return response;
+    } catch (error) {
+      console.error('❌ ZapAgentService: Erro ao consultar mensagens:', error);
+      throw error;
+    }
+  }
+
+  // 4. Obter histórico de IA (GET /historico)
+  static async getHistory(phoneNumber: string): Promise<HistoryResponse> {
+    console.log('📜 ZapAgentService: Obtendo histórico para:', phoneNumber);
+    
+    if (!phoneNumber) {
+      throw new Error('Número do telefone é obrigatório');
+    }
+    
+    try {
+      const encodedNumber = encodeURIComponent(phoneNumber);
+      const url = `${this.BASE_URL}/historico?numero=${encodedNumber}`;
+      
+      const response = await this.makeRequest<HistoryResponse>(url);
+      console.log('📜 ZapAgentService: Histórico obtido:', response);
+      
+      return response;
+    } catch (error) {
+      console.error('❌ ZapAgentService: Erro ao obter histórico:', error);
+      throw error;
+    }
+  }
+
+  // 5. Status via API Flask (GET /status/<numero>)
+  static async getAgentStatusFromFlask(phoneNumber: string): Promise<HistoryResponse> {
+    console.log('🔍 ZapAgentService: Obtendo status Flask para:', phoneNumber);
+    
+    if (!phoneNumber) {
+      throw new Error('Número do telefone é obrigatório');
+    }
+    
+    try {
+      const encodedNumber = encodeURIComponent(phoneNumber);
+      const url = `${this.API_URL}/status/${encodedNumber}`;
+      
+      const response = await this.makeRequest<HistoryResponse>(url);
+      console.log('📊 ZapAgentService: Status Flask:', response);
+      
+      return response;
+    } catch (error) {
+      console.error('❌ ZapAgentService: Erro ao obter status Flask:', error);
+      throw error;
+    }
+  }
+
+  // Métodos existentes mantidos para compatibilidade
   static async getAgentStatus(phoneNumber: string): Promise<AgentStatusResponse> {
     console.log('🔍 ZapAgentService: Verificando status para:', phoneNumber);
     
     try {
-      const encodedNumber = encodeURIComponent(phoneNumber);
-      const url = `${this.BASE_URL}/status?numero=${encodedNumber}`;
+      const connectionData = await this.verifyConnection(phoneNumber);
       
-      const response = await this.makeRequest<AgentStatusResponse>(url);
-      console.log('📊 ZapAgentService: Status recebido:', response);
-      
-      return response;
+      return {
+        status: connectionData.conectado ? 'conectado' : 'pendente',
+        conectado: connectionData.conectado,
+        message: connectionData.message || (connectionData.conectado ? 'Agente conectado' : 'Aguardando conexão')
+      };
     } catch (error) {
       console.error('❌ ZapAgentService: Erro ao verificar status:', error);
-      // Retorna um status padrão em caso de erro
       return {
         status: 'desconectado',
         conectado: false,
@@ -252,59 +396,6 @@ export class ZapAgentService {
       if (error.name === 'AbortError') {
         throw new Error('Timeout: QR code demorou muito para carregar');
       }
-      throw error;
-    }
-  }
-
-  static async createAgent(agentData: {
-    nome: string;
-    tipo: string;
-    descricao: string;
-    prompt: string;
-    numero: string;
-    plano: string;
-  }): Promise<any> {
-    console.log('🚀 ZapAgentService: Criando agente:', agentData.nome);
-    
-    try {
-      // Primeiro, verificar se a API está realmente online
-      const isOnline = await this.checkApiStatus();
-      if (!isOnline) {
-        throw new Error('API não está disponível no momento. Tente novamente em alguns segundos.');
-      }
-      
-      const url = `${this.BASE_URL}/zapagent`;
-      const response = await this.makeRequest(url, {
-        method: 'POST',
-        body: JSON.stringify(agentData),
-      });
-      
-      console.log('✅ ZapAgentService: Agente criado com sucesso:', response);
-      return response;
-    } catch (error) {
-      console.error('❌ ZapAgentService: Erro ao criar agente:', error);
-      
-      // Tratar diferentes tipos de erro
-      if (error.message?.includes('API não está disponível')) {
-        throw new Error('Servidor temporariamente indisponível. Aguarde alguns segundos e tente novamente.');
-      }
-      
-      if (error.message?.includes('Timeout')) {
-        throw new Error('Servidor demorou muito para responder. Tente novamente.');
-      }
-      
-      if (error.message?.includes('conectividade')) {
-        throw new Error('Erro de conectividade. Verifique sua conexão com a internet.');
-      }
-      
-      if (error.message?.includes('403')) {
-        throw new Error('Número já está sendo usado por outro usuário.');
-      }
-      
-      if (error.message?.includes('500') || error.message?.includes('502') || error.message?.includes('503')) {
-        throw new Error('Erro interno do servidor. Tente novamente em alguns momentos.');
-      }
-      
       throw error;
     }
   }

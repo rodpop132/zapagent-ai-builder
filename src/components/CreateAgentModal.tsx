@@ -24,7 +24,8 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     business_type: '',
     phone_number: '',
     training_data: '',
-    personality_prompt: ''
+    personality_prompt: '',
+    webhook: ''
   });
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
@@ -61,17 +62,11 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
   const checkApiStatus = async () => {
     try {
       console.log('🔍 CreateAgentModal: Verificando status da API...');
-      setApiStatus(null); // Resetar status
+      setApiStatus(null);
       
       const status = await ZapAgentService.checkApiStatus();
       setApiStatus(status);
       console.log('📊 CreateAgentModal: Status da API:', status);
-      
-      if (status) {
-        console.log('✅ CreateAgentModal: Servidor está online e funcional');
-      } else {
-        console.log('❌ CreateAgentModal: Servidor não está respondendo adequadamente');
-      }
     } catch (error) {
       console.error('❌ CreateAgentModal: Erro ao verificar API:', error);
       setApiStatus(false);
@@ -170,22 +165,14 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
   const createAgentAPI = async () => {
     try {
-      console.log('🚀 STEP 2: Iniciando criação do agente na API externa');
+      console.log('🚀 STEP 2: Criando agente via nova API integrada');
       
       const userPlan = await getUserPlan();
-      console.log('📋 STEP 2.1: Plano do usuário obtido:', userPlan);
-      
       let planValue = 'gratuito';
       if (userPlan === 'pro') planValue = 'standard';
       if (userPlan === 'ultra') planValue = 'ultra';
       
-      console.log('📋 STEP 2.2: Plano mapeado para API:', planValue);
-      console.log('📞 STEP 2.3: Número completo com DDI:', formData.phone_number);
-      
-      if (!formData.phone_number || formData.phone_number.length < 10) {
-        console.error('❌ STEP 2.3 ERROR: Número inválido');
-        throw new Error('Número do WhatsApp deve incluir o código do país (DDI)');
-      }
+      const webhook = formData.webhook || `${window.location.origin}/webhook/${formData.phone_number}`;
       
       const payload = {
         nome: formData.name,
@@ -193,17 +180,38 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         descricao: formData.description,
         prompt: formData.personality_prompt || `Você é um assistente virtual para ${formData.business_type}. Seja sempre educado, prestativo e responda de forma clara e objetiva.`,
         numero: formData.phone_number,
-        plano: planValue
+        plano: planValue,
+        webhook: webhook
       };
 
-      console.log('📦 STEP 2.4: Payload completo preparado:', JSON.stringify(payload, null, 2));
+      console.log('📦 STEP 2: Payload preparado:', payload);
       
       const result = await ZapAgentService.createAgent(payload);
-      console.log('✅ STEP 2 SUCCESS: Agente criado na API externa:', result);
+      console.log('✅ STEP 2: Resposta da API:', result);
       
-      return result;
+      // Verificar se a criação foi bem-sucedida
+      if (result.status === 'ok') {
+        console.log('✅ STEP 2: Agente criado com sucesso');
+        
+        // Se há qrcodeUrl na resposta, usar diretamente
+        if (result.qrcodeUrl) {
+          console.log('📱 STEP 2: QR Code URL recebido:', result.qrcodeUrl);
+          setQrCodeUrl(result.qrcodeUrl);
+          setShowQrModal(true);
+          startStatusPolling();
+        }
+        
+        toast({
+          title: "✅ Agente criado com sucesso!",
+          description: "Seu agente foi criado e está sendo configurado.",
+        });
+        
+        return result;
+      } else {
+        throw new Error(result.error || result.msg || 'Erro desconhecido na criação do agente');
+      }
     } catch (error) {
-      console.error('🚨 STEP 2 FINAL ERROR na createAgentAPI:', error);
+      console.error('🚨 STEP 2 ERROR:', error);
       throw error;
     }
   };
@@ -212,10 +220,10 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     try {
       console.log('🔍 Verificando status de conexão para:', formData.phone_number);
       
-      const statusData = await ZapAgentService.getAgentStatus(formData.phone_number);
-      console.log('📊 Status recebido:', statusData);
+      const connectionData = await ZapAgentService.verifyConnection(formData.phone_number);
+      console.log('📊 Status de conexão recebido:', connectionData);
       
-      if (statusData.conectado === true) {
+      if (connectionData.conectado === true) {
         setConnectionStatus('connected');
         stopStatusPolling();
         
@@ -243,13 +251,13 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
   };
 
   const startStatusPolling = () => {
-    console.log('🔄 Iniciando polling de status a cada 5 segundos...');
+    console.log('🔄 Iniciando polling de status a cada 10 segundos...');
     
     setTimeout(() => {
       checkConnectionStatus();
-    }, 5000);
+    }, 10000);
     
-    const interval = setInterval(checkConnectionStatus, 5000);
+    const interval = setInterval(checkConnectionStatus, 10000);
     setStatusCheckInterval(interval);
     
     setTimeout(() => {
@@ -336,31 +344,31 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         throw new Error('Número do WhatsApp deve incluir o código do país (DDI) e ter pelo menos 10 dígitos');
       }
 
-      // Verificar se API está online antes de prosseguir
-      console.log('🔍 MAIN PROCESS: Verificando status da API antes de criar...');
+      // Verificar se API está online
       const isApiOnline = await ZapAgentService.checkApiStatus();
-      
       if (!isApiOnline) {
         throw new Error('API não está disponível no momento. Aguarde alguns segundos e tente novamente.');
       }
-      
-      console.log('✅ MAIN PROCESS: API confirmada como online, prosseguindo...');
 
       // STEP 1: Verificar disponibilidade
       await checkPhoneNumberAvailability(formData.phone_number);
 
-      // STEP 2: Criar na API externa
+      // STEP 2: Criar na API externa (nova integração)
       console.log('📡 MAIN PROCESS: Criando agente na API externa...');
-      await createAgentAPI();
+      const apiResult = await createAgentAPI();
 
       // STEP 3: Salvar no Supabase
       console.log('💾 STEP 3: Salvando no banco de dados...');
       const { error: supabaseError } = await supabase
         .from('agents')
         .insert({
-          ...formData,
-          user_id: user?.id,
+          name: formData.name,
+          description: formData.description,
+          business_type: formData.business_type,
+          phone_number: formData.phone_number,
+          training_data: formData.training_data,
           personality_prompt: formData.personality_prompt || `Você é um assistente virtual para ${formData.business_type}. Seja sempre educado, prestativo e responda de forma clara e objetiva.`,
+          user_id: user?.id,
           whatsapp_status: 'pending'
         });
 
@@ -371,11 +379,6 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
       console.log('✅ STEP 3 SUCCESS: Agente salvo com sucesso');
 
-      toast({
-        title: "✅ Agente criado com sucesso!",
-        description: "Aguarde alguns segundos para o QR code aparecer..."
-      });
-
       onAgentCreated();
       
       // Reset form
@@ -385,15 +388,10 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         business_type: '',
         phone_number: '',
         training_data: '',
-        personality_prompt: ''
+        personality_prompt: '',
+        webhook: ''
       });
       setUploadedFiles([]);
-
-      // STEP 4: Buscar QR code após delay
-      setTimeout(async () => {
-        console.log('🔄 STEP 4: Buscando QR code...');
-        await fetchQrCode(1, 3);
-      }, 8000);
 
     } catch (error) {
       console.error('💥 MAIN PROCESS ERROR:', error);
@@ -426,8 +424,8 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
   const handleRetryQrCode = () => {
     setQrCodeUrl('');
-    console.log('🔄 Tentativa manual de atualizar QR Code...');
-    fetchQrCode(1, 3);
+    console.log('🔄 Verificando status de conexão novamente...');
+    checkConnectionStatus();
   };
 
   return (
@@ -544,6 +542,21 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
             <div className="animate-in fade-in-50 duration-300 delay-500">
               <label className="block text-sm font-medium text-gray-700 mb-1">
+                Webhook URL (Opcional)
+              </label>
+              <Input
+                value={formData.webhook}
+                onChange={(e) => setFormData({ ...formData, webhook: e.target.value })}
+                placeholder="https://seusite.com/webhook"
+                className="transition-all duration-200 focus:scale-[1.01]"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                URL para receber notificações de mensagens (deixe em branco para usar padrão)
+              </p>
+            </div>
+
+            <div className="animate-in fade-in-50 duration-300 delay-600">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Upload de Arquivos para Treinamento
                 {userPlan === 'free' && (
                   <span className="ml-2 inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
@@ -606,7 +619,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
               )}
             </div>
 
-            <div className="animate-in fade-in-50 duration-300 delay-600">
+            <div className="animate-in fade-in-50 duration-300 delay-700">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Dados de Treinamento Adicionais
               </label>
@@ -622,7 +635,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
               </p>
             </div>
 
-            <div className="animate-in fade-in-50 duration-300 delay-700">
+            <div className="animate-in fade-in-50 duration-300 delay-800">
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Personalidade do Agente
               </label>
@@ -638,7 +651,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
               </p>
             </div>
 
-            <div className="flex space-x-4 pt-4 animate-in fade-in-50 duration-300 delay-800">
+            <div className="flex space-x-4 pt-4 animate-in fade-in-50 duration-300 delay-900">
               <Button
                 type="button"
                 variant="outline"
@@ -674,24 +687,25 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
           <DialogHeader>
             <DialogTitle>Conectar WhatsApp</DialogTitle>
             <DialogDescription>
-              Escaneie o QR Code abaixo com seu WhatsApp para conectar o agente
+              Escaneie o QR Code ou aguarde a conexão automática
             </DialogDescription>
           </DialogHeader>
           
           <div className="text-center space-y-4">
             {qrCodeUrl ? (
               <div className="flex justify-center">
-                <img 
+                <iframe 
                   src={qrCodeUrl} 
-                  alt="QR Code do WhatsApp" 
-                  className="max-w-full h-auto border rounded-lg shadow-lg"
+                  style={{border: 'none', width: '300px', height: '300px'}}
+                  title="QR Code do WhatsApp"
+                  className="border rounded-lg shadow-lg"
                 />
               </div>
             ) : (
               <div className="flex justify-center items-center h-64 bg-gray-100 rounded-lg">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green mx-auto mb-2"></div>
-                  <p className="text-sm text-gray-600">Gerando QR Code...</p>
+                  <p className="text-sm text-gray-600">Conectando com WhatsApp...</p>
                 </div>
               </div>
             )}
@@ -706,7 +720,9 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
                 ) : (
                   <div className="text-center">
                     <div className="text-blue-600 font-medium text-base mb-1">⏳ Aguardando conexão...</div>
-                    <p className="text-blue-600 text-sm">Escaneie o QR code acima</p>
+                    <p className="text-blue-600 text-sm">
+                      {qrCodeUrl ? 'Escaneie o QR code acima' : 'Verificando status automaticamente...'}
+                    </p>
                   </div>
                 )}
               </div>
@@ -719,16 +735,16 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
                 size="sm"
                 className="flex-1"
               >
-                Atualizar QR Code
+                Verificar Status
               </Button>
               
               <Button
-                onClick={checkConnectionStatus}
+                onClick={handleCloseQrModal}
                 variant="outline"
                 size="sm"
                 className="flex-1"
               >
-                Verificar Status
+                Fechar
               </Button>
             </div>
           </div>
