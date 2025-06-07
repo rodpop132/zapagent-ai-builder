@@ -38,15 +38,31 @@ const CountryPhoneInput = ({ value, onChange, placeholder = "Digite o número", 
     return num.replace(/\D/g, '');
   };
 
+  // Função para limpar número de telefone removendo + duplicados
+  const cleanPhoneNumber = (phoneNumber: string) => {
+    // Remove espaços extras e múltiplos sinais de +
+    let cleaned = phoneNumber.trim().replace(/\+{2,}/g, '+');
+    
+    // Se não começar com +, adiciona
+    if (!cleaned.startsWith('+')) {
+      cleaned = '+' + cleaned;
+    }
+    
+    console.log('📞 PHONE INPUT: Número limpo:', cleaned);
+    return cleaned;
+  };
+
   // Função para detectar país pelo número completo
   const detectCountryFromNumber = (fullNumber: string) => {
-    if (!fullNumber || !fullNumber.startsWith('+')) return null;
+    const cleanedNumber = cleanPhoneNumber(fullNumber);
+    
+    if (!cleanedNumber || !cleanedNumber.startsWith('+')) return null;
     
     // Ordenar países por tamanho do código (maior primeiro para evitar conflitos)
     const sortedCountries = [...countries].sort((a, b) => b.dialCode.length - a.dialCode.length);
     
     for (const country of sortedCountries) {
-      if (fullNumber.startsWith(country.dialCode)) {
+      if (cleanedNumber.startsWith(country.dialCode)) {
         return country;
       }
     }
@@ -57,20 +73,21 @@ const CountryPhoneInput = ({ value, onChange, placeholder = "Digite o número", 
   useEffect(() => {
     console.log('🔍 PHONE INPUT: Processando valor:', value);
     
-    if (value && value.startsWith('+') && !isInitialized) {
-      const detectedCountry = detectCountryFromNumber(value);
+    if (value && value.includes('+') && !isInitialized) {
+      const cleanedValue = cleanPhoneNumber(value);
+      const detectedCountry = detectCountryFromNumber(cleanedValue);
       
       if (detectedCountry) {
         console.log('🌍 PHONE INPUT: País detectado:', detectedCountry.name);
         setSelectedCountry(detectedCountry);
         
-        const local = value.substring(detectedCountry.dialCode.length);
+        const local = cleanedValue.substring(detectedCountry.dialCode.length);
         const normalizedLocal = normalizeNumber(local);
         console.log('📞 PHONE INPUT: Número local extraído:', normalizedLocal);
         setLocalNumber(normalizedLocal);
       } else {
         console.log('⚠️ PHONE INPUT: País não detectado, usando padrão');
-        const normalizedLocal = normalizeNumber(value.substring(1));
+        const normalizedLocal = normalizeNumber(cleanedValue.substring(1));
         setLocalNumber(normalizedLocal);
       }
       setIsInitialized(true);
@@ -87,8 +104,9 @@ const CountryPhoneInput = ({ value, onChange, placeholder = "Digite o número", 
       setSelectedCountry(country);
       
       const fullNumber = country.dialCode + localNumber;
-      console.log('📞 PHONE INPUT: Novo número completo:', fullNumber);
-      onChange(fullNumber);
+      const cleanedNumber = cleanPhoneNumber(fullNumber);
+      console.log('📞 PHONE INPUT: Novo número completo:', cleanedNumber);
+      onChange(cleanedNumber);
     }
   };
 
@@ -100,8 +118,9 @@ const CountryPhoneInput = ({ value, onChange, placeholder = "Digite o número", 
     setLocalNumber(normalized);
     
     const fullNumber = selectedCountry.dialCode + normalized;
-    console.log('📞 PHONE INPUT: Número completo final:', fullNumber);
-    onChange(fullNumber);
+    const cleanedNumber = cleanPhoneNumber(fullNumber);
+    console.log('📞 PHONE INPUT: Número completo final:', cleanedNumber);
+    onChange(cleanedNumber);
   };
 
   // Formatação para exibição
