@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { normalizarNumero } from '@/utils/phoneUtils';
 
 interface Country {
   code: string;
@@ -32,11 +33,6 @@ const CountryPhoneInput = ({ value, onChange, placeholder = "Digite o número", 
   const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]);
   const [localNumber, setLocalNumber] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
-
-  // Função para normalizar o número (remover formatação)
-  const normalizeNumber = (num: string) => {
-    return num.replace(/\D/g, '');
-  };
 
   // Função para limpar número de telefone removendo + duplicados
   const cleanPhoneNumber = (phoneNumber: string) => {
@@ -82,12 +78,12 @@ const CountryPhoneInput = ({ value, onChange, placeholder = "Digite o número", 
         setSelectedCountry(detectedCountry);
         
         const local = cleanedValue.substring(detectedCountry.dialCode.length);
-        const normalizedLocal = normalizeNumber(local);
+        const normalizedLocal = normalizarNumero(local);
         console.log('📞 PHONE INPUT: Número local extraído:', normalizedLocal);
         setLocalNumber(normalizedLocal);
       } else {
         console.log('⚠️ PHONE INPUT: País não detectado, usando padrão');
-        const normalizedLocal = normalizeNumber(cleanedValue.substring(1));
+        const normalizedLocal = normalizarNumero(cleanedValue.substring(1));
         setLocalNumber(normalizedLocal);
       }
       setIsInitialized(true);
@@ -112,7 +108,7 @@ const CountryPhoneInput = ({ value, onChange, placeholder = "Digite o número", 
 
   const handleNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const inputValue = e.target.value;
-    const normalized = normalizeNumber(inputValue);
+    const normalized = normalizarNumero(inputValue);
     
     console.log('📞 PHONE INPUT: Input original:', inputValue, 'Normalizado:', normalized);
     setLocalNumber(normalized);
@@ -127,7 +123,7 @@ const CountryPhoneInput = ({ value, onChange, placeholder = "Digite o número", 
   const formatForDisplay = (num: string) => {
     if (!num) return '';
     
-    const digits = normalizeNumber(num);
+    const digits = normalizarNumero(num);
     
     if (selectedCountry.code === 'PT') {
       // Portugal: 9XX XXX XXX

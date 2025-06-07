@@ -9,6 +9,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { ZapAgentService } from '@/services/zapAgentService';
+import { normalizarNumero, validarNumero } from '@/utils/phoneUtils';
+import { handleJWTError, executeWithJWTHandling } from '@/utils/authUtils';
 import CountryPhoneInput from './CountryPhoneInput';
 
 interface CreateAgentModalProps {
@@ -107,7 +109,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
   };
 
   const getUserPlan = async () => {
-    try {
+    return await executeWithJWTHandling(async () => {
       const { data, error } = await (supabase as any)
         .from('subscriptions')
         .select('plan_type, is_unlimited')
@@ -124,20 +126,11 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       console.log('📋 Plano do usuário obtido:', plan);
       setUserPlan(plan);
       return plan;
-    } catch (error) {
-      console.error('Error getting user plan:', error);
-      setUserPlan('free');
-      return 'free';
-    }
-  };
-
-  // Função para limpar número (apenas dígitos)
-  const cleanPhoneNumber = (phoneNumber: string) => {
-    return phoneNumber.replace(/\D/g, '');
+    }, toast, 'free');
   };
 
   const checkPhoneNumberAvailability = async (phoneNumber: string) => {
-    try {
+    return await executeWithJWTHandling(async () => {
       console.log('🔍 STEP 1: Verificando disponibilidade do número:', phoneNumber);
       
       const { data: existingAgent, error } = await supabase
@@ -162,10 +155,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
       console.log('✅ STEP 1 SUCCESS: Número disponível para uso');
       return true;
-    } catch (error) {
-      console.error('❌ STEP 1 FINAL ERROR:', error);
-      throw error;
-    }
+    }, toast);
   };
 
   const createAgentAPI = async () => {
@@ -177,17 +167,25 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       if (userPlan === 'pro') planValue = 'standard';
       if (userPlan === 'ultra') planValue = 'ultra';
       
-      const webhook = formData.webhook || `${window.location.origin}/webhook/${cleanPhoneNumber(formData.phone_number)}`;
+      // Webhook só disponível para planos Pro e Ultra
+      let webhook = '';
+      if (userPlan === 'pro' || userPlan === 'ultra') {
+        webhook = formData.webhook || `${window.location.origin}/webhook/${normalizarNumero(formData.phone_number)}`;
+      }
       
-      // Limpar número para enviar apenas dígitos
-      const numeroLimpo = cleanPhoneNumber(formData.phone_number);
+      // SEMPRE normalizar número antes de enviar
+      const numeroNormalizado = normalizarNumero(formData.phone_number);
+      
+      if (!validarNumero(numeroNormalizado)) {
+        throw new Error('Número de telefone inválido. Deve ter pelo menos 10 dígitos.');
+      }
       
       const payload = {
         nome: formData.name,
         tipo: formData.business_type,
         descricao: formData.description,
         prompt: formData.personality_prompt || `Você é um assistente virtual para ${formData.business_type}. Seja sempre educado, prestativo e responda de forma clara e objetiva.`,
-        numero: numeroLimpo,
+        numero: numeroNormalizado,
         plano: planValue,
         webhook: webhook
       };
@@ -201,15 +199,15 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         console.log('✅ STEP 2: Agente criado com sucesso');
         
         // Salvar dados no localStorage para uso futuro
-        localStorage.setItem('zapagent_numero', numeroLimpo);
+        localStorage.setItem('zapagent_numero', numeroNormalizado);
         localStorage.setItem('zapagent_plano', planValue);
         
         // Usar a rota direta da imagem QR Code
-        const qrImageUrl = `https://zapagent-bot.onrender.com/qrcode-imagem?numero=${numeroLimpo}`;
+        const qrImageUrl = `https://zapagent-bot.onrender.com/qrcode-imagem?numero=${numeroNormalizado}`;
         console.log('📱 STEP 2: URL da imagem QR Code:', qrImageUrl);
         setQrCodeUrl(qrImageUrl);
         setShowQrModal(true);
-        startStatusPolling(numeroLimpo);
+        startStatusPolling(numeroNormalizado);
         
         toast({
           title: "✅ Agente criado com sucesso!",
@@ -222,29 +220,40 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       }
     } catch (error) {
       console.error('🚨 STEP 2 ERROR:', error);
+      
+      // Tratar erro de JWT
+      if (handleJWTError(error, toast)) {
+        throw new Error('Sessão expirada. Por favor, faça login novamente.');
+      }
+      
       throw error;
     }
   };
 
+  // CORRIGIDO: Sempre passar o número normalizado
   const checkConnectionStatus = async (numero: string) => {
     try {
-      console.log('🔍 Verificando status de conexão para:', numero);
+      const numeroNormalizado = normalizarNumero(numero);
+      console.log('🔍 Verificando status de conexão para número normalizado:', numeroNormalizado);
       
-      const connectionData = await ZapAgentService.verifyConnection(numero);
+      if (!validarNumero(numeroNormalizado)) {
+        throw new Error('Número inválido para verificação');
+      }
+      
+      const connectionData = await ZapAgentService.verifyConnection(numeroNormalizado);
       console.log('📊 Status de conexão recebido:', connectionData);
       
       if (connectionData.conectado === true) {
         setConnectionStatus('connected');
         stopStatusPolling();
         
-        try {
+        // Atualizar status no banco usando JWT handling
+        await executeWithJWTHandling(async () => {
           await (supabase as any)
             .from('agents')
             .update({ whatsapp_status: 'connected' })
             .eq('phone_number', formData.phone_number);
-        } catch (dbError) {
-          console.error('Erro ao atualizar status no banco:', dbError);
-        }
+        }, toast);
         
         toast({
           title: "✅ Agente Conectado!",
@@ -256,20 +265,30 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       return false;
     } catch (error) {
       console.error('💥 Erro ao verificar status:', error);
+      
+      // Tratar erro de JWT
+      if (handleJWTError(error, toast)) {
+        return false;
+      }
+      
       return false;
     }
   };
 
+  // CORRIGIDO: Função de polling com número correto
   const startStatusPolling = (numero: string) => {
-    console.log('🔄 Iniciando polling de status a cada 10 segundos...');
+    console.log('🔄 Iniciando polling de status a cada 10 segundos para número:', numero);
     
+    // Primeira verificação após 10 segundos
     setTimeout(() => {
       checkConnectionStatus(numero);
     }, 10000);
     
+    // Polling a cada 10 segundos
     const interval = setInterval(() => checkConnectionStatus(numero), 10000);
     setStatusCheckInterval(interval);
     
+    // Parar após 5 minutos
     setTimeout(() => {
       stopStatusPolling();
       console.log('⏰ Polling de status interrompido após 5 minutos');
@@ -285,13 +304,18 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
   const fetchQrCode = async (attempt = 1, maxAttempts = 3) => {
     try {
-      console.log(`🔄 Tentativa ${attempt}/${maxAttempts} - Buscando QR code para número:`, formData.phone_number);
+      const numeroNormalizado = normalizarNumero(formData.phone_number);
+      console.log(`🔄 Tentativa ${attempt}/${maxAttempts} - Buscando QR code para número normalizado:`, numeroNormalizado);
       
       if (attempt > maxAttempts) {
         throw new Error('Número máximo de tentativas atingido. O QR code pode não ter sido gerado ainda.');
       }
       
-      const qrResponse = await ZapAgentService.getQrCode(formData.phone_number);
+      if (!validarNumero(numeroNormalizado)) {
+        throw new Error('Número inválido para QR code');
+      }
+      
+      const qrResponse = await ZapAgentService.getQrCode(numeroNormalizado);
       
       if (qrResponse.conectado) {
         console.log('✅ ZapAgentService: Agente já conectado via QR check');
@@ -308,7 +332,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         console.log('✅ QR code válido extraído');
         setQrCodeUrl(qrResponse.qr_code);
         setShowQrModal(true);
-        startStatusPolling(formData.phone_number);
+        startStatusPolling(numeroNormalizado);
       } else {
         if (attempt < maxAttempts) {
           const waitTime = attempt * 3000;
@@ -320,6 +344,11 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       }
     } catch (error) {
       console.error('💥 Erro ao buscar QR code:', error);
+      
+      // Tratar erro de JWT
+      if (handleJWTError(error, toast)) {
+        return;
+      }
       
       if (attempt < maxAttempts) {
         const waitTime = attempt * 4000;
@@ -350,7 +379,10 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       if (!formData.business_type) {
         throw new Error('Tipo de negócio é obrigatório');
       }
-      if (!formData.phone_number.trim() || cleanPhoneNumber(formData.phone_number).length < 10) {
+      
+      // SEMPRE normalizar e validar número
+      const numeroNormalizado = normalizarNumero(formData.phone_number);
+      if (!validarNumero(numeroNormalizado)) {
         throw new Error('Número do WhatsApp deve ter pelo menos 10 dígitos');
       }
 
@@ -367,27 +399,29 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       console.log('📡 MAIN PROCESS: Criando agente na API externa...');
       const apiResult = await createAgentAPI();
 
-      // STEP 3: Salvar no Supabase
+      // STEP 3: Salvar no Supabase com JWT handling
       console.log('💾 STEP 3: Salvando no banco de dados...');
-      const { error: supabaseError } = await supabase
-        .from('agents')
-        .insert({
-          name: formData.name,
-          description: formData.description,
-          business_type: formData.business_type,
-          phone_number: formData.phone_number,
-          training_data: formData.training_data,
-          personality_prompt: formData.personality_prompt || `Você é um assistente virtual para ${formData.business_type}. Seja sempre educado, prestativo e responda de forma clara e objetiva.`,
-          user_id: user?.id,
-          whatsapp_status: 'pending'
-        });
+      await executeWithJWTHandling(async () => {
+        const { error: supabaseError } = await supabase
+          .from('agents')
+          .insert({
+            name: formData.name,
+            description: formData.description,
+            business_type: formData.business_type,
+            phone_number: formData.phone_number,
+            training_data: formData.training_data,
+            personality_prompt: formData.personality_prompt || `Você é um assistente virtual para ${formData.business_type}. Seja sempre educado, prestativo e responda de forma clara e objetiva.`,
+            user_id: user?.id,
+            whatsapp_status: 'pending'
+          });
 
-      if (supabaseError) {
-        console.error('❌ STEP 3 ERROR:', supabaseError);
-        throw new Error(`Erro ao salvar: ${supabaseError.message}`);
-      }
+        if (supabaseError) {
+          console.error('❌ STEP 3 ERROR:', supabaseError);
+          throw new Error(`Erro ao salvar: ${supabaseError.message}`);
+        }
 
-      console.log('✅ STEP 3 SUCCESS: Agente salvo com sucesso');
+        console.log('✅ STEP 3 SUCCESS: Agente salvo com sucesso');
+      }, toast);
 
       onAgentCreated();
       
@@ -435,8 +469,8 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
   const handleRetryQrCode = () => {
     setQrCodeUrl('');
     console.log('🔄 Verificando status de conexão novamente...');
-    const numeroLimpo = cleanPhoneNumber(formData.phone_number);
-    checkConnectionStatus(numeroLimpo);
+    const numeroNormalizado = normalizarNumero(formData.phone_number);
+    checkConnectionStatus(numeroNormalizado);
   };
 
   return (
@@ -550,7 +584,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
                     ✅ Número completo: {formData.phone_number}
                   </p>
                   <p className="text-blue-600">
-                    📞 Será enviado como: {cleanPhoneNumber(formData.phone_number)}
+                    📞 Será enviado como: {normalizarNumero(formData.phone_number)}
                   </p>
                 </div>
               )}
@@ -558,16 +592,28 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
             <div className="animate-in fade-in-50 duration-300 delay-500">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Webhook URL (Opcional)
+                Webhook URL
+                {userPlan === 'free' && (
+                  <span className="ml-2 inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+                    <Lock className="w-3 h-3 mr-1" />
+                    Pro/Ultra
+                  </span>
+                )}
               </label>
               <Input
                 value={formData.webhook}
                 onChange={(e) => setFormData({ ...formData, webhook: e.target.value })}
                 placeholder="https://seusite.com/webhook"
-                className="transition-all duration-200 focus:scale-[1.01]"
+                className={`transition-all duration-200 focus:scale-[1.01] ${
+                  userPlan === 'free' ? 'bg-gray-50 cursor-not-allowed' : ''
+                }`}
+                disabled={userPlan === 'free'}
               />
               <p className="text-xs text-gray-500 mt-1">
-                URL para receber notificações de mensagens (deixe em branco para usar padrão)
+                {userPlan === 'free' 
+                  ? 'Webhook personalizado disponível nos planos Pro e Ultra'
+                  : 'URL para receber notificações de mensagens (deixe em branco para usar padrão)'
+                }
               </p>
             </div>
 
@@ -708,72 +754,90 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
           </DialogHeader>
           
           <div className="text-center space-y-4">
-            {qrCodeUrl ? (
-              <div className="flex justify-center">
-                <img 
-                  src={qrCodeUrl}
-                  alt="QR Code do WhatsApp"
-                  style={{ width: '300px', height: '300px' }}
-                  className="border rounded-lg shadow-lg"
-                  onError={(e) => {
-                    console.error('Erro ao carregar QR Code:', e);
-                    toast({
-                      title: "Erro no QR Code",
-                      description: "Erro ao carregar QR code. Verifique se o número está correto.",
-                      variant: "destructive"
-                    });
-                  }}
-                  onLoad={() => {
-                    console.log('✅ QR Code carregado com sucesso');
-                  }}
-                />
+            {connectionStatus === 'connected' ? (
+              <div className="p-6 bg-green-50 rounded-lg">
+                <Wifi className="h-12 w-12 text-green-600 mx-auto mb-3" />
+                <h3 className="text-lg font-medium text-green-800 mb-2">
+                  WhatsApp Conectado!
+                </h3>
+                <p className="text-sm text-green-600">
+                  O agente está pronto para receber mensagens
+                </p>
               </div>
             ) : (
-              <div className="flex justify-center items-center h-64 bg-gray-100 rounded-lg">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green mx-auto mb-2"></div>
-                  <p className="text-sm text-gray-600">Conectando com WhatsApp...</p>
-                </div>
-              </div>
-            )}
-            
-            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="flex items-center justify-center space-x-2">
-                {connectionStatus === 'connected' ? (
-                  <div className="text-center">
-                    <div className="text-green-600 font-bold text-lg mb-1">✅ Agente Conectado!</div>
-                    <p className="text-green-700 text-sm">Pronto para receber mensagens</p>
+              <>
+                <p className="text-sm text-gray-600">
+                  Escaneie o QR Code abaixo com seu WhatsApp para conectar o agente
+                </p>
+                
+                {qrCodeUrl ? (
+                  <div className="flex justify-center">
+                    <img 
+                      src={qrCodeUrl}
+                      alt="QR Code do WhatsApp"
+                      style={{ width: '300px', height: '300px' }}
+                      className="border rounded-lg shadow-lg"
+                      onError={(e) => {
+                        console.error('Erro ao carregar QR Code:', e);
+                        toast({
+                          title: "Erro no QR Code",
+                          description: "Erro ao carregar QR code. Verifique se o número está correto.",
+                          variant: "destructive"
+                        });
+                      }}
+                      onLoad={() => {
+                        console.log('✅ QR Code carregado com sucesso');
+                      }}
+                    />
                   </div>
                 ) : (
-                  <div className="text-center">
-                    <div className="text-blue-600 font-medium text-base mb-1">⏳ Aguardando conexão...</div>
-                    <p className="text-blue-600 text-sm">
-                      Escaneie o QR code com seu WhatsApp
-                    </p>
+                  <div className="flex justify-center items-center h-64 bg-gray-100 rounded-lg">
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-green mx-auto mb-2"></div>
+                      <p className="text-sm text-gray-600">Conectando com WhatsApp...</p>
+                    </div>
                   </div>
                 )}
-              </div>
-            </div>
-            
-            <div className="flex space-x-2">
-              <Button
-                onClick={handleRetryQrCode}
-                variant="outline"
-                size="sm"
-                className="flex-1"
-              >
-                Verificar Status
-              </Button>
-              
-              <Button
-                onClick={handleCloseQrModal}
-                variant="outline"
-                size="sm"
-                className="flex-1"
-              >
-                Fechar
-              </Button>
-            </div>
+                
+                <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-center space-x-2">
+                    {connectionStatus === 'connected' ? (
+                      <div className="text-center">
+                        <div className="text-green-600 font-bold text-lg mb-1">✅ Agente Conectado!</div>
+                        <p className="text-green-700 text-sm">Pronto para receber mensagens</p>
+                      </div>
+                    ) : (
+                      <div className="text-center">
+                        <div className="text-blue-600 font-medium text-base mb-1">⏳ Aguardando conexão...</div>
+                        <p className="text-blue-600 text-sm">
+                          Escaneie o QR code com seu WhatsApp
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="flex space-x-2">
+                  <Button
+                    onClick={handleRetryQrCode}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                  >
+                    Verificar Status
+                  </Button>
+                  
+                  <Button
+                    onClick={handleCloseQrModal}
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                  >
+                    Fechar
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>

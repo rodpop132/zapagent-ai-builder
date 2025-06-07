@@ -5,6 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Badge } from '@/components/ui/badge';
 import { Wifi, WifiOff, RefreshCw, QrCode } from 'lucide-react';
 import { ZapAgentService } from '@/services/zapAgentService';
+import { normalizarNumero } from '@/utils/phoneUtils';
+import { handleJWTError } from '@/utils/authUtils';
+import { useToast } from '@/hooks/use-toast';
 
 interface WhatsAppStatusProps {
   phoneNumber: string;
@@ -18,11 +21,7 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
   const [checking, setChecking] = useState(false);
   const [qrLoading, setQrLoading] = useState(false);
   const [error, setError] = useState<string>('');
-
-  // Função para limpar número (apenas dígitos)
-  const cleanPhoneNumber = (phone: string) => {
-    return phone.replace(/\D/g, '');
-  };
+  const { toast } = useToast();
 
   const checkConnection = async () => {
     if (!phoneNumber) return;
@@ -30,10 +29,16 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
     try {
       setChecking(true);
       setError('');
-      const numeroLimpo = cleanPhoneNumber(phoneNumber);
-      console.log('🔍 WhatsAppStatus: Verificando conexão para:', numeroLimpo);
       
-      const statusResponse = await ZapAgentService.verifyConnection(numeroLimpo);
+      // SEMPRE normalizar o número
+      const numeroNormalizado = normalizarNumero(phoneNumber);
+      console.log('🔍 WhatsAppStatus: Verificando conexão para número normalizado:', numeroNormalizado);
+      
+      if (!numeroNormalizado || numeroNormalizado.length < 10) {
+        throw new Error('Número de telefone inválido');
+      }
+      
+      const statusResponse = await ZapAgentService.verifyConnection(numeroNormalizado);
       
       if (statusResponse.conectado === true) {
         console.log('✅ WhatsAppStatus: Agente conectado');
@@ -46,6 +51,12 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
       }
     } catch (error) {
       console.error('❌ WhatsAppStatus: Erro ao verificar conexão:', error);
+      
+      // Tratar erro de JWT
+      if (handleJWTError(error, toast)) {
+        return;
+      }
+      
       setStatus('pending');
       onStatusChange?.('pending');
       setError(error instanceof Error ? error.message : 'Erro desconhecido');
@@ -60,16 +71,28 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
     try {
       setQrLoading(true);
       setError('');
-      const numeroLimpo = cleanPhoneNumber(phoneNumber);
-      console.log('📱 WhatsAppStatus: Carregando QR code para:', numeroLimpo);
+      
+      // SEMPRE normalizar o número
+      const numeroNormalizado = normalizarNumero(phoneNumber);
+      console.log('📱 WhatsAppStatus: Carregando QR code para número normalizado:', numeroNormalizado);
+      
+      if (!numeroNormalizado || numeroNormalizado.length < 10) {
+        throw new Error('Número de telefone inválido');
+      }
       
       // Usar a rota direta da imagem
-      const qrImageUrl = `https://zapagent-bot.onrender.com/qrcode-imagem?numero=${numeroLimpo}`;
+      const qrImageUrl = `https://zapagent-bot.onrender.com/qrcode-imagem?numero=${numeroNormalizado}`;
       console.log('📱 WhatsAppStatus: URL do QR Code:', qrImageUrl);
       setQrCode(qrImageUrl);
       
     } catch (error) {
       console.error('❌ WhatsAppStatus: Erro ao carregar QR code:', error);
+      
+      // Tratar erro de JWT
+      if (handleJWTError(error, toast)) {
+        return;
+      }
+      
       const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar QR code';
       setError(errorMessage);
       setQrCode('');
@@ -163,6 +186,7 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
         </div>
       </div>
 
+      {/* Modal do QR Code */}
       <Dialog open={showQrModal} onOpenChange={handleCloseQrModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>

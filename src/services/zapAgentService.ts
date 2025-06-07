@@ -1,3 +1,4 @@
+import { normalizarNumero } from '@/utils/phoneUtils';
 
 export interface QrCodeResponse {
   conectado: boolean;
@@ -86,6 +87,9 @@ export class ZapAgentService {
         const errorText = await response.text();
         console.error(`❌ ZapAgentService: Erro HTTP ${response.status}:`, errorText);
         
+        if (response.status === 401) {
+          throw new Error('JWT expired');
+        }
         if (response.status >= 500) {
           throw new Error('Erro interno do servidor. Tente novamente em alguns momentos.');
         }
@@ -124,7 +128,7 @@ export class ZapAgentService {
     }
   }
 
-  static async checkApiStatus(): Promise<boolean> {
+  static checkApiStatus = async (): Promise<boolean> => {
     console.log('🔍 ZapAgentService: Verificando status da API...');
     
     try {
@@ -156,7 +160,7 @@ export class ZapAgentService {
       console.error('❌ ZapAgentService: Erro ao verificar status:', error);
       return false;
     }
-  }
+  };
 
   // 1. Criar agente (POST /zapagent)
   static async createAgent(agentData: {
@@ -170,6 +174,13 @@ export class ZapAgentService {
   }): Promise<CreateAgentResponse> {
     console.log('🚀 ZapAgentService: Criando agente:', agentData.nome);
     
+    // SEMPRE normalizar o número antes de enviar
+    const numeroNormalizado = normalizarNumero(agentData.numero);
+    
+    if (!numeroNormalizado || numeroNormalizado.length < 10) {
+      throw new Error('Número de telefone inválido. Deve ter pelo menos 10 dígitos.');
+    }
+    
     try {
       const isOnline = await this.checkApiStatus();
       if (!isOnline) {
@@ -177,9 +188,18 @@ export class ZapAgentService {
       }
       
       const url = `${this.BASE_URL}/zapagent`;
+      
+      // Payload com número normalizado
+      const payload = {
+        ...agentData,
+        numero: numeroNormalizado
+      };
+      
+      console.log('📦 ZapAgentService: Payload normalizado:', payload);
+      
       const response = await this.makeRequest<CreateAgentResponse>(url, {
         method: 'POST',
-        body: JSON.stringify(agentData),
+        body: JSON.stringify(payload),
       });
       
       console.log('✅ ZapAgentService: Agente criado com sucesso:', response);
@@ -192,14 +212,20 @@ export class ZapAgentService {
 
   // 2. Verificar conexão do número (GET /verificar)
   static async verifyConnection(phoneNumber: string): Promise<VerifyConnectionResponse> {
-    console.log('🔍 ZapAgentService: Verificando conexão para:', phoneNumber);
-    
     if (!phoneNumber) {
       throw new Error('Número do telefone é obrigatório');
     }
     
+    // SEMPRE normalizar o número
+    const numeroNormalizado = normalizarNumero(phoneNumber);
+    console.log('🔍 ZapAgentService: Verificando conexão para número normalizado:', numeroNormalizado);
+    
+    if (!numeroNormalizado || numeroNormalizado.length < 10) {
+      throw new Error('Número de telefone inválido');
+    }
+    
     try {
-      const encodedNumber = encodeURIComponent(phoneNumber);
+      const encodedNumber = encodeURIComponent(numeroNormalizado);
       const url = `${this.BASE_URL}/verificar?numero=${encodedNumber}`;
       
       const response = await this.makeRequest<VerifyConnectionResponse>(url);
@@ -214,14 +240,16 @@ export class ZapAgentService {
 
   // 3. Consultar mensagens usadas (GET /mensagens-usadas)
   static async getMessagesUsage(phoneNumber: string): Promise<MessagesUsageResponse> {
-    console.log('📊 ZapAgentService: Consultando uso de mensagens para:', phoneNumber);
-    
     if (!phoneNumber) {
       throw new Error('Número do telefone é obrigatório');
     }
     
+    // SEMPRE normalizar o número
+    const numeroNormalizado = normalizarNumero(phoneNumber);
+    console.log('📊 ZapAgentService: Consultando uso de mensagens para número normalizado:', numeroNormalizado);
+    
     try {
-      const encodedNumber = encodeURIComponent(phoneNumber);
+      const encodedNumber = encodeURIComponent(numeroNormalizado);
       const url = `${this.BASE_URL}/mensagens-usadas?numero=${encodedNumber}`;
       
       const response = await this.makeRequest<MessagesUsageResponse>(url);
@@ -236,14 +264,16 @@ export class ZapAgentService {
 
   // 4. Obter histórico de IA (GET /historico)
   static async getHistory(phoneNumber: string): Promise<HistoryResponse> {
-    console.log('📜 ZapAgentService: Obtendo histórico para:', phoneNumber);
-    
     if (!phoneNumber) {
       throw new Error('Número do telefone é obrigatório');
     }
     
+    // SEMPRE normalizar o número
+    const numeroNormalizado = normalizarNumero(phoneNumber);
+    console.log('📜 ZapAgentService: Obtendo histórico para número normalizado:', numeroNormalizado);
+    
     try {
-      const encodedNumber = encodeURIComponent(phoneNumber);
+      const encodedNumber = encodeURIComponent(numeroNormalizado);
       const url = `${this.BASE_URL}/historico?numero=${encodedNumber}`;
       
       const response = await this.makeRequest<HistoryResponse>(url);
@@ -258,14 +288,16 @@ export class ZapAgentService {
 
   // 5. Status via API Flask (GET /status/<numero>)
   static async getAgentStatusFromFlask(phoneNumber: string): Promise<HistoryResponse> {
-    console.log('🔍 ZapAgentService: Obtendo status Flask para:', phoneNumber);
-    
     if (!phoneNumber) {
       throw new Error('Número do telefone é obrigatório');
     }
     
+    // SEMPRE normalizar o número
+    const numeroNormalizado = normalizarNumero(phoneNumber);
+    console.log('🔍 ZapAgentService: Obtendo status Flask para número normalizado:', numeroNormalizado);
+    
     try {
-      const encodedNumber = encodeURIComponent(phoneNumber);
+      const encodedNumber = encodeURIComponent(numeroNormalizado);
       const url = `${this.API_URL}/status/${encodedNumber}`;
       
       const response = await this.makeRequest<HistoryResponse>(url);
@@ -280,10 +312,16 @@ export class ZapAgentService {
 
   // Métodos existentes mantidos para compatibilidade
   static async getAgentStatus(phoneNumber: string): Promise<AgentStatusResponse> {
-    console.log('🔍 ZapAgentService: Verificando status para:', phoneNumber);
+    if (!phoneNumber) {
+      throw new Error('Número do telefone é obrigatório');
+    }
+    
+    // SEMPRE normalizar o número
+    const numeroNormalizado = normalizarNumero(phoneNumber);
+    console.log('🔍 ZapAgentService: Verificando status para número normalizado:', numeroNormalizado);
     
     try {
-      const connectionData = await this.verifyConnection(phoneNumber);
+      const connectionData = await this.verifyConnection(numeroNormalizado);
       
       return {
         status: connectionData.conectado ? 'conectado' : 'pendente',
@@ -301,14 +339,20 @@ export class ZapAgentService {
   }
 
   static async sendMessage(phoneNumber: string, message: string, prompt: string): Promise<any> {
-    console.log('📤 ZapAgentService: Enviando mensagem para:', phoneNumber);
+    if (!phoneNumber) {
+      throw new Error('Número do telefone é obrigatório');
+    }
+    
+    // SEMPRE normalizar o número
+    const numeroNormalizado = normalizarNumero(phoneNumber);
+    console.log('📤 ZapAgentService: Enviando mensagem para número normalizado:', numeroNormalizado);
     
     try {
       const url = `${this.BASE_URL}/message`;
       const response = await this.makeRequest(url, {
         method: 'POST',
         body: JSON.stringify({
-          numero: phoneNumber,
+          numero: numeroNormalizado,
           mensagem: message,
           prompt: prompt
         }),
@@ -323,10 +367,16 @@ export class ZapAgentService {
   }
 
   static async getQrCode(phoneNumber: string): Promise<QrCodeResponse> {
-    console.log('📱 ZapAgentService: Buscando QR code para:', phoneNumber);
+    if (!phoneNumber) {
+      throw new Error('Número do telefone é obrigatório');
+    }
+    
+    // SEMPRE normalizar o número
+    const numeroNormalizado = normalizarNumero(phoneNumber);
+    console.log('📱 ZapAgentService: Buscando QR code para número normalizado:', numeroNormalizado);
     
     try {
-      const encodedNumber = encodeURIComponent(phoneNumber);
+      const encodedNumber = encodeURIComponent(numeroNormalizado);
       const url = `${this.BASE_URL}/qrcode?numero=${encodedNumber}`;
       
       const controller = new AbortController();
@@ -350,6 +400,9 @@ export class ZapAgentService {
         const errorText = await response.text();
         console.error('❌ ZapAgentService: Erro na resposta do QR:', response.status, errorText);
         
+        if (response.status === 401) {
+          throw new Error('JWT expired');
+        }
         if (response.status >= 500) {
           throw new Error('Servidor temporariamente indisponível');
         }
