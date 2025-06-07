@@ -1,3 +1,4 @@
+
 export interface QrCodeResponse {
   conectado: boolean;
   qr_code?: string;
@@ -23,7 +24,8 @@ export interface AgentStatusResponse {
 
 export class ZapAgentService {
   private static readonly BASE_URL = 'https://zapagent-bot.onrender.com';
-  private static readonly TIMEOUT = 30000; // Aumentado para 30 segundos
+  private static readonly TIMEOUT = 20000; // 20 segundos
+  private static readonly QUICK_TIMEOUT = 8000; // 8 segundos para verificação rápida
 
   private static async makeRequest<T>(url: string, options: RequestInit = {}): Promise<T> {
     const controller = new AbortController();
@@ -53,10 +55,10 @@ export class ZapAgentService {
         console.error(`❌ ZapAgentService: Erro HTTP ${response.status}:`, errorText);
         
         if (response.status >= 500) {
-          throw new Error('Servidor temporariamente indisponível. Aguarde alguns minutos.');
+          throw new Error('Erro interno do servidor. Tente novamente em alguns momentos.');
         }
         if (response.status === 404) {
-          throw new Error('Endpoint não encontrado. O servidor pode estar inicializando.');
+          throw new Error('Endpoint não encontrado.');
         }
         if (response.status === 403) {
           throw new Error('Acesso negado.');
@@ -79,11 +81,11 @@ export class ZapAgentService {
       console.error(`🚨 ZapAgentService: Erro na requisição:`, error);
       
       if (error.name === 'AbortError') {
-        throw new Error('O servidor demorou muito para responder. Ele pode estar inicializando.');
+        throw new Error('Timeout: Servidor demorou muito para responder.');
       }
       
       if (error.message?.includes('fetch') || error.message?.includes('NetworkError') || error.message?.includes('Failed to fetch')) {
-        throw new Error('Servidor indisponível. Aguarde alguns minutos para o servidor inicializar.');
+        throw new Error('Erro de conectividade. Verifique sua internet.');
       }
       
       throw error;
@@ -94,18 +96,40 @@ export class ZapAgentService {
     console.log('🔍 ZapAgentService: Verificando status da API...');
     
     try {
-      // Tenta fazer uma requisição simples para verificar se o servidor está respondendo
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.QUICK_TIMEOUT);
+
       const response = await fetch(`${this.BASE_URL}/`, {
         method: 'GET',
         mode: 'cors',
-        signal: AbortSignal.timeout(10000) // 10 segundos para verificação rápida
+        signal: controller.signal,
+        headers: {
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'User-Agent': 'ZapAgent-Client/1.0',
+        }
       });
       
-      // Se chegou até aqui, o servidor está respondendo
-      console.log('✅ ZapAgentService: Servidor respondeu, API está online');
-      return true;
+      clearTimeout(timeoutId);
+      
+      // Se chegou até aqui e teve resposta (mesmo que não seja 200), servidor está respondendo
+      console.log(`✅ ZapAgentService: Servidor respondeu com status ${response.status}`);
+      
+      // Considerar como online se responder, mesmo com códigos diferentes de 200
+      if (response.status === 200 || response.status === 404 || response.status === 405) {
+        console.log('✅ ZapAgentService: API está online e funcional');
+        return true;
+      }
+      
+      console.log(`⚠️ ZapAgentService: Servidor respondeu mas com status inesperado: ${response.status}`);
+      return false;
+      
     } catch (error) {
-      console.error('❌ ZapAgentService: Servidor não está respondendo:', error);
+      console.error('❌ ZapAgentService: Erro ao verificar status:', error);
+      
+      if (error.name === 'AbortError') {
+        console.log('❌ ZapAgentService: Timeout na verificação de status');
+      }
+      
       return false;
     }
   }
@@ -243,6 +267,12 @@ export class ZapAgentService {
     console.log('🚀 ZapAgentService: Criando agente:', agentData.nome);
     
     try {
+      // Primeiro, verificar se a API está realmente online
+      const isOnline = await this.checkApiStatus();
+      if (!isOnline) {
+        throw new Error('API não está disponível no momento. Tente novamente em alguns segundos.');
+      }
+      
       const url = `${this.BASE_URL}/zapagent`;
       const response = await this.makeRequest(url, {
         method: 'POST',
@@ -254,21 +284,28 @@ export class ZapAgentService {
     } catch (error) {
       console.error('❌ ZapAgentService: Erro ao criar agente:', error);
       
-      if (error.message?.includes('Servidor indisponível') || 
-          error.message?.includes('demorou muito') ||
-          error.message?.includes('inicializando')) {
-        throw new Error('O servidor está inicializando. Isso pode levar até 2 minutos. Tente novamente em alguns momentos.');
+      // Tratar diferentes tipos de erro
+      if (error.message?.includes('API não está disponível')) {
+        throw new Error('Servidor temporariamente indisponível. Aguarde alguns segundos e tente novamente.');
+      }
+      
+      if (error.message?.includes('Timeout')) {
+        throw new Error('Servidor demorou muito para responder. Tente novamente.');
+      }
+      
+      if (error.message?.includes('conectividade')) {
+        throw new Error('Erro de conectividade. Verifique sua conexão com a internet.');
       }
       
       if (error.message?.includes('403')) {
-        throw new Error('Número já está sendo usado.');
+        throw new Error('Número já está sendo usado por outro usuário.');
       }
       
       if (error.message?.includes('500') || error.message?.includes('502') || error.message?.includes('503')) {
-        throw new Error('Servidor temporariamente indisponível. Aguarde alguns minutos.');
+        throw new Error('Erro interno do servidor. Tente novamente em alguns momentos.');
       }
       
-      throw new Error('Servidor está inicializando. Aguarde 1-2 minutos e tente novamente.');
+      throw error;
     }
   }
 }

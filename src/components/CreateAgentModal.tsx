@@ -61,21 +61,16 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
   const checkApiStatus = async () => {
     try {
       console.log('🔍 CreateAgentModal: Verificando status da API...');
+      setApiStatus(null); // Resetar status
+      
       const status = await ZapAgentService.checkApiStatus();
       setApiStatus(status);
       console.log('📊 CreateAgentModal: Status da API:', status);
       
-      if (!status) {
-        toast({
-          title: "🔄 Servidor Inicializando",
-          description: "O servidor está inicializando. Isso pode levar 1-2 minutos. Aguarde e tente novamente.",
-          variant: "destructive"
-        });
+      if (status) {
+        console.log('✅ CreateAgentModal: Servidor está online e funcional');
       } else {
-        toast({
-          title: "✅ Servidor Online",
-          description: "O servidor está funcionando normalmente.",
-        });
+        console.log('❌ CreateAgentModal: Servidor não está respondendo adequadamente');
       }
     } catch (error) {
       console.error('❌ CreateAgentModal: Erro ao verificar API:', error);
@@ -341,13 +336,15 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         throw new Error('Número do WhatsApp deve incluir o código do país (DDI) e ter pelo menos 10 dígitos');
       }
 
-      // Mostrar aviso sobre servidor se offline
-      if (apiStatus === false) {
-        toast({
-          title: "⚠️ Tentando Conectar",
-          description: "O servidor pode estar inicializando. Aguarde...",
-        });
+      // Verificar se API está online antes de prosseguir
+      console.log('🔍 MAIN PROCESS: Verificando status da API antes de criar...');
+      const isApiOnline = await ZapAgentService.checkApiStatus();
+      
+      if (!isApiOnline) {
+        throw new Error('API não está disponível no momento. Aguarde alguns segundos e tente novamente.');
       }
+      
+      console.log('✅ MAIN PROCESS: API confirmada como online, prosseguindo...');
 
       // STEP 1: Verificar disponibilidade
       await checkPhoneNumberAvailability(formData.phone_number);
@@ -406,20 +403,11 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         errorMessage = error.message;
       }
       
-      // Se for erro de servidor inicializando, dar instruções específicas
-      if (errorMessage.includes('inicializando') || errorMessage.includes('indisponível')) {
-        toast({
-          title: "🔄 Servidor Inicializando",
-          description: "O servidor está inicializando (normal em serviços gratuitos). Aguarde 1-2 minutos e tente novamente.",
-          variant: "destructive"
-        });
-      } else {
-        toast({
-          title: "❌ Erro na Criação",
-          description: errorMessage,
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "❌ Erro na Criação",
+        description: errorMessage,
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
