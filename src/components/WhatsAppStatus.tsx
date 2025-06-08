@@ -16,7 +16,7 @@ interface WhatsAppStatusProps {
 
 const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) => {
   const [status, setStatus] = useState<'connected' | 'pending' | 'loading'>('loading');
-  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+  const [qrCodeData, setQrCodeData] = useState<string>('');
   const [showQrModal, setShowQrModal] = useState(false);
   const [checking, setChecking] = useState(false);
   const [qrLoading, setQrLoading] = useState(false);
@@ -87,12 +87,17 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
         setStatus('connected');
         onStatusChange?.('connected');
         setShowQrModal(false);
+        toast({
+          title: "WhatsApp Conectado",
+          description: "O agente já está conectado ao WhatsApp",
+          variant: "default"
+        });
         return;
       }
       
-      if (qrResponse.qrcodeUrl) {
-        console.log('📱 WhatsAppStatus: QR Code URL obtida:', qrResponse.qrcodeUrl);
-        setQrCodeUrl(qrResponse.qrcodeUrl);
+      if (qrResponse.qr_code) {
+        console.log('📱 WhatsAppStatus: QR Code recebido com sucesso');
+        setQrCodeData(qrResponse.qr_code);
       } else {
         throw new Error('QR code não disponível no momento');
       }
@@ -107,7 +112,7 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
       
       const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar QR code';
       setError(errorMessage);
-      setQrCodeUrl('');
+      setQrCodeData('');
     } finally {
       setQrLoading(false);
     }
@@ -118,14 +123,14 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
     setShowQrModal(true);
     setError('');
     
-    if (!qrCodeUrl) {
+    if (!qrCodeData) {
       await loadQrCode();
     }
   };
 
   const handleCloseQrModal = () => {
     setShowQrModal(false);
-    setQrCodeUrl('');
+    setQrCodeData('');
     setError('');
   };
 
@@ -234,11 +239,11 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
                       <p className="text-sm text-gray-600">Carregando QR Code...</p>
                     </div>
                   </div>
-                ) : qrCodeUrl ? (
+                ) : qrCodeData ? (
                   <div className="space-y-3">
                     <div className="flex justify-center">
                       <img 
-                        src={qrCodeUrl} 
+                        src={qrCodeData} 
                         alt="QR Code do WhatsApp" 
                         style={{ width: '300px', height: '300px' }}
                         className="border rounded-lg shadow-lg"

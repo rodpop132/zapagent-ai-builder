@@ -1,4 +1,3 @@
-
 import { normalizarNumero } from '@/utils/phoneUtils';
 
 export interface QrCodeResponse {
@@ -382,28 +381,45 @@ export class ZapAgentService {
     }
     
     try {
-      // First check if agent is already connected
-      const connectionStatus = await this.verifyConnection(numeroNormalizado);
-      if (connectionStatus.conectado) {
+      const encodedNumber = encodeURIComponent(numeroNormalizado);
+      const url = `${this.BASE_URL}/qrcode?numero=${encodedNumber}`;
+      
+      console.log('🔗 ZapAgentService: Fazendo requisição QR para:', url);
+      
+      const response = await this.makeRequest<{conectado: boolean; qr_code?: string}>(url);
+      
+      console.log('📱 ZapAgentService: Resposta QR recebida:', response);
+      
+      if (response.conectado === true) {
         console.log('✅ ZapAgentService: Agente já conectado');
         return { 
           conectado: true, 
           message: 'Agente já está conectado' 
         };
       }
-
-      // If not connected, return the direct QR image URL
-      const qrImageUrl = `${this.BASE_URL}/qrcode-imagem?numero=${encodeURIComponent(numeroNormalizado)}`;
-      console.log('📱 ZapAgentService: URL do QR Code:', qrImageUrl);
       
-      return {
-        conectado: false,
-        qrcodeUrl: qrImageUrl,
-        message: 'QR code disponível'
-      };
+      if (response.qr_code) {
+        console.log('📱 ZapAgentService: QR Code recebido com sucesso');
+        return {
+          conectado: false,
+          qr_code: response.qr_code,
+          message: 'QR code disponível'
+        };
+      } else {
+        throw new Error('QR code não disponível no momento');
+      }
       
     } catch (error) {
       console.error('❌ ZapAgentService: Erro ao buscar QR code:', error);
+      
+      // Handle specific HTTP errors
+      if (error instanceof Error && error.message.includes('404')) {
+        throw new Error('QR code ainda não foi gerado. Tente novamente em alguns segundos.');
+      }
+      if (error instanceof Error && error.message.includes('500')) {
+        throw new Error('Erro interno do servidor. Tente novamente mais tarde.');
+      }
+      
       throw error;
     }
   }
