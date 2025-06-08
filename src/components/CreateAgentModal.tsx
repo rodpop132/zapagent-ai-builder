@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,7 +54,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
   ];
 
   // Verificar status da API quando o modal abrir
-  React.useEffect(() => {
+  useEffect(() => {
     if (isOpen) {
       checkApiStatus();
       getUserPlan();
@@ -801,19 +801,12 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
                 
                 <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <div className="flex items-center justify-center space-x-2">
-                    {connectionStatus === 'connected' ? (
-                      <div className="text-center">
-                        <div className="text-green-600 font-bold text-lg mb-1">✅ Agente Conectado!</div>
-                        <p className="text-green-700 text-sm">Pronto para receber mensagens</p>
-                      </div>
-                    ) : (
-                      <div className="text-center">
-                        <div className="text-blue-600 font-medium text-base mb-1">⏳ Aguardando conexão...</div>
-                        <p className="text-blue-600 text-sm">
-                          Escaneie o QR code com seu WhatsApp
-                        </p>
-                      </div>
-                    )}
+                    <div className="text-center">
+                      <div className="text-blue-600 font-medium text-base mb-1">⏳ Aguardando conexão...</div>
+                      <p className="text-blue-600 text-sm">
+                        Escaneie o QR code com seu WhatsApp
+                      </p>
+                    </div>
                   </div>
                 </div>
                 
