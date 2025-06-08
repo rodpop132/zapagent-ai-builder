@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -117,6 +118,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     setLoading(true);
     console.log('🚀 MODAL: Iniciando criação do agente...', {
       user: user.email,
+      userId: user.id,
       agentName: formData.name,
       phoneNumber: formData.phone_number
     });
@@ -144,27 +146,41 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       
       console.log('📞 MODAL: Número normalizado:', numeroCompleto);
 
+      // Preparar dados do agente
+      const agentPayload = {
+        name: formData.name.trim(),
+        description: formData.description.trim() || null,
+        business_type: formData.business_type,
+        phone_number: numeroCompleto,
+        training_data: formData.training_data.trim() || null,
+        personality_prompt: formData.personality_prompt.trim() || null,
+        user_id: user.id,
+        whatsapp_status: 'pending',
+        is_active: true
+      };
+
+      console.log('📋 MODAL: Payload para inserção:', agentPayload);
+
       // Criar agente no Supabase usando executeWithJWTHandling
       console.log('💾 MODAL: Salvando agente no Supabase...');
       const agentData = await executeWithJWTHandling(async () => {
+        console.log('🔄 MODAL: Executando inserção na tabela agents...');
+        
         const { data, error } = await supabase
           .from('agents')
-          .insert({
-            name: formData.name.trim(),
-            description: formData.description.trim() || null,
-            business_type: formData.business_type,
-            phone_number: numeroCompleto,
-            training_data: formData.training_data.trim() || null,
-            personality_prompt: formData.personality_prompt.trim() || null,
-            user_id: user.id,
-            whatsapp_status: 'pending',
-            is_active: true
-          })
+          .insert(agentPayload)
           .select()
           .single();
 
         if (error) {
           console.error('❌ MODAL: Erro do Supabase ao inserir agente:', error);
+          console.error('📋 MODAL: Payload que causou erro:', agentPayload);
+          console.error('🔍 MODAL: Detalhes do erro:', {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint
+          });
           throw new Error(`Erro ao salvar agente: ${error.message}`);
         }
 
@@ -180,7 +196,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       console.log('🤖 MODAL: Registrando agente na API ZapAgent...');
       try {
         const apiResponse = await ZapAgentService.createAgent({
-          numero: numeroCompleto, // Fixed: using 'numero' instead of 'phoneNumber'
+          numero: numeroCompleto,
           nome: formData.name.trim(),
           tipo: formData.business_type,
           descricao: formData.description.trim() || '',
@@ -224,6 +240,8 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         errorMessage = 'Sua sessão expirou. Faça login novamente.';
       } else if (error.message?.includes('permission denied') || error.message?.includes('access denied')) {
         errorMessage = 'Acesso negado. Verifique suas permissões.';
+      } else if (error.message?.includes('duplicate key') || error.message?.includes('already exists')) {
+        errorMessage = 'Já existe um agente com este número de telefone.';
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -321,6 +339,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
               value={formData.phone_number}
               onChange={(value) => handleInputChange('phone_number', value)}
               placeholder="Digite o número do WhatsApp"
+              disabled={loading}
             />
             <p className="text-xs text-gray-600">
               Este será o número usado pelo agente para responder mensagens
