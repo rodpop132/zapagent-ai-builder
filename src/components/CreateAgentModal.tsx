@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -119,7 +120,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error fetching subscription:', error);
-        return 'free';
+        throw new Error(`Erro ao verificar plano: ${error.message}`);
       }
       
       const plan = data?.plan_type || 'free';
@@ -257,13 +258,18 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         setConnectionStatus('connected');
         stopStatusPolling();
         
-        // CORREÇÃO: Atualizar status usando número normalizado
+        // CORREÇÃO: Atualizar status usando número normalizado com JWT handling
         await executeWithJWTHandling(async () => {
           const numeroNormalizado = normalizarNumero(formData.phone_number);
-          await supabase
+          const { error } = await supabase
             .from('agents')
             .update({ whatsapp_status: 'connected' })
             .eq('phone_number', numeroNormalizado);
+            
+          if (error) {
+            console.error('❌ Erro ao atualizar status no Supabase:', error);
+            throw new Error(`Erro ao atualizar status: ${error.message}`);
+          }
         }, toast);
         
         toast({
@@ -410,7 +416,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       console.log('📡 MAIN PROCESS: Criando agente na API externa...');
       const apiResult = await createAgentAPI();
 
-      // STEP 3: Salvar no Supabase com número normalizado
+      // STEP 3: Salvar no Supabase com número normalizado e JWT handling
       console.log('💾 STEP 3: Salvando no banco de dados...');
       await executeWithJWTHandling(async () => {
         // CORREÇÃO PRINCIPAL: Salvar número normalizado no Supabase
