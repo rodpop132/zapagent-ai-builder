@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -181,11 +180,12 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       console.log('🤖 MODAL: Registrando agente na API ZapAgent...');
       try {
         const apiResponse = await ZapAgentService.createAgent({
-          phoneNumber: numeroCompleto,
-          name: formData.name.trim(),
-          businessType: formData.business_type,
-          trainingData: formData.training_data.trim() || '',
-          personalityPrompt: formData.personality_prompt.trim() || ''
+          numero: numeroCompleto, // Fixed: using 'numero' instead of 'phoneNumber'
+          nome: formData.name.trim(),
+          tipo: formData.business_type,
+          descricao: formData.description.trim() || '',
+          prompt: formData.personality_prompt.trim() || '',
+          plano: 'free'
         });
 
         console.log('✅ MODAL: Agente registrado na API ZapAgent:', apiResponse);
@@ -321,7 +321,6 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
               value={formData.phone_number}
               onChange={(value) => handleInputChange('phone_number', value)}
               placeholder="Digite o número do WhatsApp"
-              disabled={loading}
             />
             <p className="text-xs text-gray-600">
               Este será o número usado pelo agente para responder mensagens

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -16,6 +15,7 @@ interface CountryPhoneInputProps {
   onChange: (fullNumber: string) => void;
   placeholder?: string;
   className?: string;
+  disabled?: boolean; // Added disabled prop
 }
 
 const countries: Country[] = [
@@ -29,7 +29,13 @@ const countries: Country[] = [
   { code: 'ES', name: 'Espanha', flag: '🇪🇸', dialCode: '+34' },
 ];
 
-const CountryPhoneInput = ({ value, onChange, placeholder = "Digite o número", className = "" }: CountryPhoneInputProps) => {
+const CountryPhoneInput = ({ 
+  value, 
+  onChange, 
+  placeholder = "Digite o número", 
+  className = "",
+  disabled = false // Default value for disabled
+}: CountryPhoneInputProps) => {
   const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]);
   const [localNumber, setLocalNumber] = useState('');
   const [isInitialized, setIsInitialized] = useState(false);
@@ -144,7 +150,7 @@ const CountryPhoneInput = ({ value, onChange, placeholder = "Digite o número", 
 
   return (
     <div className={`flex space-x-2 ${className}`}>
-      <Select value={selectedCountry.code} onValueChange={handleCountryChange}>
+      <Select value={selectedCountry.code} onValueChange={handleCountryChange} disabled={disabled}>
         <SelectTrigger className="w-32 flex-shrink-0">
           <SelectValue>
             <div className="flex items-center space-x-2">
@@ -173,6 +179,7 @@ const CountryPhoneInput = ({ value, onChange, placeholder = "Digite o número", 
         placeholder={placeholder}
         className="flex-1"
         autoComplete="tel"
+        disabled={disabled}
       />
     </div>
   );
