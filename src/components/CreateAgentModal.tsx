@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -124,8 +123,8 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     });
 
     try {
-      // Verificar sessão ativa antes de prosseguir
-      console.log('🔐 MODAL: Verificando sessão de autenticação...');
+      // Verificar sessão ativa e obter token atualizado
+      console.log('🔐 MODAL: Verificando sessão e obtendo token...');
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !sessionData?.session) {
@@ -139,6 +138,18 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       }
 
       console.log('✅ MODAL: Sessão ativa confirmada para:', sessionData.session.user.email);
+      console.log('🔑 MODAL: Token JWT obtido, expira em:', new Date(sessionData.session.expires_at! * 1000));
+
+      // Verificar se o usuário autenticado é o mesmo
+      if (sessionData.session.user.id !== user.id) {
+        console.error('❌ MODAL: Usuário da sessão não confere com usuário do contexto');
+        toast({
+          title: "Erro de autenticação",
+          description: "Inconsistência na autenticação. Faça login novamente.",
+          variant: "destructive"
+        });
+        return;
+      }
 
       // Normalizar número de telefone
       const numeroNormalizado = normalizarNumero(formData.phone_number);
@@ -161,36 +172,70 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
       console.log('📋 MODAL: Payload para inserção:', agentPayload);
 
-      // Criar agente no Supabase usando executeWithJWTHandling
-      console.log('💾 MODAL: Salvando agente no Supabase...');
-      const agentData = await executeWithJWTHandling(async () => {
-        console.log('🔄 MODAL: Executando inserção na tabela agents...');
-        
-        const { data, error } = await supabase
-          .from('agents')
-          .insert(agentPayload)
-          .select()
-          .single();
+      // Verificar se já existe agente com mesmo número
+      console.log('🔍 MODAL: Verificando se número já existe...');
+      const { data: existingAgent, error: checkError } = await supabase
+        .from('agents')
+        .select('id, phone_number')
+        .eq('phone_number', numeroCompleto)
+        .maybeSingle();
 
-        if (error) {
-          console.error('❌ MODAL: Erro do Supabase ao inserir agente:', error);
-          console.error('📋 MODAL: Payload que causou erro:', agentPayload);
-          console.error('🔍 MODAL: Detalhes do erro:', {
-            code: error.code,
-            message: error.message,
-            details: error.details,
-            hint: error.hint
-          });
-          throw new Error(`Erro ao salvar agente: ${error.message}`);
+      if (checkError) {
+        console.error('❌ MODAL: Erro ao verificar número existente:', checkError);
+      } else if (existingAgent) {
+        console.log('⚠️ MODAL: Número já existe:', existingAgent);
+        toast({
+          title: "Número já em uso",
+          description: "Já existe um agente cadastrado com este número de telefone.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // Criar agente no Supabase
+      console.log('💾 MODAL: Salvando agente no Supabase...');
+      console.log('🔄 MODAL: Executando inserção na tabela agents...');
+      
+      const { data: agentData, error: insertError } = await supabase
+        .from('agents')
+        .insert(agentPayload)
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('❌ MODAL: Erro do Supabase ao inserir agente:', insertError);
+        console.error('📋 MODAL: Payload que causou erro:', agentPayload);
+        console.error('🔍 MODAL: Detalhes do erro:', {
+          code: insertError.code,
+          message: insertError.message,
+          details: insertError.details,
+          hint: insertError.hint
+        });
+
+        // Tratamento específico de erros
+        let errorMessage = 'Erro inesperado ao criar agente';
+        
+        if (insertError.code === '23505') {
+          errorMessage = 'Já existe um agente com este número de telefone.';
+        } else if (insertError.code === '42501') {
+          errorMessage = 'Permissão negada. Verifique se você está logado corretamente.';
+        } else if (insertError.message?.includes('JWT')) {
+          errorMessage = 'Sua sessão expirou. Faça login novamente.';
+        } else if (insertError.message?.includes('RLS')) {
+          errorMessage = 'Erro de permissão. Contate o suporte.';
+        } else if (insertError.message) {
+          errorMessage = insertError.message;
         }
 
-        console.log('✅ MODAL: Agente salvo no Supabase:', data);
-        return data;
-      }, toast);
-
-      if (!agentData) {
-        throw new Error('Erro ao criar agente no banco de dados');
+        toast({
+          title: "❌ Erro ao criar agente",
+          description: errorMessage,
+          variant: "destructive"
+        });
+        return;
       }
+
+      console.log('✅ MODAL: Agente salvo no Supabase:', agentData);
 
       // Registrar agente na API ZapAgent
       console.log('🤖 MODAL: Registrando agente na API ZapAgent...');
@@ -232,7 +277,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       onClose();
 
     } catch (error: any) {
-      console.error('❌ MODAL: Erro na criação do agente:', error);
+      console.error('❌ MODAL: Erro geral na criação do agente:', error);
       
       let errorMessage = 'Erro inesperado ao criar agente';
       
