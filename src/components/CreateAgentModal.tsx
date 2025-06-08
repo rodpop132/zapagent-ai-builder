@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -133,10 +134,14 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     return await executeWithJWTHandling(async () => {
       console.log('🔍 STEP 1: Verificando disponibilidade do número:', phoneNumber);
       
+      // CORREÇÃO: Verificar com número normalizado no banco
+      const numeroNormalizado = normalizarNumero(phoneNumber);
+      console.log('📱 STEP 1: Verificando número normalizado no banco:', numeroNormalizado);
+      
       const { data: existingAgent, error } = await supabase
         .from('agents')
         .select('id, user_id, name')
-        .eq('phone_number', phoneNumber)
+        .eq('phone_number', numeroNormalizado)
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -187,7 +192,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         prompt: formData.personality_prompt || `Você é um assistente virtual para ${formData.business_type}. Seja sempre educado, prestativo e responda de forma clara e objetiva.`,
         numero: numeroNormalizado,
         plano: planValue,
-        webhook: webhook
+        webhook: webhook || '' // CORREÇÃO: Sempre definir webhook, mesmo que vazio
       };
 
       console.log('📦 STEP 2: Payload preparado:', payload);
@@ -247,12 +252,13 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         setConnectionStatus('connected');
         stopStatusPolling();
         
-        // Atualizar status no banco usando JWT handling
+        // CORREÇÃO: Atualizar status usando número normalizado
         await executeWithJWTHandling(async () => {
+          const numeroNormalizado = normalizarNumero(formData.phone_number);
           await (supabase as any)
             .from('agents')
             .update({ whatsapp_status: 'connected' })
-            .eq('phone_number', formData.phone_number);
+            .eq('phone_number', numeroNormalizado);
         }, toast);
         
         toast({
@@ -399,16 +405,20 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       console.log('📡 MAIN PROCESS: Criando agente na API externa...');
       const apiResult = await createAgentAPI();
 
-      // STEP 3: Salvar no Supabase com JWT handling
+      // STEP 3: Salvar no Supabase com número normalizado
       console.log('💾 STEP 3: Salvando no banco de dados...');
       await executeWithJWTHandling(async () => {
+        // CORREÇÃO PRINCIPAL: Salvar número normalizado no Supabase
+        const numeroNormalizado = normalizarNumero(formData.phone_number);
+        console.log('📱 STEP 3: Salvando número normalizado no banco:', numeroNormalizado);
+        
         const { error: supabaseError } = await supabase
           .from('agents')
           .insert({
             name: formData.name,
             description: formData.description,
             business_type: formData.business_type,
-            phone_number: formData.phone_number,
+            phone_number: numeroNormalizado, // CORREÇÃO: usar número normalizado
             training_data: formData.training_data,
             personality_prompt: formData.personality_prompt || `Você é um assistente virtual para ${formData.business_type}. Seja sempre educado, prestativo e responda de forma clara e objetiva.`,
             user_id: user?.id,
@@ -420,7 +430,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
           throw new Error(`Erro ao salvar: ${supabaseError.message}`);
         }
 
-        console.log('✅ STEP 3 SUCCESS: Agente salvo com sucesso');
+        console.log('✅ STEP 3 SUCCESS: Agente salvo com sucesso com número normalizado');
       }, toast);
 
       onAgentCreated();
