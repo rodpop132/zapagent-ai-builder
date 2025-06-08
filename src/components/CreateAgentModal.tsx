@@ -141,6 +141,30 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     }, toast, 'free');
   };
 
+  const verifyUserSession = async () => {
+    try {
+      console.log('🔐 Verificando sessão do usuário...');
+      
+      const { data: sessionData, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('❌ Erro ao verificar sessão:', error);
+        throw new Error('Erro de autenticação. Faça login novamente.');
+      }
+      
+      if (!sessionData.session) {
+        console.error('❌ Nenhuma sessão ativa encontrada');
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
+      
+      console.log('✅ Sessão válida:', sessionData.session.user.id);
+      return sessionData.session;
+    } catch (error) {
+      console.error('💥 Erro na verificação de sessão:', error);
+      throw error;
+    }
+  };
+
   const checkAgentLimit = async () => {
     return await executeWithJWTHandling(async () => {
       if (!user?.id) {
@@ -448,6 +472,14 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     try {
       console.log('🎯 MAIN PROCESS: Iniciando criação completa do agente...');
       
+      // STEP 0: Verificar sessão de autenticação
+      console.log('🔐 STEP 0: Verificando autenticação...');
+      const session = await verifyUserSession();
+      
+      if (!user?.id) {
+        throw new Error('Usuário não autenticado após verificação de sessão');
+      }
+
       // Validação básica
       if (!formData.name.trim()) {
         throw new Error('Nome do agente é obrigatório');
@@ -461,54 +493,68 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         throw new Error('Número do WhatsApp deve ter pelo menos 10 dígitos');
       }
 
-      // Verificar se usuário está autenticado
-      if (!user?.id) {
-        throw new Error('Você precisa estar logado para criar um agente');
-      }
-
       // Verificar se API está online
       const isApiOnline = await ZapAgentService.checkApiStatus();
       if (!isApiOnline) {
         throw new Error('API não está disponível no momento. Aguarde alguns segundos e tente novamente.');
       }
 
-      // STEP 0: Verificar limite de agentes
-      console.log('📊 STEP 0: Verificando limite de agentes...');
+      // STEP 1: Verificar limite de agentes
+      console.log('📊 STEP 1: Verificando limite de agentes...');
       await checkAgentLimit();
 
-      // STEP 1: Verificar disponibilidade
-      console.log('🔍 STEP 1: Verificando disponibilidade do número...');
+      // STEP 2: Verificar disponibilidade
+      console.log('🔍 STEP 2: Verificando disponibilidade do número...');
       await checkPhoneNumberAvailability(formData.phone_number);
 
-      // STEP 2: Criar na API externa
-      console.log('📡 STEP 2: Criando agente na API externa...');
+      // STEP 3: Criar na API externa
+      console.log('📡 STEP 3: Criando agente na API externa...');
       const apiResult = await createAgentAPI();
 
-      // STEP 3: Salvar no Supabase com número normalizado e JWT handling
-      console.log('💾 STEP 3: Salvando no banco de dados...');
+      // STEP 4: Salvar no Supabase com número normalizado e JWT handling
+      console.log('💾 STEP 4: Salvando no banco de dados...');
       await executeWithJWTHandling(async () => {
         const numeroNormalizado = normalizarNumero(formData.phone_number);
-        console.log('📱 STEP 3: Salvando número normalizado no banco:', numeroNormalizado);
+        console.log('📱 STEP 4: Salvando número normalizado no banco:', numeroNormalizado);
+        console.log('👤 STEP 4: User ID para inserção:', user?.id);
         
+        // Verificar novamente a sessão antes de inserir
+        const { data: currentSession } = await supabase.auth.getSession();
+        if (!currentSession.session) {
+          throw new Error('Sessão expirada durante o processo. Faça login novamente.');
+        }
+        
+        const insertData = {
+          name: formData.name,
+          description: formData.description,
+          business_type: formData.business_type,
+          phone_number: numeroNormalizado,
+          training_data: formData.training_data,
+          personality_prompt: formData.personality_prompt || `Você é um agente para ${formData.business_type}, responda com clareza e educação.`,
+          user_id: user.id,
+          whatsapp_status: 'pending'
+        };
+
+        console.log('📦 STEP 4: Dados para inserção:', insertData);
+
         const { error: supabaseError } = await supabase
           .from('agents')
-          .insert({
-            name: formData.name,
-            description: formData.description,
-            business_type: formData.business_type,
-            phone_number: numeroNormalizado,
-            training_data: formData.training_data,
-            personality_prompt: formData.personality_prompt || `Você é um agente para ${formData.business_type}, responda com clareza e educação.`,
-            user_id: user?.id,
-            whatsapp_status: 'pending'
-          });
+          .insert(insertData);
 
         if (supabaseError) {
-          console.error('❌ STEP 3 ERROR:', supabaseError);
-          throw new Error(`Erro ao salvar: ${supabaseError.message}`);
+          console.error('❌ STEP 4 ERROR:', supabaseError);
+          
+          // Tratamento específico para diferentes tipos de erro
+          if (supabaseError.code === '42501') {
+            throw new Error('Erro de permissão: Verifique se você está logado corretamente.');
+          } else if (supabaseError.code === '23505') {
+            throw new Error('Este número de telefone já está sendo usado.');
+          } else {
+            throw new Error(`Erro ao salvar no banco: ${supabaseError.message}`);
+          }
         }
 
-        console.log('✅ STEP 3 SUCCESS: Agente salvo com sucesso com número normalizado');
+        console.log('✅ STEP 4 SUCCESS: Agente salvo com sucesso com número normalizado');
       }, toast);
 
       onAgentCreated();
@@ -524,6 +570,11 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         webhook: ''
       });
       setUploadedFiles([]);
+
+      toast({
+        title: "✅ Sucesso!",
+        description: "Agente criado com sucesso. Configure o QR Code para ativá-lo.",
+      });
 
     } catch (error) {
       console.error('💥 MAIN PROCESS ERROR:', error);
