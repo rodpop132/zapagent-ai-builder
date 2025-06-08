@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -111,7 +110,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
   const getUserPlan = async () => {
     return await executeWithJWTHandling(async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('subscriptions')
         .select('plan_type, is_unlimited')
         .eq('user_id', user?.id)
@@ -163,6 +162,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     }, toast);
   };
 
+  // FUNÇÃO CORRIGIDA conforme especificações
   const createAgentAPI = async () => {
     try {
       console.log('🚀 STEP 2: Criando agente via API ZapAgent');
@@ -172,27 +172,26 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       if (userPlan === 'pro') planValue = 'standard';
       if (userPlan === 'ultra') planValue = 'ultra';
       
+      // Validação do número
+      const numeroNormalizado = normalizarNumero(formData.phone_number);
+      if (!validarNumero(numeroNormalizado)) {
+        throw new Error('Número de telefone inválido. Deve conter ao menos 10 dígitos.');
+      }
+      
       // Webhook só disponível para planos Pro e Ultra
       let webhook = '';
       if (userPlan === 'pro' || userPlan === 'ultra') {
-        webhook = formData.webhook || `${window.location.origin}/webhook/${normalizarNumero(formData.phone_number)}`;
-      }
-      
-      // SEMPRE normalizar número antes de enviar
-      const numeroNormalizado = normalizarNumero(formData.phone_number);
-      
-      if (!validarNumero(numeroNormalizado)) {
-        throw new Error('Número de telefone inválido. Deve ter pelo menos 10 dígitos.');
+        webhook = formData.webhook || `${window.location.origin}/webhook/${numeroNormalizado}`;
       }
       
       const payload = {
         nome: formData.name,
         tipo: formData.business_type,
         descricao: formData.description,
-        prompt: formData.personality_prompt || `Você é um assistente virtual para ${formData.business_type}. Seja sempre educado, prestativo e responda de forma clara e objetiva.`,
+        prompt: formData.personality_prompt || `Você é um agente para ${formData.business_type}, responda com clareza e educação.`,
         numero: numeroNormalizado,
         plano: planValue,
-        webhook: webhook || '' // CORREÇÃO: Sempre definir webhook, mesmo que vazio
+        webhook
       };
 
       console.log('📦 STEP 2: Payload preparado:', payload);
@@ -221,15 +220,21 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         
         return result;
       } else {
-        throw new Error(result.error || result.msg || 'Erro desconhecido na criação do agente');
+        throw new Error(result.error || result.msg || 'Erro desconhecido ao criar agente');
       }
     } catch (error) {
       console.error('🚨 STEP 2 ERROR:', error);
       
       // Tratar erro de JWT
       if (handleJWTError(error, toast)) {
-        throw new Error('Sessão expirada. Por favor, faça login novamente.');
+        return;
       }
+      
+      toast({
+        title: '❌ Erro na criação do agente',
+        description: error instanceof Error ? error.message : 'Erro desconhecido',
+        variant: 'destructive',
+      });
       
       throw error;
     }
@@ -255,7 +260,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         // CORREÇÃO: Atualizar status usando número normalizado
         await executeWithJWTHandling(async () => {
           const numeroNormalizado = normalizarNumero(formData.phone_number);
-          await (supabase as any)
+          await supabase
             .from('agents')
             .update({ whatsapp_status: 'connected' })
             .eq('phone_number', numeroNormalizado);
@@ -420,7 +425,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
             business_type: formData.business_type,
             phone_number: numeroNormalizado, // CORREÇÃO: usar número normalizado
             training_data: formData.training_data,
-            personality_prompt: formData.personality_prompt || `Você é um assistente virtual para ${formData.business_type}. Seja sempre educado, prestativo e responda de forma clara e objetiva.`,
+            personality_prompt: formData.personality_prompt || `Você é um agente para ${formData.business_type}, responda com clareza e educação.`,
             user_id: user?.id,
             whatsapp_status: 'pending'
           });
