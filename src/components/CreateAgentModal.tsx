@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -111,33 +110,87 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
   const getUserPlan = async () => {
     return await executeWithJWTHandling(async () => {
+      if (!user?.id) {
+        console.log('⚠️ getUserPlan: Usuário não autenticado');
+        return 'free';
+      }
+
+      console.log('🔍 getUserPlan: Buscando plano para usuário:', user.id);
+      
       const { data, error } = await supabase
         .from('subscriptions')
         .select('plan_type, is_unlimited')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .eq('status', 'active')
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching subscription:', error);
+      if (error) {
+        if (error.code === 'PGRST116') {
+          console.log('📋 getUserPlan: Nenhuma subscription encontrada, usando free');
+          setUserPlan('free');
+          return 'free';
+        }
+        console.error('❌ getUserPlan: Erro ao buscar subscription:', error);
         throw new Error(`Erro ao verificar plano: ${error.message}`);
       }
       
       const plan = data?.plan_type || 'free';
-      console.log('📋 Plano do usuário obtido:', plan);
+      console.log('📋 getUserPlan: Plano obtido:', plan);
       setUserPlan(plan);
       return plan;
     }, toast, 'free');
+  };
+
+  const checkAgentLimit = async () => {
+    return await executeWithJWTHandling(async () => {
+      if (!user?.id) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Verificar quantos agentes o usuário já tem
+      const { data: existingAgents, error: countError } = await supabase
+        .from('agents')
+        .select('id')
+        .eq('user_id', user.id);
+
+      if (countError) {
+        console.error('❌ Erro ao contar agentes:', countError);
+        throw new Error(`Erro ao verificar agentes existentes: ${countError.message}`);
+      }
+
+      const agentCount = existingAgents?.length || 0;
+      console.log('📊 Número de agentes existentes:', agentCount);
+
+      // Verificar limite baseado no plano
+      const currentPlan = await getUserPlan();
+      const limits = {
+        'free': 1,
+        'pro': 5,
+        'ultra': 999
+      };
+
+      const limit = limits[currentPlan] || 1;
+      console.log('📋 Limite para plano', currentPlan, ':', limit);
+
+      if (agentCount >= limit) {
+        throw new Error(`Limite de agentes (${limit}) atingido para o plano ${currentPlan}. Faça upgrade do seu plano para criar mais agentes.`);
+      }
+
+      return true;
+    }, toast);
   };
 
   const checkPhoneNumberAvailability = async (phoneNumber: string) => {
     return await executeWithJWTHandling(async () => {
       console.log('🔍 STEP 1: Verificando disponibilidade do número:', phoneNumber);
       
-      // CORREÇÃO: Verificar com número normalizado no banco
       const numeroNormalizado = normalizarNumero(phoneNumber);
       console.log('📱 STEP 1: Verificando número normalizado no banco:', numeroNormalizado);
       
+      if (!validarNumero(numeroNormalizado)) {
+        throw new Error('Número de telefone inválido. Deve ter pelo menos 10 dígitos.');
+      }
+
       const { data: existingAgent, error } = await supabase
         .from('agents')
         .select('id, user_id, name')
@@ -163,7 +216,6 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     }, toast);
   };
 
-  // FUNÇÃO CORRIGIDA conforme especificações
   const createAgentAPI = async () => {
     try {
       console.log('🚀 STEP 2: Criando agente via API ZapAgent');
@@ -173,7 +225,6 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       if (userPlan === 'pro') planValue = 'standard';
       if (userPlan === 'ultra') planValue = 'ultra';
       
-      // Validação do número
       const numeroNormalizado = normalizarNumero(formData.phone_number);
       if (!validarNumero(numeroNormalizado)) {
         throw new Error('Número de telefone inválido. Deve conter ao menos 10 dígitos.');
@@ -203,11 +254,9 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       if (result.status === 'ok') {
         console.log('✅ STEP 2: Agente criado com sucesso');
         
-        // Salvar dados no localStorage para uso futuro
         localStorage.setItem('zapagent_numero', numeroNormalizado);
         localStorage.setItem('zapagent_plano', planValue);
         
-        // Usar a rota direta da imagem QR Code
         const qrImageUrl = `https://zapagent-bot.onrender.com/qrcode-imagem?numero=${numeroNormalizado}`;
         console.log('📱 STEP 2: URL da imagem QR Code:', qrImageUrl);
         setQrCodeUrl(qrImageUrl);
@@ -221,19 +270,37 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         
         return result;
       } else {
+        // Tratar erro específico de limite de agentes
+        if (result.error && result.error.includes('Limite de agentes')) {
+          throw new Error('Limite de agentes atingido para seu plano. Faça upgrade para criar mais agentes.');
+        }
         throw new Error(result.error || result.msg || 'Erro desconhecido ao criar agente');
       }
     } catch (error) {
       console.error('🚨 STEP 2 ERROR:', error);
       
-      // Tratar erro de JWT
       if (handleJWTError(error, toast)) {
         return;
       }
       
+      // Melhorar mensagens de erro
+      let errorMessage = 'Erro inesperado';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        
+        // Mensagens específicas para erros comuns
+        if (errorMessage.includes('Limite de agentes')) {
+          errorMessage = 'Limite de agentes atingido para seu plano. Faça upgrade para criar mais agentes.';
+        } else if (errorMessage.includes('403') || errorMessage.includes('Forbidden')) {
+          errorMessage = 'Acesso negado. Verifique se seu plano permite criar agentes.';
+        } else if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
+          errorMessage = 'Sessão expirada. Faça login novamente.';
+        }
+      }
+      
       toast({
         title: '❌ Erro na criação do agente',
-        description: error instanceof Error ? error.message : 'Erro desconhecido',
+        description: errorMessage,
         variant: 'destructive',
       });
       
@@ -241,7 +308,6 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     }
   };
 
-  // CORRIGIDO: Sempre passar o número normalizado
   const checkConnectionStatus = async (numero: string) => {
     try {
       const numeroNormalizado = normalizarNumero(numero);
@@ -258,7 +324,6 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         setConnectionStatus('connected');
         stopStatusPolling();
         
-        // CORREÇÃO: Atualizar status usando número normalizado com JWT handling
         await executeWithJWTHandling(async () => {
           const numeroNormalizado = normalizarNumero(formData.phone_number);
           const { error } = await supabase
@@ -283,7 +348,6 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     } catch (error) {
       console.error('💥 Erro ao verificar status:', error);
       
-      // Tratar erro de JWT
       if (handleJWTError(error, toast)) {
         return false;
       }
@@ -292,20 +356,16 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     }
   };
 
-  // CORRIGIDO: Função de polling com número correto
   const startStatusPolling = (numero: string) => {
     console.log('🔄 Iniciando polling de status a cada 10 segundos para número:', numero);
     
-    // Primeira verificação após 10 segundos
     setTimeout(() => {
       checkConnectionStatus(numero);
     }, 10000);
     
-    // Polling a cada 10 segundos
     const interval = setInterval(() => checkConnectionStatus(numero), 10000);
     setStatusCheckInterval(interval);
     
-    // Parar após 5 minutos
     setTimeout(() => {
       stopStatusPolling();
       console.log('⏰ Polling de status interrompido após 5 minutos');
@@ -362,7 +422,6 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     } catch (error) {
       console.error('💥 Erro ao buscar QR code:', error);
       
-      // Tratar erro de JWT
       if (handleJWTError(error, toast)) {
         return;
       }
@@ -397,10 +456,14 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         throw new Error('Tipo de negócio é obrigatório');
       }
       
-      // SEMPRE normalizar e validar número
       const numeroNormalizado = normalizarNumero(formData.phone_number);
       if (!validarNumero(numeroNormalizado)) {
         throw new Error('Número do WhatsApp deve ter pelo menos 10 dígitos');
+      }
+
+      // Verificar se usuário está autenticado
+      if (!user?.id) {
+        throw new Error('Você precisa estar logado para criar um agente');
       }
 
       // Verificar se API está online
@@ -409,17 +472,21 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         throw new Error('API não está disponível no momento. Aguarde alguns segundos e tente novamente.');
       }
 
+      // STEP 0: Verificar limite de agentes
+      console.log('📊 STEP 0: Verificando limite de agentes...');
+      await checkAgentLimit();
+
       // STEP 1: Verificar disponibilidade
+      console.log('🔍 STEP 1: Verificando disponibilidade do número...');
       await checkPhoneNumberAvailability(formData.phone_number);
 
       // STEP 2: Criar na API externa
-      console.log('📡 MAIN PROCESS: Criando agente na API externa...');
+      console.log('📡 STEP 2: Criando agente na API externa...');
       const apiResult = await createAgentAPI();
 
       // STEP 3: Salvar no Supabase com número normalizado e JWT handling
       console.log('💾 STEP 3: Salvando no banco de dados...');
       await executeWithJWTHandling(async () => {
-        // CORREÇÃO PRINCIPAL: Salvar número normalizado no Supabase
         const numeroNormalizado = normalizarNumero(formData.phone_number);
         console.log('📱 STEP 3: Salvando número normalizado no banco:', numeroNormalizado);
         
@@ -429,7 +496,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
             name: formData.name,
             description: formData.description,
             business_type: formData.business_type,
-            phone_number: numeroNormalizado, // CORREÇÃO: usar número normalizado
+            phone_number: numeroNormalizado,
             training_data: formData.training_data,
             personality_prompt: formData.personality_prompt || `Você é um agente para ${formData.business_type}, responda com clareza e educação.`,
             user_id: user?.id,
