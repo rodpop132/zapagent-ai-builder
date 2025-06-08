@@ -16,7 +16,7 @@ interface WhatsAppStatusProps {
 
 const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) => {
   const [status, setStatus] = useState<'connected' | 'pending' | 'loading'>('loading');
-  const [qrCode, setQrCode] = useState<string>('');
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [showQrModal, setShowQrModal] = useState(false);
   const [checking, setChecking] = useState(false);
   const [qrLoading, setQrLoading] = useState(false);
@@ -80,10 +80,22 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
         throw new Error('Número de telefone inválido');
       }
       
-      // Usar a rota direta da imagem
-      const qrImageUrl = `https://zapagent-bot.onrender.com/qrcode-imagem?numero=${numeroNormalizado}`;
-      console.log('📱 WhatsAppStatus: URL do QR Code:', qrImageUrl);
-      setQrCode(qrImageUrl);
+      const qrResponse = await ZapAgentService.getQrCode(numeroNormalizado);
+      
+      if (qrResponse.conectado) {
+        console.log('✅ WhatsAppStatus: Agente já conectado');
+        setStatus('connected');
+        onStatusChange?.('connected');
+        setShowQrModal(false);
+        return;
+      }
+      
+      if (qrResponse.qrcodeUrl) {
+        console.log('📱 WhatsAppStatus: QR Code URL obtida:', qrResponse.qrcodeUrl);
+        setQrCodeUrl(qrResponse.qrcodeUrl);
+      } else {
+        throw new Error('QR code não disponível no momento');
+      }
       
     } catch (error) {
       console.error('❌ WhatsAppStatus: Erro ao carregar QR code:', error);
@@ -95,7 +107,7 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
       
       const errorMessage = error instanceof Error ? error.message : 'Erro ao carregar QR code';
       setError(errorMessage);
-      setQrCode('');
+      setQrCodeUrl('');
     } finally {
       setQrLoading(false);
     }
@@ -106,14 +118,14 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
     setShowQrModal(true);
     setError('');
     
-    if (!qrCode) {
+    if (!qrCodeUrl) {
       await loadQrCode();
     }
   };
 
   const handleCloseQrModal = () => {
     setShowQrModal(false);
-    setQrCode('');
+    setQrCodeUrl('');
     setError('');
   };
 
@@ -222,17 +234,18 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
                       <p className="text-sm text-gray-600">Carregando QR Code...</p>
                     </div>
                   </div>
-                ) : qrCode ? (
+                ) : qrCodeUrl ? (
                   <div className="space-y-3">
                     <div className="flex justify-center">
                       <img 
-                        src={qrCode} 
+                        src={qrCodeUrl} 
                         alt="QR Code do WhatsApp" 
                         style={{ width: '300px', height: '300px' }}
                         className="border rounded-lg shadow-lg"
-                        onError={() => {
+                        onError={(e) => {
                           console.error('❌ WhatsAppStatus: Erro ao carregar imagem QR');
                           setError('Erro ao exibir QR code');
+                          e.currentTarget.style.display = 'none';
                         }}
                         onLoad={() => {
                           console.log('✅ WhatsAppStatus: QR code carregado na UI');

@@ -1,3 +1,4 @@
+
 import { normalizarNumero } from '@/utils/phoneUtils';
 
 export interface QrCodeResponse {
@@ -366,6 +367,7 @@ export class ZapAgentService {
     }
   }
 
+  // SIMPLIFIED QR Code method - using direct image URL approach
   static async getQrCode(phoneNumber: string): Promise<QrCodeResponse> {
     if (!phoneNumber) {
       throw new Error('Número do telefone é obrigatório');
@@ -375,80 +377,33 @@ export class ZapAgentService {
     const numeroNormalizado = normalizarNumero(phoneNumber);
     console.log('📱 ZapAgentService: Buscando QR code para número normalizado:', numeroNormalizado);
     
+    if (!numeroNormalizado || numeroNormalizado.length < 10) {
+      throw new Error('Número de telefone inválido');
+    }
+    
     try {
-      const encodedNumber = encodeURIComponent(numeroNormalizado);
-      const url = `${this.BASE_URL}/qrcode?numero=${encodedNumber}`;
-      
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUT);
-
-      console.log(`🔗 ZapAgentService: URL do QR code: ${url}`);
-
-      const response = await fetch(url, {
-        signal: controller.signal,
-        headers: {
-          'Accept': 'text/html,application/json',
-          'Cache-Control': 'no-cache',
-          'User-Agent': 'ZapAgent-Client/1.0',
-        },
-        mode: 'cors'
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ ZapAgentService: Erro na resposta do QR:', response.status, errorText);
-        
-        if (response.status === 401) {
-          throw new Error('JWT expired');
-        }
-        if (response.status >= 500) {
-          throw new Error('Servidor temporariamente indisponível');
-        }
-        if (response.status === 404) {
-          throw new Error('QR code ainda não foi gerado');
-        }
-        
-        throw new Error(`Erro ${response.status}: QR code indisponível`);
-      }
-
-      const contentType = response.headers.get('content-type');
-      console.log('📄 ZapAgentService: Content-Type:', contentType);
-
-      if (contentType?.includes('application/json')) {
-        const jsonResponse = await response.json();
-        console.log('📄 ZapAgentService: Resposta JSON do QR:', jsonResponse);
-        return jsonResponse;
-      }
-
-      const htmlContent = await response.text();
-      console.log('📄 ZapAgentService: HTML QR recebido (primeiros 200 chars):', htmlContent.substring(0, 200));
-
-      if (htmlContent.includes('QR não encontrado') || htmlContent.includes('Agente já conectado')) {
-        if (htmlContent.includes('Agente já conectado')) {
-          return { conectado: true, message: 'Agente já está conectado' };
-        }
-        throw new Error('QR code ainda não foi gerado');
-      }
-
-      const imgMatch = htmlContent.match(/src\s*=\s*["'](data:image\/[^;]+;base64,[^"']+)["']/i);
-      
-      if (imgMatch && imgMatch[1]) {
-        console.log('✅ ZapAgentService: QR code extraído com sucesso');
-        return {
-          conectado: false,
-          qr_code: imgMatch[1]
+      // First check if agent is already connected
+      const connectionStatus = await this.verifyConnection(numeroNormalizado);
+      if (connectionStatus.conectado) {
+        console.log('✅ ZapAgentService: Agente já conectado');
+        return { 
+          conectado: true, 
+          message: 'Agente já está conectado' 
         };
-      } else {
-        console.error('❌ ZapAgentService: QR code não encontrado no HTML');
-        throw new Error('QR code não encontrado na resposta');
       }
+
+      // If not connected, return the direct QR image URL
+      const qrImageUrl = `${this.BASE_URL}/qrcode-imagem?numero=${encodeURIComponent(numeroNormalizado)}`;
+      console.log('📱 ZapAgentService: URL do QR Code:', qrImageUrl);
+      
+      return {
+        conectado: false,
+        qrcodeUrl: qrImageUrl,
+        message: 'QR code disponível'
+      };
+      
     } catch (error) {
       console.error('❌ ZapAgentService: Erro ao buscar QR code:', error);
-      if (error.name === 'AbortError') {
-        throw new Error('Timeout: QR code demorou muito para carregar');
-      }
       throw error;
     }
   }
