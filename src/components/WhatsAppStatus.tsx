@@ -87,8 +87,8 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
     
     try {
       if (isMountedRef.current) setQrLoading(true);
-      if (isMountedRef.current) setError(''); // Sempre limpar erros antigos
-      if (isMountedRef.current) setQrCodeData(''); // Limpar QR code anterior
+      if (isMountedRef.current) setError('');
+      if (isMountedRef.current) setQrCodeData('');
       
       const numeroNormalizado = normalizarNumero(phoneNumber);
       devLog('📱 WhatsAppStatus: Carregando QR code para número normalizado:', numeroNormalizado);
@@ -122,14 +122,18 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
         return;
       }
 
+      // Debug logs para verificar o QR code recebido
+      devLog('✅ qr_code recebido (primeiros 100 chars):', qrResponse.qr_code?.substring(0, 100));
+      
       // ✅ QR Code disponível como base64 PNG válido
       if (qrResponse.qr_code && 
           typeof qrResponse.qr_code === 'string' && 
           qrResponse.qr_code.startsWith('data:image/png;base64,')) {
         devLog('📱 WhatsAppStatus: QR Code PNG válido recebido');
-        devLog('📏 WhatsAppStatus: Tamanho do QR code:', qrResponse.qr_code.length, 'caracteres');
+        devLog('📏 WhatsAppStatus: Tamanho do QR code:', qrResponse.qr_code.length);
         
         setQrCodeData(qrResponse.qr_code);
+        devLog('✅ Estado do QR code setado com sucesso');
         setError('');
       } else if (qrResponse.message) {
         // ⚠️ Backend retornou apenas uma mensagem (ex: "QR code ainda não gerado")
@@ -371,6 +375,17 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
                     Verificar Status
                   </Button>
                 </div>
+
+                {/* Debug button for development */}
+                {process.env.NODE_ENV === 'development' && (
+                  <Button
+                    onClick={() => console.log('🧪 Estado atual do QR:', { qrCodeData, error })}
+                    variant="ghost"
+                    className="text-xs"
+                  >
+                    Ver Debug QR
+                  </Button>
+                )}
               </>
             )}
           </div>
