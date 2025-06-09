@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
@@ -22,16 +22,26 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
   const [qrLoading, setQrLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const { toast } = useToast();
+  
+  // Flag para evitar state updates após unmount
+  const isMountedRef = useRef(true);
+
+  // Log helper para controlar logs em produção
+  const devLog = (message: string, data?: any) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(message, data || '');
+    }
+  };
 
   const checkConnection = async () => {
-    if (!phoneNumber) return;
+    if (!phoneNumber || !isMountedRef.current) return;
     
     try {
-      setChecking(true);
-      setError('');
+      if (isMountedRef.current) setChecking(true);
+      if (isMountedRef.current) setError('');
       
       const numeroNormalizado = normalizarNumero(phoneNumber);
-      console.log('🔍 WhatsAppStatus: Verificando conexão para número normalizado:', numeroNormalizado);
+      devLog('🔍 WhatsAppStatus: Verificando conexão para número normalizado:', numeroNormalizado);
       
       if (!numeroNormalizado || numeroNormalizado.length < 10) {
         throw new Error('Número de telefone inválido');
@@ -39,51 +49,68 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
       
       const statusResponse = await ZapAgentService.verifyConnection(numeroNormalizado);
       
+      // Validar se a resposta é um objeto válido
+      if (typeof statusResponse !== 'object' || statusResponse === null) {
+        throw new Error('Resposta inesperada do servidor (formato inválido)');
+      }
+      
+      if (!isMountedRef.current) return;
+      
       if (statusResponse.conectado === true) {
-        console.log('✅ WhatsAppStatus: Agente conectado');
+        devLog('✅ WhatsAppStatus: Agente conectado');
         setStatus('connected');
         onStatusChange?.('connected');
       } else {
-        console.log('⏳ WhatsAppStatus: Agente pendente');
+        devLog('⏳ WhatsAppStatus: Agente pendente');
         setStatus('pending');
         onStatusChange?.('pending');
       }
     } catch (error) {
-      console.error('❌ WhatsAppStatus: Erro ao verificar conexão:', error);
+      devLog('❌ WhatsAppStatus: Erro ao verificar conexão:', error);
       
       if (handleJWTError(error, toast)) {
         return;
       }
       
-      setStatus('pending');
-      onStatusChange?.('pending');
-      setError(error instanceof Error ? error.message : 'Erro desconhecido');
+      if (isMountedRef.current) {
+        setStatus('pending');
+        onStatusChange?.('pending');
+        setError(error instanceof Error ? error.message : 'Erro desconhecido');
+      }
     } finally {
-      setChecking(false);
+      if (isMountedRef.current) setChecking(false);
     }
   };
 
   const loadQrCode = async () => {
-    if (!phoneNumber) return;
+    if (!phoneNumber || !isMountedRef.current) return;
     
     try {
-      setQrLoading(true);
-      setError(''); // Sempre limpar erros antigos
-      setQrCodeData(''); // Limpar QR code anterior
+      if (isMountedRef.current) setQrLoading(true);
+      if (isMountedRef.current) setError(''); // Sempre limpar erros antigos
+      if (isMountedRef.current) setQrCodeData(''); // Limpar QR code anterior
       
       const numeroNormalizado = normalizarNumero(phoneNumber);
-      console.log('📱 WhatsAppStatus: Carregando QR code para número normalizado:', numeroNormalizado);
+      devLog('📱 WhatsAppStatus: Carregando QR code para número normalizado:', numeroNormalizado);
       
       if (!numeroNormalizado || numeroNormalizado.length < 10) {
         throw new Error('Número de telefone inválido');
       }
       
       const qrResponse = await ZapAgentService.getQrCode(numeroNormalizado);
-      console.log('📋 WhatsAppStatus: Resposta da API:', qrResponse);
+      
+      // Validar se a resposta é um objeto válido
+      if (typeof qrResponse !== 'object' || qrResponse === null) {
+        throw new Error('Resposta inesperada do servidor (formato inválido)');
+      }
+      
+      devLog('📋 WhatsAppStatus: Resposta da API:', qrResponse);
+
+      if (!isMountedRef.current) return;
 
       // ✅ Agente já está conectado
       if (qrResponse.conectado === true) {
-        console.log('✅ WhatsAppStatus: Agente já conectado');
+        devLog('✅ WhatsAppStatus: Agente já conectado');
         setStatus('connected');
         onStatusChange?.('connected');
         setShowQrModal(false);
@@ -95,33 +122,35 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
         return;
       }
 
-      // ✅ QR Code disponível como base64
+      // ✅ QR Code disponível como base64 PNG válido
       if (qrResponse.qr_code && 
           typeof qrResponse.qr_code === 'string' && 
-          qrResponse.qr_code.startsWith('data:image')) {
-        console.log('📱 WhatsAppStatus: QR Code válido recebido');
-        console.log('📏 WhatsAppStatus: Tamanho do QR code:', qrResponse.qr_code.length, 'caracteres');
+          qrResponse.qr_code.startsWith('data:image/png;base64,')) {
+        devLog('📱 WhatsAppStatus: QR Code PNG válido recebido');
+        devLog('📏 WhatsAppStatus: Tamanho do QR code:', qrResponse.qr_code.length, 'caracteres');
         
         setQrCodeData(qrResponse.qr_code);
         setError('');
       } else if (qrResponse.message) {
         // ⚠️ Backend retornou apenas uma mensagem (ex: "QR code ainda não gerado")
-        console.log('📨 WhatsAppStatus: Mensagem do backend:', qrResponse.message);
+        devLog('📨 WhatsAppStatus: Mensagem do backend:', qrResponse.message);
         setError(qrResponse.message);
         setQrCodeData('');
       } else {
         // ❌ Resposta inesperada sem QR nem mensagem
-        console.error('❌ WhatsAppStatus: Resposta inesperada:', qrResponse);
+        devLog('❌ WhatsAppStatus: Resposta inesperada:', qrResponse);
         setError('QR code não disponível. Tente novamente em alguns segundos.');
         setQrCodeData('');
       }
       
     } catch (error) {
-      console.error('❌ WhatsAppStatus: Erro ao carregar QR code:', error);
+      devLog('❌ WhatsAppStatus: Erro ao carregar QR code:', error);
       
       if (handleJWTError(error, toast)) {
         return;
       }
+      
+      if (!isMountedRef.current) return;
       
       // Tratar diferentes tipos de erro
       let errorMessage = 'Erro ao comunicar com o servidor. Aguarde e tente novamente.';
@@ -133,6 +162,8 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
           errorMessage = 'Erro de conectividade. Verifique sua internet.';
         } else if (error.message.includes('QR code ainda não gerado')) {
           errorMessage = error.message;
+        } else if (error.message.includes('formato inválido')) {
+          errorMessage = 'Servidor retornou dados inválidos. Tente novamente.';
         } else {
           errorMessage = error.message;
         }
@@ -141,12 +172,12 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
       setError(errorMessage);
       setQrCodeData('');
     } finally {
-      setQrLoading(false);
+      if (isMountedRef.current) setQrLoading(false);
     }
   };
 
   const handleShowQrCode = async () => {
-    console.log('🔄 WhatsAppStatus: Abrindo modal QR code...');
+    devLog('🔄 WhatsAppStatus: Abrindo modal QR code...');
     setShowQrModal(true);
     
     // Sempre tentar carregar o QR code quando abrir o modal
@@ -154,7 +185,7 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
   };
 
   const handleCloseQrModal = () => {
-    console.log('🚪 WhatsAppStatus: Fechando modal QR code');
+    devLog('🚪 WhatsAppStatus: Fechando modal QR code');
     setShowQrModal(false);
     setQrCodeData('');
     setError('');
@@ -163,20 +194,27 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
   // Verificar status inicialmente e a cada 30 segundos
   useEffect(() => {
     if (phoneNumber) {
-      console.log('🚀 WhatsAppStatus: Iniciando verificação para:', phoneNumber);
+      devLog('🚀 WhatsAppStatus: Iniciando verificação para:', phoneNumber);
       checkConnection();
       
       const interval = setInterval(() => {
-        console.log('⏰ WhatsAppStatus: Verificação automática...');
+        devLog('⏰ WhatsAppStatus: Verificação automática...');
         checkConnection();
       }, 30000);
       
       return () => {
-        console.log('🛑 WhatsAppStatus: Limpando interval');
+        devLog('🛑 WhatsAppStatus: Limpando interval');
         clearInterval(interval);
       };
     }
   }, [phoneNumber]);
+
+  // Cleanup flag ao desmontar componente
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   return (
     <>
@@ -282,12 +320,12 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
                         style={{ width: '300px', height: '300px' }}
                         className="border rounded-lg shadow-lg"
                         onError={(e) => {
-                          console.error('❌ WhatsAppStatus: Erro ao carregar imagem QR');
+                          devLog('❌ WhatsAppStatus: Erro ao carregar imagem QR');
                           setError('Erro ao exibir QR code - imagem inválida');
                           e.currentTarget.style.display = 'none';
                         }}
                         onLoad={() => {
-                          console.log('✅ WhatsAppStatus: QR code exibido com sucesso');
+                          devLog('✅ WhatsAppStatus: QR code exibido com sucesso');
                         }}
                       />
                     </div>
