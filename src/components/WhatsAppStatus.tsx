@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -326,7 +325,8 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
                         onError={(e) => {
                           devLog('❌ WhatsAppStatus: Erro ao carregar imagem QR');
                           setError('Erro ao exibir QR code - imagem inválida');
-                          e.currentTarget.style.display = 'none';
+                          // Remover temporariamente para debug
+                          // e.currentTarget.style.display = 'none';
                         }}
                         onLoad={() => {
                           devLog('✅ WhatsAppStatus: QR code exibido com sucesso');

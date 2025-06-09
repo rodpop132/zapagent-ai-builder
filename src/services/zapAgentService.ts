@@ -456,6 +456,7 @@ export class ZapAgentService {
         
         try {
           const jsonResponse = JSON.parse(responseText);
+          console.log('🧪 ZapAgentService: jsonResponse completa:', jsonResponse);
           console.log('📱 ZapAgentService: Resposta JSON parseada:', {
             conectado: jsonResponse.conectado,
             hasQrCode: !!jsonResponse.qr_code,
@@ -474,6 +475,7 @@ export class ZapAgentService {
           if (jsonResponse.qr_code) {
             console.log('📱 ZapAgentService: QR Code recebido via JSON');
             console.log('🔍 ZapAgentService: Tipo do QR code:', jsonResponse.qr_code.startsWith('data:') ? 'base64' : 'URL');
+            console.log('🎯 ZapAgentService: Retornando QR code base64 com tamanho:', jsonResponse.qr_code.length);
             
             return {
               conectado: false,
