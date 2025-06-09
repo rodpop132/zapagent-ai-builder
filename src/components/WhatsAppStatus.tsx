@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -88,11 +87,13 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
       
       const duration = Date.now() - startTime;
       console.log(`⏱️ WhatsAppStatus: getQrCode completado em ${duration}ms`);
-      console.log('📋 WhatsAppStatus: Resposta recebida:', {
+      console.log('📋 WhatsAppStatus: Resposta completa recebida:', {
         conectado: qrResponse.conectado,
         hasQrCode: !!qrResponse.qr_code,
-        qrCodeType: qrResponse.qr_code?.substring(0, 20),
-        message: qrResponse.message
+        qrCodeType: qrResponse.qr_code ? (qrResponse.qr_code.startsWith('data:') ? 'base64' : 'URL') : 'undefined',
+        qrCodeLength: qrResponse.qr_code?.length || 0,
+        message: qrResponse.message,
+        responseKeys: Object.keys(qrResponse)
       });
       
       if (qrResponse.conectado) {
@@ -108,16 +109,26 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
         return;
       }
       
-      if (qrResponse.qr_code) {
-        console.log('📱 WhatsAppStatus: QR Code recebido com sucesso');
+      // ✅ CORREÇÃO: Verificar se qr_code existe e é uma string válida
+      if (qrResponse.qr_code && typeof qrResponse.qr_code === 'string' && qrResponse.qr_code.length > 0) {
+        console.log('📱 WhatsAppStatus: QR Code válido recebido com sucesso');
         console.log('🔍 WhatsAppStatus: Formato do QR:', qrResponse.qr_code.startsWith('data:') ? 'base64' : 'URL');
         console.log('📏 WhatsAppStatus: Tamanho do QR code:', qrResponse.qr_code.length, 'caracteres');
+        console.log('📝 WhatsAppStatus: Preview do QR:', qrResponse.qr_code.substring(0, 50) + '...');
         
         setQrCodeData(qrResponse.qr_code);
         setError(''); // Limpar qualquer erro anterior
+      } else if (qrResponse.message) {
+        // Se há uma mensagem do backend, mostrar ela ao usuário
+        console.log('📨 WhatsAppStatus: Backend retornou mensagem:', qrResponse.message);
+        setError(qrResponse.message);
+        setQrCodeData('');
       } else {
-        console.error('❌ WhatsAppStatus: QR code não presente na resposta');
-        throw new Error('QR code não disponível no momento');
+        // Caso genérico quando não há QR nem mensagem
+        console.error('❌ WhatsAppStatus: QR code não presente e sem mensagem explicativa');
+        console.log('🔍 WhatsAppStatus: Estrutura da resposta:', JSON.stringify(qrResponse, null, 2));
+        setError('QR code ainda não disponível. Tente novamente em alguns segundos.');
+        setQrCodeData('');
       }
       
     } catch (error) {
@@ -265,10 +276,10 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
                 
                 {error ? (
                   <div className="p-4 bg-red-50 rounded-lg border border-red-200">
-                    <p className="text-sm text-red-700 font-medium mb-2">Erro ao carregar QR Code</p>
+                    <p className="text-sm text-red-700 font-medium mb-2">Informação do Backend</p>
                     <p className="text-xs text-red-600">{error}</p>
                     <p className="text-xs text-gray-500 mt-2">
-                      Verifique o console para mais detalhes
+                      Aguarde alguns segundos e tente "Atualizar QR" novamente
                     </p>
                   </div>
                 ) : qrLoading ? (
