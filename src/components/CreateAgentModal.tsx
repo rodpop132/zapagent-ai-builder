@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -106,7 +105,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     return true;
   };
 
-  // Função melhorada para verificar QR code com retry
+  // Função melhorada para verificar QR code com retry - CORRIGIDA
   const checkQrCodeWithRetry = async (numeroCompleto: string, maxTentativas = 5) => {
     let tentativas = 0;
     
@@ -119,6 +118,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         if (qrResponse.qr_code) {
           console.log('✅ MODAL: QR code obtido com sucesso!');
           clearInterval(interval);
+          setQrcodeUrl(qrResponse.qr_code); // Agora definimos o base64 real
           setCreationState('success');
         }
       } catch (qrError) {
@@ -258,10 +258,10 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
         console.log('✅ MODAL: Agente registrado na API ZapAgent:', apiResponse);
 
-        // 3. Agora aguardar QR code com retry melhorado
+        // 3. Agora aguardar QR code com retry melhorado - CORRIGIDO
         setCreationState('awaiting_qr');
-        setQrcodeUrl(`https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(numeroCompleto)}`);
-
+        // NÃO definimos qrcodeUrl aqui, só após obter o QR real
+        
         // Iniciar verificação com retry
         checkQrCodeWithRetry(numeroCompleto);
 
@@ -367,31 +367,65 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
               <p className="text-sm text-red-600 mt-2">{error}</p>
             )}
 
-            {creationState === 'awaiting_qr' && qrcodeUrl && (
+            {/* QR Code - CORRIGIDO para usar base64 */}
+            {creationState === 'awaiting_qr' && (
               <div className="mt-4">
                 <p className="text-sm text-gray-600 mb-3">
-                  Agente criado! O QR code está sendo gerado. Quando estiver pronto, aparecerá abaixo:
+                  Agente criado! Aguardando geração do QR code...
                 </p>
-                <div className="flex justify-center">
-                  <img 
-                    src={qrcodeUrl} 
-                    alt="QR Code do WhatsApp" 
-                    className="w-48 h-48 border rounded-lg"
-                    onError={() => {
-                      console.log('⏰ QR Code ainda não está pronto');
-                    }}
-                  />
-                </div>
+                {qrcodeUrl ? (
+                  <div className="flex justify-center">
+                    <img 
+                      src={qrcodeUrl.startsWith('data:') ? qrcodeUrl : `data:image/png;base64,${qrcodeUrl}`}
+                      alt="QR Code do WhatsApp" 
+                      className="w-48 h-48 border rounded-lg"
+                      onError={() => {
+                        console.log('⏰ Erro ao carregar QR Code');
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex justify-center">
+                    <div className="w-48 h-48 border rounded-lg bg-gray-100 flex items-center justify-center">
+                      <div className="text-center">
+                        <Loader2 className="h-8 w-8 animate-spin text-gray-400 mx-auto mb-2" />
+                        <p className="text-sm text-gray-500">Gerando QR Code...</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            {isComplete && (
+            {/* QR Code quando já está pronto - CORRIGIDO */}
+            {isComplete && qrcodeUrl && (
+              <div className="mt-4">
+                <p className="text-green-700 font-medium mb-3">
+                  🎉 Agente "{formData.name}" criado com sucesso!
+                </p>
+                <p className="text-sm text-green-600 mb-3">
+                  Escaneie o QR Code abaixo com seu WhatsApp:
+                </p>
+                <div className="flex justify-center">
+                  <img 
+                    src={qrcodeUrl.startsWith('data:') ? qrcodeUrl : `data:image/png;base64,${qrcodeUrl}`}
+                    alt="QR Code do WhatsApp" 
+                    className="w-48 h-48 border rounded-lg"
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-2 text-center">
+                  WhatsApp → Menu → Aparelhos conectados → Conectar aparelho
+                </p>
+              </div>
+            )}
+
+            {isComplete && !qrcodeUrl && (
               <div className="mt-4 text-center">
                 <p className="text-green-700 font-medium">
                   🎉 Agente "{formData.name}" criado com sucesso!
                 </p>
                 <p className="text-sm text-green-600 mt-1">
-                  Você pode fechar esta janela e configurar o WhatsApp na lista de agentes.
+                  Você pode configurar o WhatsApp na lista de agentes.
                 </p>
               </div>
             )}
@@ -432,7 +466,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
               />
             </div>
 
-            {/* Tipo de Negócio - CORRIGIDO com wrapper Select */}
+            {/* Tipo de Negócio */}
             <div className="space-y-2">
               <Label className="flex items-center">
                 <Building className="h-4 w-4 mr-2" />
@@ -579,3 +613,5 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 };
 
 export default CreateAgentModal;
+
+}
