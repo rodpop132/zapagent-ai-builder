@@ -613,5 +613,3 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 };
 
 export default CreateAgentModal;
-
-}
