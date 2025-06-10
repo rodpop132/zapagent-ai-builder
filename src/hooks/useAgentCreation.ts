@@ -77,8 +77,12 @@ export const useAgentCreation = () => {
     return true;
   };
 
-  const checkQrCodeWithRetry = async (numeroCompleto: string, maxTentativas = 5) => {
+  const checkQrCodeWithRetry = async (numeroCompleto: string, maxTentativas = 10) => {
     let tentativas = 0;
+    
+    // Aguardar 3 segundos antes de começar a verificar
+    console.log('⏳ MODAL: Aguardando 3 segundos antes de iniciar polling do QR...');
+    await new Promise(resolve => setTimeout(resolve, 3000));
     
     const interval = setInterval(async () => {
       tentativas++;
@@ -86,22 +90,42 @@ export const useAgentCreation = () => {
       
       try {
         const qrResponse = await ZapAgentService.getQrCode(numeroCompleto);
-        if (qrResponse.qr_code) {
+        
+        // ✅ Agente já conectado
+        if (qrResponse.conectado === true) {
+          console.log('✅ MODAL: Agente já está conectado!');
+          clearInterval(interval);
+          setCreationState('success');
+          return;
+        }
+        
+        // ✅ QR code disponível
+        if (qrResponse.qr_code && qrResponse.qr_code !== null) {
           console.log('✅ MODAL: QR code obtido com sucesso!');
           clearInterval(interval);
           setQrcodeUrl(qrResponse.qr_code);
           setCreationState('success');
-        } else {
-          console.log('⏳ QR ainda não gerado, aguardando...');
+          return;
         }
+        
+        // ⏳ QR ainda não pronto - continuar tentando
+        console.log('⏳ MODAL: QR ainda não pronto, aguardando...', qrResponse.message || 'Sem mensagem');
+        
       } catch (qrError) {
-        console.log(`⏰ MODAL: QR ainda não pronto (tentativa ${tentativas})`);
+        console.log(`⏰ MODAL: Erro ao buscar QR (tentativa ${tentativas}):`, qrError);
+        // Não parar o polling por causa de erro - continuar tentando
       }
       
+      // Atingiu máximo de tentativas
       if (tentativas >= maxTentativas) {
         console.log('⚠️ MODAL: Máximo de tentativas atingido, mas agente foi criado');
         clearInterval(interval);
         setCreationState('success');
+        toast({
+          title: "Agente criado",
+          description: "Agente foi criado com sucesso. Você pode conectar o WhatsApp na lista de agentes.",
+          variant: "default"
+        });
       }
     }, 2000);
   };
@@ -205,8 +229,18 @@ export const useAgentCreation = () => {
           plano: 'free'
         });
 
-        setCreationState('awaiting_qr');
-        checkQrCodeWithRetry(numeroCompleto);
+        console.log('✅ MODAL: Agente registrado na API ZapAgent:', apiResponse);
+
+        // Verificar se o QR já vem na resposta da criação
+        if (apiResponse.qrcodeUrl) {
+          console.log('🎯 MODAL: QR code já disponível na resposta da criação!');
+          setQrcodeUrl(apiResponse.qrcodeUrl);
+          setCreationState('success');
+        } else {
+          // Iniciar polling para buscar QR code
+          setCreationState('awaiting_qr');
+          checkQrCodeWithRetry(numeroCompleto);
+        }
 
       } catch (apiError) {
         console.warn('⚠️ MODAL: Erro na API ZapAgent, mas agente foi salvo:', apiError);

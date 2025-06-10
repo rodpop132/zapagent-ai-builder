@@ -425,26 +425,14 @@ export class ZapAgentService {
             const errorJson = JSON.parse(errorText);
             console.log('🔍 ZapAgentService: JSON de erro parseado:', errorJson);
             
-            if (errorJson.message) {
-              console.log('💬 ZapAgentService: Mensagem do servidor:', errorJson.message);
-              // FIXED: Return response instead of throwing error for "not ready" messages
-              return {
-                conectado: false,
-                qr_code: null,
-                message: errorJson.message
-              };
-            }
-            if (errorJson.conectado === false && errorJson.message) {
-              console.log('🔄 ZapAgentService: QR ainda não gerado pelo servidor');
-              return {
-                conectado: false,
-                qr_code: null,
-                message: errorJson.message
-              };
-            }
+            // FIXED: Return response instead of throwing error for "not ready" messages
+            return {
+              conectado: false,
+              qr_code: null,
+              message: errorJson.message || 'QR code ainda não foi gerado. Tente novamente em alguns segundos.'
+            };
           } catch (parseError) {
             console.error('❌ ZapAgentService: Erro ao fazer parse do JSON de erro:', parseError);
-            console.log('📝 ZapAgentService: Usando mensagem padrão para 404');
           }
           return {
             conectado: false,
