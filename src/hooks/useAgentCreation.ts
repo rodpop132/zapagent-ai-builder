@@ -232,7 +232,11 @@ export const useAgentCreation = () => {
         // Verificar se o QR já vem na resposta da criação
         if (apiResponse.qrcodeUrl) {
           console.log('🎯 MODAL: QR code já disponível na resposta da criação!');
-          setQrcodeUrl(apiResponse.qrcodeUrl);
+          // Tratar URL relativa do backend
+          const fullQrUrl = apiResponse.qrcodeUrl.startsWith('/') 
+            ? `https://zapagent-bot.onrender.com${apiResponse.qrcodeUrl}`
+            : apiResponse.qrcodeUrl;
+          setQrcodeUrl(fullQrUrl);
           setCreationState('success');
         } else {
           // Iniciar polling otimizado para buscar QR code

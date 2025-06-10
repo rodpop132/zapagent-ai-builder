@@ -26,11 +26,35 @@ const CreationStatusDisplay = ({ creationState, error, qrcodeUrl, agentName }: C
     }
   };
 
+  const formatQrCodeUrl = (url: string | null) => {
+    if (!url) return null;
+    
+    // Se a URL já é completa (começa com http), usa ela diretamente
+    if (url.startsWith('http')) {
+      return url;
+    }
+    
+    // Se é base64, usa diretamente
+    if (url.startsWith('data:image')) {
+      return url;
+    }
+    
+    // Se começa com "/", é uma URL relativa do backend
+    if (url.startsWith('/')) {
+      return `https://zapagent-bot.onrender.com${url}`;
+    }
+    
+    // Se não tem prefixo, assume que é base64 sem o data prefix
+    return `data:image/png;base64,${url}`;
+  };
+
   const isProcessing = ['saving', 'creating_zapagent', 'awaiting_qr'].includes(creationState);
   const isComplete = creationState === 'success';
   const hasError = creationState === 'error';
 
   if (!isProcessing && !isComplete && !hasError) return null;
+
+  const formattedQrUrl = formatQrCodeUrl(qrcodeUrl);
 
   return (
     <div className={`p-4 rounded-lg border ${
@@ -54,20 +78,24 @@ const CreationStatusDisplay = ({ creationState, error, qrcodeUrl, agentName }: C
         <p className="text-sm text-red-600 mt-2">{error}</p>
       )}
 
-      {/* QR Code - CORRIGIDO para usar base64 */}
+      {/* QR Code durante o processo de espera */}
       {creationState === 'awaiting_qr' && (
         <div className="mt-4">
           <p className="text-sm text-gray-600 mb-3">
             Agente criado! Aguardando geração do QR code...
           </p>
-          {qrcodeUrl ? (
+          {formattedQrUrl ? (
             <div className="flex justify-center">
               <img 
-                src={qrcodeUrl.startsWith('data:') ? qrcodeUrl : `data:image/png;base64,${qrcodeUrl}`}
+                src={formattedQrUrl}
                 alt="QR Code do WhatsApp" 
                 className="w-48 h-48 border rounded-lg"
-                onError={() => {
-                  console.log('⏰ Erro ao carregar QR Code');
+                onError={(e) => {
+                  console.log('⏰ Erro ao carregar QR Code:', formattedQrUrl);
+                  console.error('Erro na imagem:', e);
+                }}
+                onLoad={() => {
+                  console.log('✅ QR Code carregado com sucesso:', formattedQrUrl);
                 }}
               />
             </div>
@@ -84,36 +112,39 @@ const CreationStatusDisplay = ({ creationState, error, qrcodeUrl, agentName }: C
         </div>
       )}
 
-      {/* QR Code quando já está pronto */}
-      {isComplete && qrcodeUrl && (
+      {/* QR Code quando está completo */}
+      {isComplete && (
         <div className="mt-4">
           <p className="text-green-700 font-medium mb-3">
             🎉 Agente "{agentName}" criado com sucesso!
           </p>
-          <p className="text-sm text-green-600 mb-3">
-            Escaneie o QR Code abaixo com seu WhatsApp:
-          </p>
-          <div className="flex justify-center">
-            <img 
-              src={qrcodeUrl.startsWith('data:') ? qrcodeUrl : `data:image/png;base64,${qrcodeUrl}`}
-              alt="QR Code do WhatsApp" 
-              className="w-48 h-48 border rounded-lg"
-            />
-          </div>
-          <p className="text-xs text-gray-500 mt-2 text-center">
-            WhatsApp → Menu → Aparelhos conectados → Conectar aparelho
-          </p>
-        </div>
-      )}
-
-      {isComplete && !qrcodeUrl && (
-        <div className="mt-4 text-center">
-          <p className="text-green-700 font-medium">
-            🎉 Agente "{agentName}" criado com sucesso!
-          </p>
-          <p className="text-sm text-green-600 mt-1">
-            Você pode configurar o WhatsApp na lista de agentes.
-          </p>
+          {formattedQrUrl ? (
+            <>
+              <p className="text-sm text-green-600 mb-3">
+                Escaneie o QR Code abaixo com seu WhatsApp:
+              </p>
+              <div className="flex justify-center">
+                <img 
+                  src={formattedQrUrl}
+                  alt="QR Code do WhatsApp" 
+                  className="w-48 h-48 border rounded-lg"
+                  onError={() => {
+                    console.log('⏰ Erro ao carregar QR Code final:', formattedQrUrl);
+                  }}
+                  onLoad={() => {
+                    console.log('✅ QR Code final carregado:', formattedQrUrl);
+                  }}
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-2 text-center">
+                WhatsApp → Menu → Aparelhos conectados → Conectar aparelho
+              </p>
+            </>
+          ) : (
+            <p className="text-sm text-green-600 mt-1">
+              Você pode configurar o WhatsApp na lista de agentes.
+            </p>
+          )}
         </div>
       )}
     </div>
