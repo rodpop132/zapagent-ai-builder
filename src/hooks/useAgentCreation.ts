@@ -152,8 +152,8 @@ export const useAgentCreation = () => {
       console.log('✅ API respondeu com sucesso:', apiResponse);
 
       // Caso o QR code já venha de cara
-      if (apiResponse.qrcodeUrl || apiResponse.qr_code) {
-        setQrcodeUrl(apiResponse.qrcodeUrl || apiResponse.qr_code!);
+      if (apiResponse.qrcodeUrl) {
+        setQrcodeUrl(apiResponse.qrcodeUrl);
         setCreationState('success');
         onAgentCreated();
         return;
