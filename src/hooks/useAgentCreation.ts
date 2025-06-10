@@ -88,7 +88,7 @@ export const useAgentCreation = () => {
       return;
     }
 
-    console.log('🚀 MODAL: Iniciando criação do agente...', {
+    console.log('🚀 Iniciando criação do agente...', {
       user: user.email,
       userId: user.id,
       agentName: formData.name,
@@ -100,30 +100,22 @@ export const useAgentCreation = () => {
       setError('');
 
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !sessionData?.session) {
-        console.error('❌ MODAL: Sessão inválida:', sessionError);
-        throw new Error('Sua sessão expirou. Faça login novamente.');
-      }
 
-      if (sessionData.session.user.id !== user.id) {
-        console.error('❌ MODAL: Usuário da sessão não confere com usuário do contexto');
-        throw new Error('Inconsistência na autenticação. Faça login novamente.');
+      if (sessionError || !sessionData?.session || sessionData.session.user.id !== user.id) {
+        throw new Error('Sessão inválida. Faça login novamente.');
       }
 
       const numeroNormalizado = normalizarNumero(formData.phone_number);
       const numeroCompleto = numeroNormalizado.startsWith('+') ? numeroNormalizado : `+${numeroNormalizado}`;
-      
-      const { data: existingAgent, error: checkError } = await supabase
+
+      const { data: existingAgent } = await supabase
         .from('agents')
-        .select('id, phone_number')
+        .select('id')
         .eq('phone_number', numeroCompleto)
         .maybeSingle();
 
-      if (checkError) {
-        console.error('❌ MODAL: Erro ao verificar número existente:', checkError);
-      } else if (existingAgent) {
-        throw new Error('Já existe um agente cadastrado com este número de telefone.');
+      if (existingAgent) {
+        throw new Error('Já existe um agente com este número de telefone.');
       }
 
       const agentPayload = {
@@ -138,36 +130,16 @@ export const useAgentCreation = () => {
         is_active: true
       };
 
-      const { data: agentData, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from('agents')
-        .insert(agentPayload)
-        .select()
-        .single();
+        .insert(agentPayload);
 
       if (insertError) {
-        console.error('❌ MODAL: Erro do Supabase ao inserir agente:', insertError);
-        
-        let errorMessage = 'Erro inesperado ao criar agente';
-        
-        if (insertError.code === '23505') {
-          errorMessage = 'Já existe um agente com este número de telefone.';
-        } else if (insertError.code === '42501') {
-          errorMessage = 'Permissão negada. Verifique se você está logado corretamente.';
-        } else if (insertError.message?.includes('JWT')) {
-          errorMessage = 'Sua sessão expirou. Faça login novamente.';
-        } else if (insertError.message?.includes('RLS')) {
-          errorMessage = 'Erro de permissão. Contate o suporte.';
-        } else if (insertError.message) {
-          errorMessage = insertError.message;
-        }
-
-        throw new Error(errorMessage);
+        throw new Error(insertError.message || 'Erro inesperado ao salvar agente');
       }
 
-      // ✅ ETAPA 1: Aguardar criação do agente no backend
       setCreationState('creating_zapagent');
-      
-      console.log('🔄 MODAL: Criando agente na API ZapAgent...');
+
       const apiResponse = await ZapAgentService.createAgent({
         numero: numeroCompleto,
         nome: formData.name.trim(),
@@ -177,81 +149,61 @@ export const useAgentCreation = () => {
         plano: 'free'
       });
 
-      console.log('✅ MODAL: Agente criado na API:', apiResponse);
+      console.log('✅ API respondeu com sucesso:', apiResponse);
 
-      // ✅ Se já veio QR na resposta da criação
-      if (apiResponse.qrcodeUrl) {
-        console.log('🎯 MODAL: QR code já disponível na resposta da criação!');
-        // Tratar URL relativa do backend
-        const fullQrUrl = apiResponse.qrcodeUrl.startsWith('/') 
-          ? `https://zapagent-bot.onrender.com${apiResponse.qrcodeUrl}`
-          : apiResponse.qrcodeUrl;
-        setQrcodeUrl(fullQrUrl);
+      // Caso o QR code já venha de cara
+      if (apiResponse.qrcodeUrl || apiResponse.qr_code) {
+        setQrcodeUrl(apiResponse.qrcodeUrl || apiResponse.qr_code!);
         setCreationState('success');
         onAgentCreated();
         return;
       }
 
-      // ✅ ETAPA 2: Iniciar polling manual até o QR ficar pronto
+      // Caso contrário, iniciar polling manual para buscar o QR
       setCreationState('awaiting_qr');
-      console.log('🔄 MODAL: Iniciando polling do QR code...');
 
       const maxTentativas = 20;
       for (let i = 1; i <= maxTentativas; i++) {
-        console.log(`🔍 MODAL: Tentando buscar QR code... tentativa ${i}/${maxTentativas}`);
+        console.log(`🔁 Buscando QR (${i}/${maxTentativas})...`);
+        const qrResponse = await ZapAgentService.getQrCode(numeroCompleto);
 
-        try {
-          const qrResponse = await ZapAgentService.getQrCode(numeroCompleto);
-
-          // ✅ Agente já conectado
-          if (qrResponse.conectado === true) {
-            console.log('✅ MODAL: Agente já está conectado!');
-            setCreationState('success');
-            onAgentCreated();
-            return;
-          }
-
-          // ✅ QR code disponível
-          if (qrResponse.qr_code) {
-            console.log('✅ MODAL: QR code obtido com sucesso!');
-            setQrcodeUrl(qrResponse.qr_code);
-            setCreationState('success');
-            onAgentCreated();
-            return;
-          }
-
-          // ⏳ QR ainda não pronto - continuar tentando
-          console.log('⏳ MODAL: QR ainda não pronto, aguardando...', qrResponse.message || 'Sem mensagem');
-        } catch (qrError) {
-          console.log(`⏰ MODAL: Erro ao buscar QR (tentativa ${i}):`, qrError);
-          // Continuar tentando mesmo com erro
+        if (qrResponse.conectado) {
+          setCreationState('success');
+          toast({
+            title: "WhatsApp já conectado",
+            description: "O número já estava ativo.",
+            variant: "default"
+          });
+          onAgentCreated();
+          return;
         }
 
-        // Aguardar 500ms antes da próxima tentativa (exceto na última)
-        if (i < maxTentativas) {
-          await new Promise(resolve => setTimeout(resolve, 500));
+        if (qrResponse.qr_code) {
+          setQrcodeUrl(qrResponse.qr_code);
+          setCreationState('success');
+          onAgentCreated();
+          return;
         }
+
+        await new Promise(resolve => setTimeout(resolve, 500)); // aguarda 0.5s
       }
 
-      // ⚠️ Máximo de tentativas atingido
-      console.log('⚠️ MODAL: Máximo de tentativas atingido, mas agente foi criado');
       toast({
         title: "QR Code ainda não disponível",
-        description: "Você pode tentar novamente manualmente no painel do agente.",
-        variant: "default"
+        description: "Agente criado, mas QR não gerado a tempo. Tente novamente no painel.",
+        variant: "destructive"
       });
+
       setCreationState('success');
       onAgentCreated();
 
     } catch (error: any) {
-      console.error('❌ MODAL: Erro geral na criação do agente:', error);
-      
+      console.error('❌ Erro ao criar agente:', error);
       setCreationState('error');
-      setError(error.message || 'Erro inesperado ao criar agente');
-      
+      setError(error.message || 'Erro desconhecido');
       toast({
         title: "❌ Erro ao criar agente",
-        description: error.message || 'Erro inesperado ao criar agente',
+        description: error.message || 'Erro inesperado',
         variant: "destructive"
       });
     }
