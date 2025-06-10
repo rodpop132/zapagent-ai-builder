@@ -366,7 +366,7 @@ export class ZapAgentService {
     }
   }
 
-  // IMPROVED QR Code method - handles both JSON and HTML responses with detailed logging
+  // IMPROVED QR Code method - handles both JSON and HTML responses with detailed logging and fixed null handling
   static async getQrCode(phoneNumber: string): Promise<QrCodeResponse> {
     if (!phoneNumber) {
       throw new Error('Número do telefone é obrigatório');
@@ -427,17 +427,30 @@ export class ZapAgentService {
             
             if (errorJson.message) {
               console.log('💬 ZapAgentService: Mensagem do servidor:', errorJson.message);
-              throw new Error(errorJson.message);
+              // FIXED: Return response instead of throwing error for "not ready" messages
+              return {
+                conectado: false,
+                qr_code: null,
+                message: errorJson.message
+              };
             }
             if (errorJson.conectado === false && errorJson.message) {
               console.log('🔄 ZapAgentService: QR ainda não gerado pelo servidor');
-              throw new Error(errorJson.message);
+              return {
+                conectado: false,
+                qr_code: null,
+                message: errorJson.message
+              };
             }
           } catch (parseError) {
             console.error('❌ ZapAgentService: Erro ao fazer parse do JSON de erro:', parseError);
             console.log('📝 ZapAgentService: Usando mensagem padrão para 404');
           }
-          throw new Error('QR code ainda não foi gerado. Tente novamente em alguns segundos.');
+          return {
+            conectado: false,
+            qr_code: null,
+            message: 'QR code ainda não foi gerado. Tente novamente em alguns segundos.'
+          };
         }
         
         throw new Error(`Erro do servidor: ${response.status}`);
@@ -483,8 +496,13 @@ export class ZapAgentService {
               message: 'QR code disponível (JSON)'
             };
           } else {
-            console.error('❌ ZapAgentService: JSON não contém qr_code');
-            throw new Error('QR code não disponível no momento');
+            // FIXED: Instead of throwing error, return response with null qr_code
+            console.log('📨 ZapAgentService: JSON sem qr_code, mas com possível mensagem');
+            return {
+              conectado: false,
+              qr_code: null,
+              message: jsonResponse.message || 'QR code ainda não gerado'
+            };
           }
         } catch (parseError) {
           console.error('❌ ZapAgentService: Erro ao fazer parse do JSON:', parseError);
@@ -516,7 +534,11 @@ export class ZapAgentService {
         
         console.error('❌ ZapAgentService: Nenhuma imagem encontrada no HTML');
         console.log('📝 ZapAgentService: HTML recebido:', responseText.substring(0, 500));
-        throw new Error('QR code não encontrado na resposta HTML');
+        return {
+          conectado: false,
+          qr_code: null,
+          message: 'QR code não encontrado na resposta HTML'
+        };
       } else {
         console.error('❌ ZapAgentService: Content-Type não suportado:', contentType);
         console.log('📝 ZapAgentService: Resposta recebida:', responseText.substring(0, 200));
