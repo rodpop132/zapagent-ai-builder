@@ -77,16 +77,14 @@ export const useAgentCreation = () => {
     return true;
   };
 
-  const checkQrCodeWithRetry = async (numeroCompleto: string, maxTentativas = 10) => {
-    let tentativas = 0;
-    
-    // Aguardar 3 segundos antes de começar a verificar
-    console.log('⏳ MODAL: Aguardando 3 segundos antes de iniciar polling do QR...');
-    await new Promise(resolve => setTimeout(resolve, 3000));
-    
-    const interval = setInterval(async () => {
-      tentativas++;
-      console.log(`🔄 MODAL: Tentativa ${tentativas}/${maxTentativas} para obter QR code...`);
+  const checkQrCodeWithRetry = async (numeroCompleto: string) => {
+    const maxTentativas = 20; // tentar até 20 vezes
+    const intervalo = 500;    // intervalo entre tentativas (500ms = 0.5s)
+
+    console.log('🔄 MODAL: Iniciando busca do QR code com retry otimizado...');
+
+    for (let tentativa = 1; tentativa <= maxTentativas; tentativa++) {
+      console.log(`🔍 MODAL: Tentativa ${tentativa}/${maxTentativas} para obter QR code...`);
       
       try {
         const qrResponse = await ZapAgentService.getQrCode(numeroCompleto);
@@ -94,7 +92,6 @@ export const useAgentCreation = () => {
         // ✅ Agente já conectado
         if (qrResponse.conectado === true) {
           console.log('✅ MODAL: Agente já está conectado!');
-          clearInterval(interval);
           setCreationState('success');
           return;
         }
@@ -102,7 +99,6 @@ export const useAgentCreation = () => {
         // ✅ QR code disponível
         if (qrResponse.qr_code && qrResponse.qr_code !== null) {
           console.log('✅ MODAL: QR code obtido com sucesso!');
-          clearInterval(interval);
           setQrcodeUrl(qrResponse.qr_code);
           setCreationState('success');
           return;
@@ -112,22 +108,24 @@ export const useAgentCreation = () => {
         console.log('⏳ MODAL: QR ainda não pronto, aguardando...', qrResponse.message || 'Sem mensagem');
         
       } catch (qrError) {
-        console.log(`⏰ MODAL: Erro ao buscar QR (tentativa ${tentativas}):`, qrError);
-        // Não parar o polling por causa de erro - continuar tentando
+        console.log(`⏰ MODAL: Erro ao buscar QR (tentativa ${tentativa}):`, qrError);
+        // Continuar tentando mesmo com erro
       }
       
-      // Atingiu máximo de tentativas
-      if (tentativas >= maxTentativas) {
-        console.log('⚠️ MODAL: Máximo de tentativas atingido, mas agente foi criado');
-        clearInterval(interval);
-        setCreationState('success');
-        toast({
-          title: "Agente criado",
-          description: "Agente foi criado com sucesso. Você pode conectar o WhatsApp na lista de agentes.",
-          variant: "default"
-        });
+      // Aguardar antes da próxima tentativa (exceto na última)
+      if (tentativa < maxTentativas) {
+        await new Promise(resolve => setTimeout(resolve, intervalo));
       }
-    }, 2000);
+    }
+    
+    // ⚠️ Máximo de tentativas atingido
+    console.log('⚠️ MODAL: Máximo de tentativas atingido, mas agente foi criado');
+    setCreationState('success');
+    toast({
+      title: "Agente criado",
+      description: "Agente foi criado com sucesso. Você pode conectar o WhatsApp na lista de agentes.",
+      variant: "default"
+    });
   };
 
   const createAgent = async (onAgentCreated: () => void) => {
@@ -237,9 +235,9 @@ export const useAgentCreation = () => {
           setQrcodeUrl(apiResponse.qrcodeUrl);
           setCreationState('success');
         } else {
-          // Iniciar polling para buscar QR code
+          // Iniciar polling otimizado para buscar QR code
           setCreationState('awaiting_qr');
-          checkQrCodeWithRetry(numeroCompleto);
+          await checkQrCodeWithRetry(numeroCompleto);
         }
 
       } catch (apiError) {
