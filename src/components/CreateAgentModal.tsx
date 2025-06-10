@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,7 @@ import { executeWithJWTHandling } from '@/utils/authUtils';
 import { ZapAgentService } from '@/services/zapAgentService';
 import CountryPhoneInput from './CountryPhoneInput';
 import { normalizarNumero, validarNumero } from '@/utils/phoneUtils';
-import { Loader2, Bot, Phone, Building, FileText, Brain } from 'lucide-react';
+import { Loader2, Bot, Phone, Building, FileText, Brain, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 
 interface CreateAgentModalProps {
   isOpen: boolean;
@@ -29,6 +30,8 @@ interface FormData {
   personality_prompt: string;
 }
 
+type CreationState = 'idle' | 'saving' | 'creating_zapagent' | 'awaiting_qr' | 'success' | 'error';
+
 const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -42,7 +45,9 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     personality_prompt: ''
   });
   
-  const [loading, setLoading] = useState(false);
+  const [creationState, setCreationState] = useState<CreationState>('idle');
+  const [qrcodeUrl, setQrcodeUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string>('');
 
   const businessTypes = [
     { value: 'ecommerce', label: 'E-commerce / Loja Online' },
@@ -114,7 +119,6 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       return;
     }
 
-    setLoading(true);
     console.log('🚀 MODAL: Iniciando criação do agente...', {
       user: user.email,
       userId: user.id,
@@ -123,32 +127,25 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     });
 
     try {
+      // 1. Primeiro salvar no Supabase
+      setCreationState('saving');
+      setError('');
+
       // Verificar sessão ativa e obter token atualizado
       console.log('🔐 MODAL: Verificando sessão e obtendo token...');
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !sessionData?.session) {
         console.error('❌ MODAL: Sessão inválida:', sessionError);
-        toast({
-          title: "Sessão expirada",
-          description: "Sua sessão expirou. Faça login novamente.",
-          variant: "destructive"
-        });
-        return;
+        throw new Error('Sua sessão expirou. Faça login novamente.');
       }
 
       console.log('✅ MODAL: Sessão ativa confirmada para:', sessionData.session.user.email);
-      console.log('🔑 MODAL: Token JWT obtido, expira em:', new Date(sessionData.session.expires_at! * 1000));
 
       // Verificar se o usuário autenticado é o mesmo
       if (sessionData.session.user.id !== user.id) {
         console.error('❌ MODAL: Usuário da sessão não confere com usuário do contexto');
-        toast({
-          title: "Erro de autenticação",
-          description: "Inconsistência na autenticação. Faça login novamente.",
-          variant: "destructive"
-        });
-        return;
+        throw new Error('Inconsistência na autenticação. Faça login novamente.');
       }
 
       // Normalizar número de telefone
@@ -156,6 +153,21 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
       const numeroCompleto = numeroNormalizado.startsWith('+') ? numeroNormalizado : `+${numeroNormalizado}`;
       
       console.log('📞 MODAL: Número normalizado:', numeroCompleto);
+
+      // Verificar se já existe agente com mesmo número
+      console.log('🔍 MODAL: Verificando se número já existe...');
+      const { data: existingAgent, error: checkError } = await supabase
+        .from('agents')
+        .select('id, phone_number')
+        .eq('phone_number', numeroCompleto)
+        .maybeSingle();
+
+      if (checkError) {
+        console.error('❌ MODAL: Erro ao verificar número existente:', checkError);
+      } else if (existingAgent) {
+        console.log('⚠️ MODAL: Número já existe:', existingAgent);
+        throw new Error('Já existe um agente cadastrado com este número de telefone.');
+      }
 
       // Preparar dados do agente
       const agentPayload = {
@@ -172,30 +184,8 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
       console.log('📋 MODAL: Payload para inserção:', agentPayload);
 
-      // Verificar se já existe agente com mesmo número
-      console.log('🔍 MODAL: Verificando se número já existe...');
-      const { data: existingAgent, error: checkError } = await supabase
-        .from('agents')
-        .select('id, phone_number')
-        .eq('phone_number', numeroCompleto)
-        .maybeSingle();
-
-      if (checkError) {
-        console.error('❌ MODAL: Erro ao verificar número existente:', checkError);
-      } else if (existingAgent) {
-        console.log('⚠️ MODAL: Número já existe:', existingAgent);
-        toast({
-          title: "Número já em uso",
-          description: "Já existe um agente cadastrado com este número de telefone.",
-          variant: "destructive"
-        });
-        return;
-      }
-
       // Criar agente no Supabase
       console.log('💾 MODAL: Salvando agente no Supabase...');
-      console.log('🔄 MODAL: Executando inserção na tabela agents...');
-      
       const { data: agentData, error: insertError } = await supabase
         .from('agents')
         .insert(agentPayload)
@@ -204,14 +194,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
       if (insertError) {
         console.error('❌ MODAL: Erro do Supabase ao inserir agente:', insertError);
-        console.error('📋 MODAL: Payload que causou erro:', agentPayload);
-        console.error('🔍 MODAL: Detalhes do erro:', {
-          code: insertError.code,
-          message: insertError.message,
-          details: insertError.details,
-          hint: insertError.hint
-        });
-
+        
         // Tratamento específico de erros
         let errorMessage = 'Erro inesperado ao criar agente';
         
@@ -227,18 +210,15 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
           errorMessage = insertError.message;
         }
 
-        toast({
-          title: "❌ Erro ao criar agente",
-          description: errorMessage,
-          variant: "destructive"
-        });
-        return;
+        throw new Error(errorMessage);
       }
 
       console.log('✅ MODAL: Agente salvo no Supabase:', agentData);
 
-      // Registrar agente na API ZapAgent
+      // 2. Depois criar agente na API ZapAgent
+      setCreationState('creating_zapagent');
       console.log('🤖 MODAL: Registrando agente na API ZapAgent...');
+      
       try {
         const apiResponse = await ZapAgentService.createAgent({
           numero: numeroCompleto,
@@ -250,54 +230,45 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
         });
 
         console.log('✅ MODAL: Agente registrado na API ZapAgent:', apiResponse);
+
+        // 3. Agora aguardar QR code
+        setCreationState('awaiting_qr');
+        setQrcodeUrl(`https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(numeroCompleto)}`);
+
+        // Aguardar um pouco para o QR ser gerado
+        setTimeout(async () => {
+          try {
+            const qrResponse = await ZapAgentService.getQrCode(numeroCompleto);
+            if (qrResponse.qr_code) {
+              setCreationState('success');
+            }
+          } catch (qrError) {
+            console.log('⏰ MODAL: QR ainda não pronto, mantendo estado de aguardando');
+          }
+        }, 3000);
+
       } catch (apiError) {
-        console.warn('⚠️ MODAL: Erro na API ZapAgent (continuando):', apiError);
-        // Não bloquear a criação se a API externa falhar
+        console.warn('⚠️ MODAL: Erro na API ZapAgent, mas agente foi salvo:', apiError);
+        // Mesmo com erro na API externa, consideramos sucesso
+        setCreationState('success');
       }
 
       // Sucesso
-      console.log('🎉 MODAL: Agente criado com sucesso!');
-      toast({
-        title: "✅ Agente criado com sucesso!",
-        description: `${formData.name} foi criado e está sendo configurado.`,
-        variant: "default"
-      });
-
-      // Reset form e fechar modal
-      setFormData({
-        name: '',
-        description: '',
-        business_type: '',
-        phone_number: '',
-        training_data: '',
-        personality_prompt: ''
-      });
-
+      console.log('🎉 MODAL: Processo de criação iniciado com sucesso!');
+      
       onAgentCreated();
-      onClose();
 
     } catch (error: any) {
       console.error('❌ MODAL: Erro geral na criação do agente:', error);
       
-      let errorMessage = 'Erro inesperado ao criar agente';
+      setCreationState('error');
+      setError(error.message || 'Erro inesperado ao criar agente');
       
-      if (error.message?.includes('JWT expired') || error.message?.includes('Unauthorized')) {
-        errorMessage = 'Sua sessão expirou. Faça login novamente.';
-      } else if (error.message?.includes('permission denied') || error.message?.includes('access denied')) {
-        errorMessage = 'Acesso negado. Verifique suas permissões.';
-      } else if (error.message?.includes('duplicate key') || error.message?.includes('already exists')) {
-        errorMessage = 'Já existe um agente com este número de telefone.';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
       toast({
         title: "❌ Erro ao criar agente",
-        description: errorMessage,
+        description: error.message || 'Erro inesperado ao criar agente',
         variant: "destructive"
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -308,8 +279,45 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     }));
   };
 
+  const handleClose = () => {
+    // Reset form e estado
+    setFormData({
+      name: '',
+      description: '',
+      business_type: '',
+      phone_number: '',
+      training_data: '',
+      personality_prompt: ''
+    });
+    setCreationState('idle');
+    setQrcodeUrl(null);
+    setError('');
+    onClose();
+  };
+
+  const getStateMessage = () => {
+    switch (creationState) {
+      case 'saving':
+        return { icon: Loader2, text: 'Salvando agente...', className: 'text-blue-600' };
+      case 'creating_zapagent':
+        return { icon: Bot, text: 'Registrando na API...', className: 'text-purple-600' };
+      case 'awaiting_qr':
+        return { icon: Clock, text: 'Aguardando QR code... (pode demorar até 10s)', className: 'text-orange-600' };
+      case 'success':
+        return { icon: CheckCircle, text: 'Agente criado com sucesso!', className: 'text-green-600' };
+      case 'error':
+        return { icon: AlertCircle, text: 'Erro ao criar agente', className: 'text-red-600' };
+      default:
+        return null;
+    }
+  };
+
+  const isProcessing = ['saving', 'creating_zapagent', 'awaiting_qr'].includes(creationState);
+  const isComplete = creationState === 'success';
+  const hasError = creationState === 'error';
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center text-xl">
@@ -318,146 +326,239 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Nome do Agente */}
-          <div className="space-y-2">
-            <Label htmlFor="name" className="flex items-center">
-              <Bot className="h-4 w-4 mr-2" />
-              Nome do Agente *
-            </Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              placeholder="Ex: Assistente da Loja XYZ"
-              required
-              disabled={loading}
-            />
-          </div>
+        {/* Status do processo */}
+        {(isProcessing || isComplete || hasError) && (
+          <div className={`p-4 rounded-lg border ${
+            isComplete ? 'bg-green-50 border-green-200' :
+            hasError ? 'bg-red-50 border-red-200' :
+            'bg-blue-50 border-blue-200'
+          }`}>
+            {(() => {
+              const state = getStateMessage();
+              if (!state) return null;
+              const Icon = state.icon;
+              return (
+                <div className="flex items-center">
+                  <Icon className={`h-5 w-5 mr-3 ${state.className} ${isProcessing ? 'animate-spin' : ''}`} />
+                  <span className={`font-medium ${state.className}`}>{state.text}</span>
+                </div>
+              );
+            })()}
+            
+            {hasError && error && (
+              <p className="text-sm text-red-600 mt-2">{error}</p>
+            )}
 
-          {/* Descrição */}
-          <div className="space-y-2">
-            <Label htmlFor="description" className="flex items-center">
-              <FileText className="h-4 w-4 mr-2" />
-              Descrição (opcional)
-            </Label>
-            <Input
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Breve descrição do agente"
-              disabled={loading}
-            />
-          </div>
+            {creationState === 'awaiting_qr' && qrcodeUrl && (
+              <div className="mt-4">
+                <p className="text-sm text-gray-600 mb-3">
+                  Agente criado! O QR code está sendo gerado. Quando estiver pronto, aparecerá abaixo:
+                </p>
+                <div className="flex justify-center">
+                  <img 
+                    src={qrcodeUrl} 
+                    alt="QR Code do WhatsApp" 
+                    className="w-48 h-48 border rounded-lg"
+                    onLoad={() => {
+                      console.log('✅ QR Code carregado com sucesso');
+                      setCreationState('success');
+                    }}
+                    onError={() => {
+                      console.log('⏰ QR Code ainda não está pronto');
+                    }}
+                  />
+                </div>
+              </div>
+            )}
 
-          {/* Tipo de Negócio */}
-          <div className="space-y-2">
-            <Label className="flex items-center">
-              <Building className="h-4 w-4 mr-2" />
-              Tipo de Negócio *
-            </Label>
-            <Select
-              value={formData.business_type}
-              onValueChange={(value) => handleInputChange('business_type', value)}
-              disabled={loading}
+            {isComplete && (
+              <div className="mt-4 text-center">
+                <p className="text-green-700 font-medium">
+                  🎉 Agente "{formData.name}" criado com sucesso!
+                </p>
+                <p className="text-sm text-green-600 mt-1">
+                  Você pode fechar esta janela e configurar o WhatsApp na lista de agentes.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Formulário - só mostra se não estiver em processo ou concluído */}
+        {!isProcessing && !isComplete && (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Nome do Agente */}
+            <div className="space-y-2">
+              <Label htmlFor="name" className="flex items-center">
+                <Bot className="h-4 w-4 mr-2" />
+                Nome do Agente *
+              </Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => handleInputChange('name', e.target.value)}
+                placeholder="Ex: Assistente da Loja XYZ"
+                required
+                disabled={hasError}
+              />
+            </div>
+
+            {/* Descrição */}
+            <div className="space-y-2">
+              <Label htmlFor="description" className="flex items-center">
+                <FileText className="h-4 w-4 mr-2" />
+                Descrição (opcional)
+              </Label>
+              <Input
+                id="description"
+                value={formData.description}
+                onChange={(e) => handleInputChange('description', e.target.value)}
+                placeholder="Breve descrição do agente"
+                disabled={hasError}
+              />
+            </div>
+
+            {/* Tipo de Negócio */}
+            <div className="space-y-2">
+              <Label className="flex items-center">
+                <Building className="h-4 w-4 mr-2" />
+                Tipo de Negócio *
+              </Label>
+              <Select
+                value={formData.business_type}
+                onValueChange={(value) => handleInputChange('business_type', value)}
+                disabled={hasError}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o tipo de negócio" />
+                </SelectTrigger>
+                <SelectContent>
+                  {businessTypes.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Número do WhatsApp */}
+            <div className="space-y-2">
+              <Label className="flex items-center">
+                <Phone className="h-4 w-4 mr-2" />
+                Número do WhatsApp *
+              </Label>
+              <CountryPhoneInput
+                value={formData.phone_number}
+                onChange={(value) => handleInputChange('phone_number', value)}
+                placeholder="Digite o número do WhatsApp"
+                disabled={hasError}
+              />
+              <p className="text-xs text-gray-600">
+                Este será o número usado pelo agente para responder mensagens
+              </p>
+            </div>
+
+            {/* Dados de Treinamento */}
+            <div className="space-y-2">
+              <Label htmlFor="training_data" className="flex items-center">
+                <Brain className="h-4 w-4 mr-2" />
+                Dados de Treinamento (opcional)
+              </Label>
+              <Textarea
+                id="training_data"
+                value={formData.training_data}
+                onChange={(e) => handleInputChange('training_data', e.target.value)}
+                placeholder="Informações sobre seus produtos, serviços, preços, políticas, etc."
+                rows={4}
+                disabled={hasError}
+              />
+              <p className="text-xs text-gray-600">
+                Quanto mais informações você fornecer, melhor será o atendimento do agente
+              </p>
+            </div>
+
+            {/* Personalidade */}
+            <div className="space-y-2">
+              <Label htmlFor="personality_prompt" className="flex items-center">
+                <Brain className="h-4 w-4 mr-2" />
+                Personalidade do Agente (opcional)
+              </Label>
+              <Textarea
+                id="personality_prompt"
+                value={formData.personality_prompt}
+                onChange={(e) => handleInputChange('personality_prompt', e.target.value)}
+                placeholder="Ex: Seja sempre educado, use emojis, responda de forma amigável..."
+                rows={3}
+                disabled={hasError}
+              />
+              <p className="text-xs text-gray-600">
+                Como o agente deve se comportar nas conversas
+              </p>
+            </div>
+
+            {/* Botões */}
+            <div className="flex justify-end space-x-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+                disabled={isProcessing}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={isProcessing || hasError}
+                className="bg-brand-green hover:bg-brand-green/90"
+              >
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Criando...
+                  </>
+                ) : (
+                  <>
+                    <Bot className="h-4 w-4 mr-2" />
+                    Criar Agente
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        )}
+
+        {/* Botões para quando está concluído */}
+        {isComplete && (
+          <div className="flex justify-end space-x-3 pt-4">
+            <Button
+              onClick={handleClose}
+              className="bg-brand-green hover:bg-brand-green/90"
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o tipo de negócio" />
-              </SelectTrigger>
-              <SelectContent>
-                {businessTypes.map((type) => (
-                  <SelectItem key={type.value} value={type.value}>
-                    {type.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <CheckCircle className="h-4 w-4 mr-2" />
+              Fechar
+            </Button>
           </div>
+        )}
 
-          {/* Número do WhatsApp */}
-          <div className="space-y-2">
-            <Label className="flex items-center">
-              <Phone className="h-4 w-4 mr-2" />
-              Número do WhatsApp *
-            </Label>
-            <CountryPhoneInput
-              value={formData.phone_number}
-              onChange={(value) => handleInputChange('phone_number', value)}
-              placeholder="Digite o número do WhatsApp"
-              disabled={loading}
-            />
-            <p className="text-xs text-gray-600">
-              Este será o número usado pelo agente para responder mensagens
-            </p>
-          </div>
-
-          {/* Dados de Treinamento */}
-          <div className="space-y-2">
-            <Label htmlFor="training_data" className="flex items-center">
-              <Brain className="h-4 w-4 mr-2" />
-              Dados de Treinamento (opcional)
-            </Label>
-            <Textarea
-              id="training_data"
-              value={formData.training_data}
-              onChange={(e) => handleInputChange('training_data', e.target.value)}
-              placeholder="Informações sobre seus produtos, serviços, preços, políticas, etc."
-              rows={4}
-              disabled={loading}
-            />
-            <p className="text-xs text-gray-600">
-              Quanto mais informações você fornecer, melhor será o atendimento do agente
-            </p>
-          </div>
-
-          {/* Personalidade */}
-          <div className="space-y-2">
-            <Label htmlFor="personality_prompt" className="flex items-center">
-              <Brain className="h-4 w-4 mr-2" />
-              Personalidade do Agente (opcional)
-            </Label>
-            <Textarea
-              id="personality_prompt"
-              value={formData.personality_prompt}
-              onChange={(e) => handleInputChange('personality_prompt', e.target.value)}
-              placeholder="Ex: Seja sempre educado, use emojis, responda de forma amigável..."
-              rows={3}
-              disabled={loading}
-            />
-            <p className="text-xs text-gray-600">
-              Como o agente deve se comportar nas conversas
-            </p>
-          </div>
-
-          {/* Botões */}
+        {/* Botão para tentar novamente em caso de erro */}
+        {hasError && (
           <div className="flex justify-end space-x-3 pt-4">
             <Button
               type="button"
               variant="outline"
-              onClick={onClose}
-              disabled={loading}
+              onClick={() => setCreationState('idle')}
             >
-              Cancelar
+              Tentar Novamente
             </Button>
             <Button
-              type="submit"
-              disabled={loading}
-              className="bg-brand-green hover:bg-brand-green/90"
+              type="button"
+              onClick={handleClose}
             >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Criando...
-                </>
-              ) : (
-                <>
-                  <Bot className="h-4 w-4 mr-2" />
-                  Criar Agente
-                </>
-              )}
+              Fechar
             </Button>
           </div>
-        </form>
+        )}
       </DialogContent>
     </Dialog>
   );
