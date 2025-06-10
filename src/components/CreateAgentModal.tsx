@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -104,6 +103,33 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
     }
 
     return true;
+  };
+
+  // Função melhorada para verificar QR code com retry
+  const checkQrCodeWithRetry = async (numeroCompleto: string, maxTentativas = 5) => {
+    let tentativas = 0;
+    
+    const interval = setInterval(async () => {
+      tentativas++;
+      console.log(`🔄 MODAL: Tentativa ${tentativas}/${maxTentativas} para obter QR code...`);
+      
+      try {
+        const qrResponse = await ZapAgentService.getQrCode(numeroCompleto);
+        if (qrResponse.qr_code) {
+          console.log('✅ MODAL: QR code obtido com sucesso!');
+          clearInterval(interval);
+          setCreationState('success');
+        }
+      } catch (qrError) {
+        console.log(`⏰ MODAL: QR ainda não pronto (tentativa ${tentativas})`);
+      }
+      
+      if (tentativas >= maxTentativas) {
+        console.log('⚠️ MODAL: Máximo de tentativas atingido, mas agente foi criado');
+        clearInterval(interval);
+        setCreationState('success');
+      }
+    }, 2000); // Verificar a cada 2 segundos
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -231,21 +257,12 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 
         console.log('✅ MODAL: Agente registrado na API ZapAgent:', apiResponse);
 
-        // 3. Agora aguardar QR code
+        // 3. Agora aguardar QR code com retry melhorado
         setCreationState('awaiting_qr');
         setQrcodeUrl(`https://zapagent-bot.onrender.com/qrcode?numero=${encodeURIComponent(numeroCompleto)}`);
 
-        // Aguardar um pouco para o QR ser gerado
-        setTimeout(async () => {
-          try {
-            const qrResponse = await ZapAgentService.getQrCode(numeroCompleto);
-            if (qrResponse.qr_code) {
-              setCreationState('success');
-            }
-          } catch (qrError) {
-            console.log('⏰ MODAL: QR ainda não pronto, mantendo estado de aguardando');
-          }
-        }, 3000);
+        // Iniciar verificação com retry
+        checkQrCodeWithRetry(numeroCompleto);
 
       } catch (apiError) {
         console.warn('⚠️ MODAL: Erro na API ZapAgent, mas agente foi salvo:', apiError);
@@ -359,10 +376,6 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
                     src={qrcodeUrl} 
                     alt="QR Code do WhatsApp" 
                     className="w-48 h-48 border rounded-lg"
-                    onLoad={() => {
-                      console.log('✅ QR Code carregado com sucesso');
-                      setCreationState('success');
-                    }}
                     onError={() => {
                       console.log('⏰ QR Code ainda não está pronto');
                     }}
@@ -399,7 +412,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
                 onChange={(e) => handleInputChange('name', e.target.value)}
                 placeholder="Ex: Assistente da Loja XYZ"
                 required
-                disabled={hasError}
+                disabled={isProcessing || hasError}
               />
             </div>
 
@@ -414,11 +427,11 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
                 value={formData.description}
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 placeholder="Breve descrição do agente"
-                disabled={hasError}
+                disabled={isProcessing || hasError}
               />
             </div>
 
-            {/* Tipo de Negócio */}
+            {/* Tipo de Negócio - CORRIGIDO com wrapper Select */}
             <div className="space-y-2">
               <Label className="flex items-center">
                 <Building className="h-4 w-4 mr-2" />
@@ -427,7 +440,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
               <Select
                 value={formData.business_type}
                 onValueChange={(value) => handleInputChange('business_type', value)}
-                disabled={hasError}
+                disabled={isProcessing || hasError}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o tipo de negócio" />
@@ -452,7 +465,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
                 value={formData.phone_number}
                 onChange={(value) => handleInputChange('phone_number', value)}
                 placeholder="Digite o número do WhatsApp"
-                disabled={hasError}
+                disabled={isProcessing || hasError}
               />
               <p className="text-xs text-gray-600">
                 Este será o número usado pelo agente para responder mensagens
@@ -471,7 +484,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
                 onChange={(e) => handleInputChange('training_data', e.target.value)}
                 placeholder="Informações sobre seus produtos, serviços, preços, políticas, etc."
                 rows={4}
-                disabled={hasError}
+                disabled={isProcessing || hasError}
               />
               <p className="text-xs text-gray-600">
                 Quanto mais informações você fornecer, melhor será o atendimento do agente
@@ -490,7 +503,7 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
                 onChange={(e) => handleInputChange('personality_prompt', e.target.value)}
                 placeholder="Ex: Seja sempre educado, use emojis, responda de forma amigável..."
                 rows={3}
-                disabled={hasError}
+                disabled={isProcessing || hasError}
               />
               <p className="text-xs text-gray-600">
                 Como o agente deve se comportar nas conversas
@@ -565,3 +578,5 @@ const CreateAgentModal = ({ isOpen, onClose, onAgentCreated }: CreateAgentModalP
 };
 
 export default CreateAgentModal;
+
+</edits_to_apply>
