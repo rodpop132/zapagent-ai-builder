@@ -1,4 +1,3 @@
-
 export const pt = {
   translation: {
     header: {
@@ -48,59 +47,132 @@ export const pt = {
         description: "Conecte com WhatsApp e comece a atender clientes automaticamente 24 horas por dia."
       }
     },
+    dashboard: {
+      title: "Painel completo para gerenciar seu agente",
+      subtitle: "Acompanhe conversas, analytics e performance do seu agente IA em tempo real",
+      upgradePlan: "Atualizar Plano",
+      messagesSent: "Mensagens enviadas",
+      responseRate: "Taxa de resposta",
+      clientsServed: "Clientes atendidos",
+      recentConversations: "Conversas recentes",
+      live: "Ao vivo",
+      newMessages: "novas mensagens chegando...",
+      status: {
+        online: "Online",
+        typing: "Digitando...",
+        read: "Lida",
+        delivered: "Entregue",
+        offline: "Offline"
+      },
+      conversations: {
+        joao: {
+          name: "João Silva",
+          message: "Qual o horário de funcionamento?"
+        },
+        maria: {
+          name: "Maria Santos", 
+          message: "Vocês fazem entrega no sábado?"
+        },
+        pedro: {
+          name: "Pedro Costa",
+          message: "Gostaria de saber sobre os preços"
+        },
+        ana: {
+          name: "Ana Oliveira",
+          message: "Produtos disponíveis hoje?"
+        }
+      }
+    },
     benefits: {
       title: "Por que escolher o ZapAgent AI?",
-      subtitle: "Vantagens que fazem a diferença no seu negócio",
+      subtitle: "Ideal para pequenos negócios, freelancers e e-commerces que querem automatizar o atendimento",
       available24h: {
-        title: "Disponível 24/7",
-        description: "Seu agente nunca dorme e está sempre pronto para atender"
-      },
-      instantResponse: {
-        title: "Resposta instantânea",
-        description: "Clientes recebem respostas imediatas, melhorando a satisfação"
-      },
-      easySetup: {
-        title: "Configuração simples",
-        description: "Configure em minutos sem conhecimento técnico"
+        title: "Atendimento automático 24/7",
+        description: "Seu agente nunca para de trabalhar. Responde clientes a qualquer hora, mesmo quando você está dormindo."
       },
       smartLearning: {
-        title: "Aprendizado inteligente",
-        description: "IA que aprende com suas conversas e melhora continuamente"
+        title: "IA treinada no seu negócio",
+        description: "Carregue seus próprios dados e treine a IA para responder exatamente como você responderia."
+      },
+      whatsappIntegration: {
+        title: "Integração direta com WhatsApp",
+        description: "Conecta direto com WhatsApp Business ou Web WhatsApp. Seus clientes nem vão perceber que é um robô."
+      },
+      analytics: {
+        title: "Analytics completos", 
+        description: "Veja quantas mensagens foram enviadas, taxa de resposta e performance do seu agente."
+      },
+      easySetup: {
+        title: "Fácil de usar - sem código",
+        description: "Interface intuitiva que qualquer pessoa consegue usar. Não precisa ser programador."
+      },
+      free: {
+        title: "Comece grátis",
+        description: "Crie e teste seu agente sem pagar nada. Só paga quando quiser usar no WhatsApp."
+      },
+      cta: {
+        title: "Transforme o seu atendimento com inteligência artificial",
+        subtitle: "Junte-se a centenas de negócios que já automatizaram seu atendimento e aumentaram suas vendas",
+        guarantee: "Cancele quando quiser, sem burocracia"
       }
     },
     pricing: {
-      title: "Planos e Preços",
-      subtitle: "Escolha o plano ideal para o seu negócio",
+      title: "Planos que cabem no seu bolso",
+      subtitle: "Comece grátis e escale conforme seu negócio cresce. Sem contratos longos ou pegadinhas.",
       free: {
         title: "Gratuito",
         price: "R$ 0",
-        period: "/mês",
-        messages: "100 mensagens/mês",
-        agents: "1 agente",
-        support: "Suporte por email",
+        period: "para sempre",
+        description: "Perfeito para testar e começar",
+        features: {
+          agents: "1 agente IA",
+          messages: "Até 30 mensagens/mês",
+          training: "Treinamento com PDFs",
+          simulator: "Simulador de conversa",
+          support: "Suporte básico"
+        },
         cta: "Começar grátis"
       },
       pro: {
-        title: "Profissional", 
-        price: "R$ 47",
+        title: "Pro",
+        originalPrice: "R$ 100",
+        discount: "-50%",
+        price: "R$ 49",
         period: "/mês",
-        messages: "2.000 mensagens/mês",
-        agents: "3 agentes",
-        support: "Suporte prioritário",
-        analytics: "Relatórios avançados",
-        cta: "Assinar agora"
+        popular: "Mais Popular",
+        promotion: "PROMOÇÃO",
+        description: "Ideal para pequenos negócios",
+        features: {
+          agents: "3 agentes IA ativos",
+          messages: "10.000 mensagens/mês", 
+          whatsapp: "Integração WhatsApp",
+          analytics: "Analytics básicos",
+          support: "Suporte prioritário",
+          customizations: "Personalizações extras"
+        },
+        cta: "Escolher Pro"
       },
-      enterprise: {
-        title: "Empresarial",
-        price: "R$ 97", 
+      ultra: {
+        title: "Ultra",
+        originalPrice: "R$ 250",
+        discount: "-50%",
+        price: "R$ 99",
         period: "/mês",
-        messages: "10.000 mensagens/mês",
-        agents: "10 agentes",
-        support: "Suporte dedicado",
-        analytics: "Analytics completo",
-        integrations: "Integrações personalizadas",
-        cta: "Falar com vendas"
-      }
+        promotion: "PROMOÇÃO",
+        description: "Para negócios em crescimento",
+        features: {
+          agents: "Agentes IA ilimitados",
+          messages: "Mensagens ilimitadas",
+          analytics: "Analytics avançados",
+          integrations: "Múltiplas integrações",
+          support: "Suporte VIP",
+          api: "API personalizada",
+          telegram: "Exportação para Telegram"
+        },
+        cta: "Escolher Ultra"
+      },
+      guarantee: "Todos os planos incluem garantia de 7 dias. Cancele quando quiser.",
+      comingSoon: "Em breve: Integração com Instagram e Telegram"
     },
     testimonials: {
       title: "O que nossos clientes dizem",

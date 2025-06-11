@@ -1,37 +1,40 @@
 
 import { Check } from "lucide-react";
+import { useTranslation } from 'react-i18next';
 
 const Benefits = () => {
+  const { t } = useTranslation();
+
   const benefits = [
     {
       icon: "🤖",
-      title: "Atendimento automático 24/7",
-      description: "Seu agente nunca para de trabalhar. Responde clientes a qualquer hora, mesmo quando você está dormindo."
+      title: t('benefits.available24h.title'),
+      description: t('benefits.available24h.description')
     },
     {
       icon: "🧠",
-      title: "IA treinada no seu negócio", 
-      description: "Carregue seus próprios dados e treine a IA para responder exatamente como você responderia."
+      title: t('benefits.smartLearning.title'), 
+      description: t('benefits.smartLearning.description')
     },
     {
       icon: "📱",
-      title: "Integração direta com WhatsApp",
-      description: "Conecta direto com WhatsApp Business ou Web WhatsApp. Seus clientes nem vão perceber que é um robô."
+      title: t('benefits.whatsappIntegration.title'),
+      description: t('benefits.whatsappIntegration.description')
     },
     {
       icon: "📊",
-      title: "Analytics completos",
-      description: "Veja quantas mensagens foram enviadas, taxa de resposta e performance do seu agente."
+      title: t('benefits.analytics.title'),
+      description: t('benefits.analytics.description')
     },
     {
       icon: "⚡",
-      title: "Fácil de usar - sem código",
-      description: "Interface intuitiva que qualquer pessoa consegue usar. Não precisa ser programador."
+      title: t('benefits.easySetup.title'),
+      description: t('benefits.easySetup.description')
     },
     {
       icon: "💰",
-      title: "Comece grátis",
-      description: "Crie e teste seu agente sem pagar nada. Só paga quando quiser usar no WhatsApp."
+      title: t('benefits.free.title'),
+      description: t('benefits.free.description')
     }
   ];
 
@@ -40,10 +43,10 @@ const Benefits = () => {
       <div className="container mx-auto max-w-6xl">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-brand-dark mb-4">
-            Por que escolher o ZapAgent AI?
+            {t('benefits.title')}
           </h2>
           <p className="text-xl text-brand-gray max-w-2xl mx-auto">
-            Ideal para pequenos negócios, freelancers e e-commerces que querem automatizar o atendimento
+            {t('benefits.subtitle')}
           </p>
         </div>
 
@@ -67,14 +70,14 @@ const Benefits = () => {
 
         <div className="mt-16 bg-brand-green/5 rounded-2xl p-8 text-center">
           <h3 className="text-2xl font-bold text-brand-dark mb-4">
-            Transforme o seu atendimento com inteligência artificial
+            {t('benefits.cta.title')}
           </h3>
           <p className="text-brand-gray mb-6 max-w-2xl mx-auto">
-            Junte-se a centenas de negócios que já automatizaram seu atendimento e aumentaram suas vendas
+            {t('benefits.cta.subtitle')}
           </p>
           <div className="flex items-center justify-center space-x-2">
             <Check className="h-5 w-5 text-brand-green" />
-            <span className="text-brand-dark font-medium">Cancele quando quiser, sem burocracia</span>
+            <span className="text-brand-dark font-medium">{t('benefits.cta.guarantee')}</span>
           </div>
         </div>
       </div>

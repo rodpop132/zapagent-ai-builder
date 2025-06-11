@@ -1,238 +1,199 @@
-import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
-import { Check, Loader2 } from "lucide-react";
+import { Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from 'react-i18next';
 
 const PricingSection = () => {
-  const [loading, setLoading] = useState<string | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
-  const handleSubscribe = async (planType: string) => {
-    // Para plano gratuito, sempre direcionar para login
-    if (planType === 'free') {
+  const handlePlanClick = (planType: string) => {
+    if (user) {
+      navigate('/dashboard');
+    } else {
       navigate('/auth');
-      return;
-    }
-
-    setLoading(planType);
-    
-    try {
-      let checkoutData;
-      
-      if (user) {
-        // Usuário logado - usar o método atual
-        const { data, error } = await supabase.functions.invoke('create-checkout', {
-          body: { planType }
-        });
-
-        if (error) {
-          console.error('Erro ao criar checkout:', error);
-          throw error;
-        }
-        checkoutData = data;
-      } else {
-        // Usuário não logado - checkout direto
-        const response = await fetch(`https://hagweqrpbrjbtsbbscbn.supabase.co/functions/v1/create-checkout`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhhZ3dlcXJwYnJqYnRzYmJzY2JuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg4Nzc3MzYsImV4cCI6MjA2NDQ1MzczNn0.Vv3lWCvfqTPFwCTDWsqLiMgnybseNYsbhWRft4CkRZs',
-          },
-          body: JSON.stringify({ planType, guestCheckout: true })
-        });
-
-        if (!response.ok) {
-          throw new Error('Erro ao criar checkout');
-        }
-        
-        checkoutData = await response.json();
-      }
-
-      if (checkoutData?.url) {
-        // Abrir checkout do Stripe em nova aba
-        window.open(checkoutData.url, '_blank');
-      } else {
-        throw new Error('URL do checkout não retornada');
-      }
-    } catch (error) {
-      console.error('Erro ao processar assinatura:', error);
-      toast.error('Erro ao processar pagamento. Tente novamente.');
-    } finally {
-      setLoading(null);
     }
   };
 
-  const plans = [
-    {
-      name: "Grátis",
-      price: "R$0",
-      period: "para sempre",
-      description: "Perfeito para testar e começar",
-      features: [
-        "1 agente IA",
-        "Até 30 mensagens/mês", 
-        "Treinamento com PDFs",
-        "Simulador de conversa",
-        "Suporte básico"
-      ],
-      cta: "Começar grátis",
-      popular: false,
-      planType: "free"
-    },
-    {
-      name: "Pro",
-      originalPrice: "R$100",
-      price: "R$49",
-      period: "/mês",
-      description: "Ideal para pequenos negócios",
-      features: [
-        "3 agentes IA ativos",
-        "10.000 mensagens/mês",
-        "Integração WhatsApp",
-        "Analytics básicos",
-        "Suporte prioritário",
-        "Personalizações extras"
-      ],
-      cta: "Escolher Pro",
-      popular: true,
-      planType: "pro",
-      promotion: true
-    },
-    {
-      name: "Ultra",
-      originalPrice: "R$250",
-      price: "R$99",
-      period: "/mês", 
-      description: "Para negócios em crescimento",
-      features: [
-        "Agentes IA ilimitados",
-        "Mensagens ilimitadas",
-        "Analytics avançados",
-        "Múltiplas integrações",
-        "Suporte VIP",
-        "API personalizada",
-        "Exportação para Telegram"
-      ],
-      cta: "Escolher Ultra",
-      popular: false,
-      planType: "ultra",
-      promotion: true
-    }
-  ];
-
   return (
-    <section id="planos" className="py-12 md:py-20 px-4 bg-white">
+    <section id="planos" className="py-20 px-4 bg-gray-50">
       <div className="container mx-auto max-w-6xl">
-        <div className="text-center mb-12 md:mb-16 animate-in fade-in-50 duration-500">
-          <h2 className="text-3xl md:text-4xl font-bold text-brand-dark mb-4">
-            Planos que cabem no seu bolso
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-brand-dark mb-4">
+            {t('pricing.title')}
           </h2>
-          <p className="text-lg md:text-xl text-brand-gray max-w-2xl mx-auto px-4">
-            Comece grátis e escale conforme seu negócio cresce. Sem contratos longos ou pegadinhas.
+          <p className="text-xl text-brand-gray">
+            {t('pricing.subtitle')}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
-          {plans.map((plan, index) => (
-            <div 
-              key={index} 
-              className={`relative rounded-2xl p-6 md:p-8 transition-all duration-300 hover:scale-105 animate-in slide-in-from-bottom-4 ${
-                plan.popular 
-                  ? 'bg-brand-green text-white shadow-2xl md:scale-105' 
-                  : 'bg-white border-2 border-gray-200 shadow-lg hover:border-brand-green/50'
-              }`}
-              style={{ animationDelay: `${index * 200}ms` }}
-            >
-              {plan.popular && (
-                <div className="absolute -top-3 md:-top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-white text-brand-green px-3 md:px-4 py-1 md:py-2 rounded-full text-xs md:text-sm font-bold">
-                    Mais Popular
-                  </span>
-                </div>
-              )}
-
-              {plan.promotion && (
-                <div className="absolute -top-2 -right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold animate-pulse">
-                  PROMOÇÃO
-                </div>
-              )}
-              
-              <div className="text-center mb-6 md:mb-8">
-                <h3 className={`text-xl md:text-2xl font-bold mb-2 ${plan.popular ? 'text-white' : 'text-brand-dark'}`}>
-                  {plan.name}
-                </h3>
-                <div className="mb-2">
-                  {plan.promotion && plan.originalPrice && (
-                    <div className="flex items-center justify-center gap-2 mb-1">
-                      <span className={`text-lg line-through ${plan.popular ? 'text-white/60' : 'text-gray-400'}`}>
-                        {plan.originalPrice}
-                      </span>
-                      <span className="bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
-                        -50%
-                      </span>
-                    </div>
-                  )}
-                  <span className={`text-3xl md:text-4xl font-bold ${plan.popular ? 'text-white' : 'text-brand-dark'}`}>
-                    {plan.price}
-                  </span>
-                  <span className={`text-base md:text-lg ${plan.popular ? 'text-white/80' : 'text-brand-gray'}`}>
-                    {plan.period}
-                  </span>
-                </div>
-                <p className={`text-sm md:text-base ${plan.popular ? 'text-white/80' : 'text-brand-gray'}`}>
-                  {plan.description}
-                </p>
+        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          {/* Plano Gratuito */}
+          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow border border-gray-100">
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-bold text-brand-dark mb-2">{t('pricing.free.title')}</h3>
+              <div className="mb-4">
+                <span className="text-4xl font-bold text-brand-dark">{t('pricing.free.price')}</span>
+                <span className="text-brand-gray ml-2">{t('pricing.free.period')}</span>
               </div>
-
-              <ul className="space-y-3 md:space-y-4 mb-6 md:mb-8">
-                {plan.features.map((feature, featureIndex) => (
-                  <li 
-                    key={featureIndex} 
-                    className="flex items-start animate-in slide-in-from-left-1 duration-200"
-                    style={{ animationDelay: `${(index * 200) + (featureIndex * 50)}ms` }}
-                  >
-                    <Check className={`h-4 w-4 md:h-5 md:w-5 mr-2 md:mr-3 mt-0.5 ${plan.popular ? 'text-white' : 'text-brand-green'} flex-shrink-0`} />
-                    <span className={`text-sm md:text-base ${plan.popular ? 'text-white' : 'text-brand-gray'}`}>
-                      {feature}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-
-              <Button 
-                className={`w-full py-2 md:py-3 transition-all duration-200 hover:scale-105 text-sm md:text-base ${
-                  plan.popular 
-                    ? 'bg-white text-brand-green hover:bg-gray-100' 
-                    : 'bg-brand-green text-white hover:bg-brand-green/90'
-                }`}
-                size="lg"
-                onClick={() => handleSubscribe(plan.planType)}
-                disabled={loading === plan.planType}
-              >
-                {loading === plan.planType ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Processando...
-                  </>
-                ) : (
-                  plan.cta
-                )}
-              </Button>
+              <p className="text-brand-gray">{t('pricing.free.description')}</p>
             </div>
-          ))}
+            
+            <ul className="space-y-4 mb-8">
+              <li className="flex items-center">
+                <Check className="h-5 w-5 text-brand-green mr-3" />
+                <span className="text-brand-gray">{t('pricing.free.features.agents')}</span>
+              </li>
+              <li className="flex items-center">
+                <Check className="h-5 w-5 text-brand-green mr-3" />
+                <span className="text-brand-gray">{t('pricing.free.features.messages')}</span>
+              </li>
+              <li className="flex items-center">
+                <Check className="h-5 w-5 text-brand-green mr-3" />
+                <span className="text-brand-gray">{t('pricing.free.features.training')}</span>
+              </li>
+              <li className="flex items-center">
+                <Check className="h-5 w-5 text-brand-green mr-3" />
+                <span className="text-brand-gray">{t('pricing.free.features.simulator')}</span>
+              </li>
+              <li className="flex items-center">
+                <Check className="h-5 w-5 text-brand-green mr-3" />
+                <span className="text-brand-gray">{t('pricing.free.features.support')}</span>
+              </li>
+            </ul>
+            
+            <Button 
+              className="w-full bg-brand-green hover:bg-brand-green/90 text-white"
+              onClick={() => handlePlanClick('free')}
+            >
+              {t('pricing.free.cta')}
+            </Button>
+          </div>
+
+          {/* Plano Pro */}
+          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow border-2 border-brand-green relative">
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+              <div className="bg-brand-green text-white px-6 py-2 rounded-full text-sm font-medium flex items-center space-x-2">
+                <span>{t('pricing.pro.popular')}</span>
+                <span className="bg-white text-brand-green px-2 py-1 rounded text-xs">{t('pricing.pro.promotion')}</span>
+              </div>
+            </div>
+            
+            <div className="text-center mb-8 mt-4">
+              <h3 className="text-2xl font-bold text-brand-dark mb-2">{t('pricing.pro.title')}</h3>
+              <div className="mb-2">
+                <span className="text-lg text-brand-gray line-through">{t('pricing.pro.originalPrice')}</span>
+                <span className="text-sm bg-red-100 text-red-600 px-2 py-1 rounded ml-2">{t('pricing.pro.discount')}</span>
+              </div>
+              <div className="mb-4">
+                <span className="text-4xl font-bold text-brand-green">{t('pricing.pro.price')}</span>
+                <span className="text-brand-gray ml-2">{t('pricing.pro.period')}</span>
+              </div>
+              <p className="text-brand-gray">{t('pricing.pro.description')}</p>
+            </div>
+            
+            <ul className="space-y-4 mb-8">
+              <li className="flex items-center">
+                <Check className="h-5 w-5 text-brand-green mr-3" />
+                <span className="text-brand-gray">{t('pricing.pro.features.agents')}</span>
+              </li>
+              <li className="flex items-center">
+                <Check className="h-5 w-5 text-brand-green mr-3" />
+                <span className="text-brand-gray">{t('pricing.pro.features.messages')}</span>
+              </li>
+              <li className="flex items-center">
+                <Check className="h-5 w-5 text-brand-green mr-3" />
+                <span className="text-brand-gray">{t('pricing.pro.features.whatsapp')}</span>
+              </li>
+              <li className="flex items-center">
+                <Check className="h-5 w-5 text-brand-green mr-3" />
+                <span className="text-brand-gray">{t('pricing.pro.features.analytics')}</span>
+              </li>
+              <li className="flex items-center">
+                <Check className="h-5 w-5 text-brand-green mr-3" />
+                <span className="text-brand-gray">{t('pricing.pro.features.support')}</span>
+              </li>
+              <li className="flex items-center">
+                <Check className="h-5 w-5 text-brand-green mr-3" />
+                <span className="text-brand-gray">{t('pricing.pro.features.customizations')}</span>
+              </li>
+            </ul>
+            
+            <Button 
+              className="w-full bg-brand-green hover:bg-brand-green/90 text-white"
+              onClick={() => handlePlanClick('pro')}
+            >
+              {t('pricing.pro.cta')}
+            </Button>
+          </div>
+
+          {/* Plano Ultra */}
+          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow border border-gray-100 relative">
+            <div className="absolute -top-4 right-4">
+              <div className="bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-medium">
+                {t('pricing.ultra.promotion')}
+              </div>
+            </div>
+            
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-bold text-brand-dark mb-2">{t('pricing.ultra.title')}</h3>
+              <div className="mb-2">
+                <span className="text-lg text-brand-gray line-through">{t('pricing.ultra.originalPrice')}</span>
+                <span className="text-sm bg-red-100 text-red-600 px-2 py-1 rounded ml-2">{t('pricing.ultra.discount')}</span>
+              </div>
+              <div className="mb-4">
+                <span className="text-4xl font-bold text-purple-600">{t('pricing.ultra.price')}</span>
+                <span className="text-brand-gray ml-2">{t('pricing.ultra.period')}</span>
+              </div>
+              <p className="text-brand-gray">{t('pricing.ultra.description')}</p>
+            </div>
+            
+            <ul className="space-y-4 mb-8">
+              <li className="flex items-center">
+                <Check className="h-5 w-5 text-purple-600 mr-3" />
+                <span className="text-brand-gray">{t('pricing.ultra.features.agents')}</span>
+              </li>
+              <li className="flex items-center">
+                <Check className="h-5 w-5 text-purple-600 mr-3" />
+                <span className="text-brand-gray">{t('pricing.ultra.features.messages')}</span>
+              </li>
+              <li className="flex items-center">
+                <Check className="h-5 w-5 text-purple-600 mr-3" />
+                <span className="text-brand-gray">{t('pricing.ultra.features.analytics')}</span>
+              </li>
+              <li className="flex items-center">
+                <Check className="h-5 w-5 text-purple-600 mr-3" />
+                <span className="text-brand-gray">{t('pricing.ultra.features.integrations')}</span>
+              </li>
+              <li className="flex items-center">
+                <Check className="h-5 w-5 text-purple-600 mr-3" />
+                <span className="text-brand-gray">{t('pricing.ultra.features.support')}</span>
+              </li>
+              <li className="flex items-center">
+                <Check className="h-5 w-5 text-purple-600 mr-3" />
+                <span className="text-brand-gray">{t('pricing.ultra.features.api')}</span>
+              </li>
+              <li className="flex items-center">
+                <Check className="h-5 w-5 text-purple-600 mr-3" />
+                <span className="text-brand-gray">{t('pricing.ultra.features.telegram')}</span>
+              </li>
+            </ul>
+            
+            <Button 
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+              onClick={() => handlePlanClick('ultra')}
+            >
+              {t('pricing.ultra.cta')}
+            </Button>
+          </div>
         </div>
 
-        <div className="text-center mt-8 md:mt-12 animate-in fade-in-50 duration-500 delay-800 px-4">
-          <p className="text-brand-gray mb-4 text-sm md:text-base">
-            Todos os planos incluem garantia de 7 dias. Cancele quando quiser.
-          </p>
-          <p className="text-xs md:text-sm text-brand-gray">
-            <strong>Em breve:</strong> Integração com Instagram e Telegram
-          </p>
+        <div className="text-center mt-12">
+          <p className="text-brand-gray mb-4">{t('pricing.guarantee')}</p>
+          <p className="text-brand-dark font-medium">{t('pricing.comingSoon')}</p>
         </div>
       </div>
     </section>

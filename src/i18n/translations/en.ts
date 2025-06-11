@@ -1,4 +1,3 @@
-
 export const en = {
   translation: {
     header: {
@@ -48,59 +47,132 @@ export const en = {
         description: "Connect with WhatsApp and start serving customers automatically 24 hours a day."
       }
     },
+    dashboard: {
+      title: "Complete dashboard to manage your agent",
+      subtitle: "Track conversations, analytics and performance of your AI agent in real time",
+      upgradePlan: "Upgrade Plan",
+      messagesSent: "Messages sent",
+      responseRate: "Response rate",
+      clientsServed: "Clients served",
+      recentConversations: "Recent conversations",
+      live: "Live",
+      newMessages: "new messages coming...",
+      status: {
+        online: "Online",
+        typing: "Typing...",
+        read: "Read",
+        delivered: "Delivered",
+        offline: "Offline"
+      },
+      conversations: {
+        joao: {
+          name: "John Silva",
+          message: "What are your business hours?"
+        },
+        maria: {
+          name: "Mary Santos",
+          message: "Do you deliver on Saturday?"
+        },
+        pedro: {
+          name: "Peter Costa",
+          message: "I'd like to know about prices"
+        },
+        ana: {
+          name: "Anna Oliveira",
+          message: "Products available today?"
+        }
+      }
+    },
     benefits: {
       title: "Why choose ZapAgent AI?",
-      subtitle: "Advantages that make a difference in your business",
+      subtitle: "Ideal for small businesses, freelancers and e-commerce that want to automate customer service",
       available24h: {
-        title: "Available 24/7",
-        description: "Your agent never sleeps and is always ready to serve"
-      },
-      instantResponse: {
-        title: "Instant response",
-        description: "Customers receive immediate responses, improving satisfaction"
-      },
-      easySetup: {
-        title: "Simple setup",
-        description: "Set up in minutes without technical knowledge"
+        title: "24/7 automatic service",
+        description: "Your agent never stops working. Responds to customers at any time, even when you're sleeping."
       },
       smartLearning: {
-        title: "Smart learning",
-        description: "AI that learns from your conversations and continuously improves"
+        title: "AI trained on your business",
+        description: "Upload your own data and train the AI to respond exactly as you would respond."
+      },
+      whatsappIntegration: {
+        title: "Direct WhatsApp integration",
+        description: "Connects directly with WhatsApp Business or WhatsApp Web. Your customers won't even notice it's a bot."
+      },
+      analytics: {
+        title: "Complete analytics",
+        description: "See how many messages were sent, response rate and your agent's performance."
+      },
+      easySetup: {
+        title: "Easy to use - no code",
+        description: "Intuitive interface that anyone can use. You don't need to be a programmer."
+      },
+      free: {
+        title: "Start free",
+        description: "Create and test your agent without paying anything. Only pay when you want to use on WhatsApp."
+      },
+      cta: {
+        title: "Transform your customer service with artificial intelligence",
+        subtitle: "Join hundreds of businesses that have already automated their service and increased their sales",
+        guarantee: "Cancel anytime, no bureaucracy"
       }
     },
     pricing: {
-      title: "Plans & Pricing",
-      subtitle: "Choose the ideal plan for your business",
+      title: "Plans that fit your budget",
+      subtitle: "Start free and scale as your business grows. No long contracts or gotchas.",
       free: {
         title: "Free",
         price: "$ 0",
-        period: "/month",
-        messages: "100 messages/month",
-        agents: "1 agent",
-        support: "Email support", 
+        period: "forever",
+        description: "Perfect for testing and getting started",
+        features: {
+          agents: "1 AI agent",
+          messages: "Up to 30 messages/month",
+          training: "PDF training",
+          simulator: "Conversation simulator",
+          support: "Basic support"
+        },
         cta: "Start free"
       },
       pro: {
-        title: "Professional",
-        price: "$ 39",
+        title: "Pro",
+        originalPrice: "$ 100",
+        discount: "-50%",
+        price: "$ 49",
         period: "/month",
-        messages: "2,000 messages/month",
-        agents: "3 agents",
-        support: "Priority support",
-        analytics: "Advanced reports",
-        cta: "Subscribe now"
+        popular: "Most Popular",
+        promotion: "PROMOTION",
+        description: "Ideal for small businesses",
+        features: {
+          agents: "3 active AI agents",
+          messages: "10,000 messages/month",
+          whatsapp: "WhatsApp integration",
+          analytics: "Basic analytics",
+          support: "Priority support",
+          customizations: "Extra customizations"
+        },
+        cta: "Choose Pro"
       },
-      enterprise: {
-        title: "Enterprise",
-        price: "$ 79",
+      ultra: {
+        title: "Ultra",
+        originalPrice: "$ 250",
+        discount: "-50%",
+        price: "$ 99",
         period: "/month",
-        messages: "10,000 messages/month",
-        agents: "10 agents",
-        support: "Dedicated support",
-        analytics: "Complete analytics",
-        integrations: "Custom integrations",
-        cta: "Talk to sales"
-      }
+        promotion: "PROMOTION",
+        description: "For growing businesses",
+        features: {
+          agents: "Unlimited AI agents",
+          messages: "Unlimited messages",
+          analytics: "Advanced analytics",
+          integrations: "Multiple integrations",
+          support: "VIP support",
+          api: "Custom API",
+          telegram: "Telegram export"
+        },
+        cta: "Choose Ultra"
+      },
+      guarantee: "All plans include 7-day guarantee. Cancel anytime.",
+      comingSoon: "Coming soon: Instagram and Telegram integration"
     },
     testimonials: {
       title: "What our customers say",

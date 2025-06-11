@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Crown } from "lucide-react";
 import PlanUpgradeModal from "@/components/PlanUpgradeModal";
+import { useTranslation } from 'react-i18next';
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const [currentConversationIndex, setCurrentConversationIndex] = useState(0);
   const [newMessageCount, setNewMessageCount] = useState(1247);
   const [clientCount, setClientCount] = useState(156);
@@ -11,10 +13,10 @@ const Dashboard = () => {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
   const conversations = [
-    { name: "João Silva", message: "Qual o horário de funcionamento?", time: "2 min", status: "online" },
-    { name: "Maria Santos", message: "Vocês fazem entrega no sábado?", time: "5 min", status: "typing" },
-    { name: "Pedro Costa", message: "Gostaria de saber sobre os preços", time: "8 min", status: "read" },
-    { name: "Ana Oliveira", message: "Produtos disponíveis hoje?", time: "12 min", status: "online" },
+    { name: t('dashboard.conversations.joao.name'), message: t('dashboard.conversations.joao.message'), time: "2 min", status: "online" },
+    { name: t('dashboard.conversations.maria.name'), message: t('dashboard.conversations.maria.message'), time: "5 min", status: "typing" },
+    { name: t('dashboard.conversations.pedro.name'), message: t('dashboard.conversations.pedro.message'), time: "8 min", status: "read" },
+    { name: t('dashboard.conversations.ana.name'), message: t('dashboard.conversations.ana.message'), time: "12 min", status: "online" },
     { name: "Carlos Mendes", message: "Prazo de entrega para SP?", time: "15 min", status: "delivered" },
     { name: "Lucia Ferreira", message: "Aceita cartão de crédito?", time: "18 min", status: "online" },
     { name: "Roberto Silva", message: "Tem desconto para atacado?", time: "20 min", status: "typing" },
@@ -57,11 +59,11 @@ const Dashboard = () => {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'online': return 'Online';
-      case 'typing': return 'Digitando...';
-      case 'read': return 'Lida';
-      case 'delivered': return 'Entregue';
-      default: return 'Offline';
+      case 'online': return t('dashboard.status.online');
+      case 'typing': return t('dashboard.status.typing');
+      case 'read': return t('dashboard.status.read');
+      case 'delivered': return t('dashboard.status.delivered');
+      default: return t('dashboard.status.offline');
     }
   };
 
@@ -75,10 +77,10 @@ const Dashboard = () => {
       <div className="container mx-auto max-w-6xl relative">
         <div className="text-center mb-12 md:mb-16 animate-in fade-in-50 duration-700">
           <h2 className="text-3xl md:text-4xl font-bold text-brand-dark mb-4 animate-in slide-in-from-top-6 duration-700">
-            Painel completo para gerenciar seu agente
+            {t('dashboard.title')}
           </h2>
           <p className="text-lg md:text-xl text-brand-gray max-w-2xl mx-auto animate-in slide-in-from-bottom-4 duration-700 delay-200 px-4">
-            Acompanhe conversas, analytics e performance do seu agente IA em tempo real
+            {t('dashboard.subtitle')}
           </p>
           
           {/* Upgrade Plan Button */}
@@ -88,7 +90,7 @@ const Dashboard = () => {
               className="bg-gradient-to-r from-brand-green to-green-600 hover:from-brand-green/90 hover:to-green-600/90 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
             >
               <Crown className="h-5 w-5 mr-2" />
-              Atualizar Plano
+              {t('dashboard.upgradePlan')}
             </Button>
           </div>
         </div>
@@ -99,15 +101,15 @@ const Dashboard = () => {
               <div className="text-2xl md:text-3xl font-bold text-brand-green mb-2 group-hover:scale-110 transition-transform duration-300 animate-glow">
                 {newMessageCount.toLocaleString()}
               </div>
-              <div className="text-brand-gray text-sm md:text-base">Mensagens enviadas</div>
+              <div className="text-brand-gray text-sm md:text-base">{t('dashboard.messagesSent')}</div>
             </div>
             <div className="bg-blue-50 rounded-lg p-4 md:p-6 text-center hover:bg-blue-100 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-bottom-6 duration-500 delay-700 group">
               <div className="text-2xl md:text-3xl font-bold text-blue-600 mb-2 group-hover:scale-110 transition-transform duration-300">{responseRate}%</div>
-              <div className="text-brand-gray text-sm md:text-base">Taxa de resposta</div>
+              <div className="text-brand-gray text-sm md:text-base">{t('dashboard.responseRate')}</div>
             </div>
             <div className="bg-purple-50 rounded-lg p-4 md:p-6 text-center hover:bg-purple-100 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-right-6 duration-500 delay-900 group relative overflow-hidden">
               <div className="text-2xl md:text-3xl font-bold text-purple-600 mb-2 group-hover:scale-110 transition-transform duration-300">{clientCount}</div>
-              <div className="text-brand-gray text-sm md:text-base">Clientes atendidos</div>
+              <div className="text-brand-gray text-sm md:text-base">{t('dashboard.clientsServed')}</div>
               {/* New client indicator */}
               {clientCount % 10 === 0 && (
                 <div className="absolute top-2 right-2 bg-purple-500 text-white text-xs px-2 py-1 rounded-full animate-bounce">
@@ -120,11 +122,11 @@ const Dashboard = () => {
           <div className="bg-gray-50 rounded-lg p-4 md:p-6 hover:bg-gray-100 transition-colors duration-300 animate-in fade-in-50 duration-700 delay-1100">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-brand-dark animate-in slide-in-from-left-4 duration-500 delay-1200 text-lg md:text-xl">
-                Conversas recentes
+                {t('dashboard.recentConversations')}
               </h3>
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-xs text-brand-gray">Ao vivo</span>
+                <span className="text-xs text-brand-gray">{t('dashboard.live')}</span>
               </div>
             </div>
             
@@ -195,7 +197,7 @@ const Dashboard = () => {
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-brand-dark">
-                      {Math.floor(Math.random() * 3) + 1} novas mensagens chegando...
+                      {Math.floor(Math.random() * 3) + 1} {t('dashboard.newMessages')}
                     </span>
                     <div className="flex space-x-1">
                       <div className="w-2 h-2 bg-brand-green rounded-full animate-bounce"></div>
