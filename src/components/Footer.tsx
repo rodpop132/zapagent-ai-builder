@@ -1,5 +1,9 @@
 
+import { useTranslation } from 'react-i18next';
+
 const Footer = () => {
+  const { t } = useTranslation();
+
   return (
     <footer className="bg-brand-dark text-white py-12 px-4">
       <div className="container mx-auto max-w-6xl">
@@ -12,50 +16,49 @@ const Footer = () => {
               <span className="text-xl font-bold">ZapAgent AI</span>
             </div>
             <p className="text-gray-400 mb-6 max-w-md">
-              Transforme o seu atendimento com inteligência artificial. 
-              Crie agentes IA que respondem automaticamente no WhatsApp.
+              {t('footer.description')}
             </p>
             <div className="flex space-x-4">
               <a href="#" className="text-gray-400 hover:text-brand-green transition-colors">
-                📧 suporte@zapagent.ai
+                📧 {t('footer.email')}
               </a>
             </div>
           </div>
 
           <div>
-            <h4 className="font-bold mb-4">Produto</h4>
+            <h4 className="font-bold mb-4">{t('footer.product')}</h4>
             <ul className="space-y-3 text-gray-400">
-              <li><a href="#como-funciona" className="hover:text-white transition-colors">Como funciona</a></li>
-              <li><a href="#planos" className="hover:text-white transition-colors">Planos e preços</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Simular conversa</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Integrações</a></li>
+              <li><a href="#como-funciona" className="hover:text-white transition-colors">{t('header.howItWorks')}</a></li>
+              <li><a href="#planos" className="hover:text-white transition-colors">{t('header.plans')}</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">{t('footer.simulate')}</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">{t('footer.integrations')}</a></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-bold mb-4">Empresa</h4>
+            <h4 className="font-bold mb-4">{t('footer.company')}</h4>
             <ul className="space-y-3 text-gray-400">
-              <li><a href="#" className="hover:text-white transition-colors">Sobre nós</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Carreiras</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Contato</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">{t('footer.about')}</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">{t('footer.blog')}</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">{t('footer.careers')}</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">{t('footer.contact')}</a></li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-gray-700 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 text-sm">
-            © 2024 ZapAgent AI. Todos os direitos reservados.
+            © 2024 ZapAgent AI. {t('footer.rights')}
           </p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">
-              Termos de Uso
+              {t('footer.terms')}
             </a>
             <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">
-              Política de Privacidade
+              {t('footer.privacy')}
             </a>
             <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">
-              Cookies
+              {t('footer.cookies')}
             </a>
           </div>
         </div>

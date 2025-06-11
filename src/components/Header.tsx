@@ -4,11 +4,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import LanguageSelector from "./LanguageSelector";
 
 const Header = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t } = useTranslation();
 
   const handleAuthClick = () => {
     navigate('/auth');
@@ -54,37 +57,38 @@ const Header = () => {
             onClick={() => scrollToSection('como-funciona')}
             className="text-gray-600 hover:text-gray-900 transition-colors"
           >
-            Como funciona
+            {t('header.howItWorks')}
           </button>
           <button 
             onClick={() => scrollToSection('planos')}
             className="text-gray-600 hover:text-gray-900 transition-colors"
           >
-            Planos
+            {t('header.plans')}
           </button>
           <button 
             onClick={() => scrollToSection('faq')}
             className="text-gray-600 hover:text-gray-900 transition-colors"
           >
-            FAQ
+            {t('header.faq')}
           </button>
         </nav>
 
         {/* Desktop Buttons */}
         <div className="hidden md:flex items-center space-x-4">
+          <LanguageSelector />
           {user ? (
             <>
               <Button 
                 variant="outline" 
                 onClick={handleDashboardClick}
               >
-                Dashboard
+                {t('header.dashboard')}
               </Button>
               <Button 
                 variant="outline"
                 onClick={handleSignOut}
               >
-                Sair
+                {t('header.logout')}
               </Button>
             </>
           ) : (
@@ -93,13 +97,13 @@ const Header = () => {
                 variant="outline"
                 onClick={handleAuthClick}
               >
-                Entrar
+                {t('header.login')}
               </Button>
               <Button 
                 className="bg-green-600 hover:bg-green-700 text-white"
                 onClick={handleDashboardClick}
               >
-                Criar agente grátis
+                {t('header.createAgent')}
               </Button>
             </>
           )}
@@ -122,22 +126,25 @@ const Header = () => {
               onClick={() => scrollToSection('como-funciona')}
               className="block w-full text-left py-2 text-gray-600 hover:text-gray-900 transition-colors"
             >
-              Como funciona
+              {t('header.howItWorks')}
             </button>
             <button 
               onClick={() => scrollToSection('planos')}
               className="block w-full text-left py-2 text-gray-600 hover:text-gray-900 transition-colors"
             >
-              Planos
+              {t('header.plans')}
             </button>
             <button 
               onClick={() => scrollToSection('faq')}
               className="block w-full text-left py-2 text-gray-600 hover:text-gray-900 transition-colors"
             >
-              FAQ
+              {t('header.faq')}
             </button>
             
             <div className="pt-4 border-t border-gray-100 space-y-3">
+              <div className="flex justify-center">
+                <LanguageSelector />
+              </div>
               {user ? (
                 <>
                   <Button 
@@ -145,14 +152,14 @@ const Header = () => {
                     onClick={handleDashboardClick}
                     className="w-full justify-center"
                   >
-                    Dashboard
+                    {t('header.dashboard')}
                   </Button>
                   <Button 
                     variant="outline"
                     onClick={handleSignOut}
                     className="w-full justify-center"
                   >
-                    Sair
+                    {t('header.logout')}
                   </Button>
                 </>
               ) : (
@@ -162,13 +169,13 @@ const Header = () => {
                     className="w-full justify-center" 
                     onClick={handleAuthClick}
                   >
-                    Entrar
+                    {t('header.login')}
                   </Button>
                   <Button 
                     className="w-full bg-green-600 hover:bg-green-700 text-white justify-center"
                     onClick={handleDashboardClick}
                   >
-                    Criar agente grátis
+                    {t('header.createAgent')}
                   </Button>
                 </>
               )}
