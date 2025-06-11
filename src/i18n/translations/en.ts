@@ -1,3 +1,4 @@
+
 export const en = {
   translation: {
     header: {
@@ -135,9 +136,9 @@ export const en = {
       },
       pro: {
         title: "Pro",
-        originalPrice: "$ 100",
-        discount: "-50%",
-        price: "$ 49",
+        originalPrice: "$ 50",
+        discount: "-70%",
+        price: "$ 15",
         period: "/month",
         popular: "Most Popular",
         promotion: "PROMOTION",
@@ -154,9 +155,9 @@ export const en = {
       },
       ultra: {
         title: "Ultra",
-        originalPrice: "$ 250",
-        discount: "-50%",
-        price: "$ 99",
+        originalPrice: "$ 99",
+        discount: "-63%",
+        price: "$ 37",
         period: "/month",
         promotion: "PROMOTION",
         description: "For growing businesses",
