@@ -4,15 +4,65 @@ import { Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const PricingSection = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
-  const handlePlanClick = (planType: string) => {
+  // Detectar país baseado no idioma
+  const getCountryFromLanguage = () => {
+    switch (i18n.language) {
+      case 'pt': return 'brasil';
+      case 'es': return 'spain';
+      case 'en': 
+      default: return 'usa';
+    }
+  };
+
+  const handlePlanClick = async (planType: string) => {
+    if (planType === 'free') {
+      if (user) {
+        navigate('/dashboard');
+      } else {
+        navigate('/auth');
+      }
+      return;
+    }
+
+    // Para planos pagos, usar Stripe
     if (user) {
-      navigate('/dashboard');
+      try {
+        const country = getCountryFromLanguage();
+        
+        const { data, error } = await supabase.functions.invoke('create-checkout', {
+          body: { 
+            planType: planType,
+            country: country
+          }
+        });
+
+        if (error) {
+          console.error('Erro ao criar checkout:', error);
+          throw error;
+        }
+
+        if (data?.url) {
+          // Abrir checkout do Stripe em nova aba
+          window.open(data.url, '_blank');
+        } else {
+          throw new Error('URL do checkout não retornada');
+        }
+      } catch (error) {
+        console.error('Erro ao processar pagamento:', error);
+        toast.error(
+          i18n.language === 'pt' ? 'Erro ao processar pagamento. Tente novamente.' :
+          i18n.language === 'es' ? 'Error al procesar el pago. Inténtalo de nuevo.' :
+          'Error processing payment. Please try again.'
+        );
+      }
     } else {
       navigate('/auth');
     }

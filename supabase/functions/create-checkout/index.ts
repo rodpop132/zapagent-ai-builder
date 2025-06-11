@@ -19,7 +19,7 @@ serve(async (req) => {
   );
 
   try {
-    const { planType, guestCheckout } = await req.json();
+    const { planType, guestCheckout, country } = await req.json();
     
     let user = null;
     
@@ -41,90 +41,74 @@ serve(async (req) => {
       apiVersion: "2023-10-16",
     });
 
-    // Definir preços baseado no plano
-    const priceIds = {
-      pro: "price_1RVbYyPpmCy5gtzzPUjXC12Z", // 10.000 mensagens/mês
-      ultra: "price_1RVfjlPpmCy5gtzzfOMaqUJO" // Ilimitado
-    };
-
-    const priceId = priceIds[planType as keyof typeof priceIds];
-    if (!priceId) {
-      throw new Error("Plano inválido");
-    }
-
-    let customerId;
-    
-    // Se for usuário autenticado, verificar customer existente
-    if (user?.email) {
-      const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-      if (customers.data.length > 0) {
-        customerId = customers.data[0].id;
+    // Definir URLs dos produtos baseado no país/idioma
+    const productUrls = {
+      brasil: {
+        pro: "https://buy.stripe.com/test_9B6aEQe2ieGq1XC6Af1RC00",
+        ultra: "https://buy.stripe.com/test_14A7sEgaq0PA8m07Ej1RC01"
+      },
+      usa: {
+        pro: "https://buy.stripe.com/test_14A3co6zQdCmgSw6Af1RC02",
+        ultra: "https://buy.stripe.com/test_9B6bIU4rI41MgSw2jZ1RC03"
+      },
+      spain: {
+        pro: "https://buy.stripe.com/test_eVq28k9M2dCm59O1fV1RC04",
+        ultra: "https://buy.stripe.com/test_dRmeV64rIbue9q47Ej1RC05"
       }
-    }
-
-    // Detectar o domínio correto da requisição
-    const origin = req.headers.get("origin") || req.headers.get("referer")?.split('/').slice(0, 3).join('/');
-    
-    if (!origin) {
-      throw new Error("Não foi possível determinar o domínio da aplicação");
-    }
-
-    console.log("Origin detected:", origin);
-
-    // URLs de redirecionamento corretas
-    const successUrl = `${origin}/sucesso?session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `${origin}/cancelado`;
-
-    // Configuração da sessão de checkout
-    const sessionConfig: any = {
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      mode: "subscription",
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      allow_promotion_codes: true,
     };
 
-    // Se tiver customer ID, usar ele
-    if (customerId) {
-      sessionConfig.customer = customerId;
-    } else if (user?.email) {
-      // Se for usuário autenticado mas sem customer, usar o email
-      sessionConfig.customer_email = user.email;
+    // Definir IDs dos produtos baseado no país/idioma
+    const productIds = {
+      brasil: {
+        pro: "prod_STmfzkSSMpD35w",
+        ultra: "prod_SToyLyjbb8R2Ds"
+      },
+      usa: {
+        pro: "prod_STp0xvRnEZxeDM", 
+        ultra: "prod_STp2DD4hfv6qDw"
+      },
+      spain: {
+        pro: "prod_STp3p9V59yRrlv",
+        ultra: "prod_STp5by78vNuem9"
+      }
+    };
+
+    // Determinar país baseado no parâmetro ou idioma
+    let selectedCountry = 'usa'; // Default
+    if (country === 'BR' || country === 'brasil') {
+      selectedCountry = 'brasil';
+    } else if (country === 'ES' || country === 'spain') {
+      selectedCountry = 'spain';
+    } else if (country === 'US' || country === 'usa') {
+      selectedCountry = 'usa';
     }
-    // Para checkout de convidado, não definir customer nem customer_email
-    // O Stripe vai pedir o email durante o checkout
 
-    // Metadados para identificar o usuário se estiver logado
-    if (user) {
-      sessionConfig.metadata = {
-        user_id: user.id,
-        user_email: user.email,
-        plan_type: planType
-      };
-    } else {
-      // Para checkout de convidado, ainda incluir metadados do plano
-      sessionConfig.metadata = {
-        plan_type: planType,
-        guest_checkout: true
-      };
+    // Pegar a URL correta para o plano e país
+    const checkoutUrl = productUrls[selectedCountry]?.[planType];
+    const productId = productIds[selectedCountry]?.[planType];
+
+    if (!checkoutUrl || !productId) {
+      throw new Error(`Plano ${planType} não encontrado para o país ${selectedCountry}`);
     }
 
-    // Criar sessão de checkout
-    const session = await stripe.checkout.sessions.create(sessionConfig);
+    console.log("Redirecionando para Stripe Checkout:", {
+      country: selectedCountry,
+      plan: planType,
+      url: checkoutUrl,
+      productId: productId
+    });
 
-    console.log("Checkout session created:", session.id);
-    console.log("Success URL:", successUrl);
-    console.log("Cancel URL:", cancelUrl);
-
-    return new Response(JSON.stringify({ url: session.url }), {
+    // Retornar URL direta do Stripe Checkout
+    return new Response(JSON.stringify({ 
+      url: checkoutUrl,
+      country: selectedCountry,
+      plan: planType,
+      productId: productId
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
+
   } catch (error) {
     console.error("Error creating checkout:", error);
     return new Response(JSON.stringify({ error: error.message }), {
