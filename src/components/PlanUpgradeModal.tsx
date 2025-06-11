@@ -152,13 +152,6 @@ const PlanUpgradeModal = ({ isOpen, onClose, currentPlan }: PlanUpgradeModalProp
   });
 
   const handleUpgrade = async (planId: string) => {
-    if (!user) {
-      toast.error(i18n.language === 'pt' ? 'Você precisa estar logado para assinar um plano' : 
-                  i18n.language === 'es' ? 'Necesitas estar conectado para suscribirte a un plan' :
-                  'You need to be logged in to subscribe to a plan');
-      return;
-    }
-
     setLoading(true);
     
     try {
@@ -167,7 +160,8 @@ const PlanUpgradeModal = ({ isOpen, onClose, currentPlan }: PlanUpgradeModalProp
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { 
           planType: planId,
-          country: country
+          country: country,
+          guestCheckout: !user // Se não estiver autenticado, fazer checkout como convidado
         }
       });
 

@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,38 +32,35 @@ const PricingSection = () => {
     }
 
     // Para planos pagos, usar Stripe
-    if (user) {
-      try {
-        const country = getCountryFromLanguage();
-        
-        const { data, error } = await supabase.functions.invoke('create-checkout', {
-          body: { 
-            planType: planType,
-            country: country
-          }
-        });
-
-        if (error) {
-          console.error('Erro ao criar checkout:', error);
-          throw error;
+    try {
+      const country = getCountryFromLanguage();
+      
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { 
+          planType: planType,
+          country: country,
+          guestCheckout: !user // Se não estiver autenticado, fazer checkout como convidado
         }
+      });
 
-        if (data?.url) {
-          // Abrir checkout do Stripe em nova aba
-          window.open(data.url, '_blank');
-        } else {
-          throw new Error('URL do checkout não retornada');
-        }
-      } catch (error) {
-        console.error('Erro ao processar pagamento:', error);
-        toast.error(
-          i18n.language === 'pt' ? 'Erro ao processar pagamento. Tente novamente.' :
-          i18n.language === 'es' ? 'Error al procesar el pago. Inténtalo de nuevo.' :
-          'Error processing payment. Please try again.'
-        );
+      if (error) {
+        console.error('Erro ao criar checkout:', error);
+        throw error;
       }
-    } else {
-      navigate('/auth');
+
+      if (data?.url) {
+        // Abrir checkout do Stripe em nova aba
+        window.open(data.url, '_blank');
+      } else {
+        throw new Error('URL do checkout não retornada');
+      }
+    } catch (error) {
+      console.error('Erro ao processar pagamento:', error);
+      toast.error(
+        i18n.language === 'pt' ? 'Erro ao processar pagamento. Tente novamente.' :
+        i18n.language === 'es' ? 'Error al procesar el pago. Inténtalo de nuevo.' :
+        'Error processing payment. Please try again.'
+      );
     }
   };
 
