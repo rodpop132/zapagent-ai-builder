@@ -1,22 +1,26 @@
 
+import { useTranslation } from 'react-i18next';
+
 const HowItWorks = () => {
+  const { t } = useTranslation();
+
   const steps = [
     {
-      number: "01",
-      title: "Criar",
-      description: "Configure seu agente em minutos, sem código. Defina nome, personalidade e área de atuação.",
+      number: t('howItWorks.step1.number'),
+      title: t('howItWorks.step1.title'),
+      description: t('howItWorks.step1.description'),
       icon: "🎯"
     },
     {
-      number: "02", 
-      title: "Treinar",
-      description: "Carregue PDFs, digite perguntas frequentes ou cole textos. Sua IA aprende sobre seu negócio.",
+      number: t('howItWorks.step2.number'), 
+      title: t('howItWorks.step2.title'),
+      description: t('howItWorks.step2.description'),
       icon: "🧠"
     },
     {
-      number: "03",
-      title: "Ativar no WhatsApp",
-      description: "Conecte com WhatsApp e comece a atender clientes automaticamente 24 horas por dia.",
+      number: t('howItWorks.step3.number'),
+      title: t('howItWorks.step3.title'),
+      description: t('howItWorks.step3.description'),
       icon: "💬"
     }
   ];
@@ -30,10 +34,10 @@ const HowItWorks = () => {
       <div className="container mx-auto max-w-6xl">
         <div className="text-center mb-12 md:mb-16 animate-in fade-in-50 duration-700">
           <h2 className="text-3xl md:text-4xl font-bold text-brand-dark mb-4 animate-in slide-in-from-top-6 duration-700">
-            Como funciona o ZapAgent AI
+            {t('howItWorks.title')}
           </h2>
           <p className="text-lg md:text-xl text-brand-gray max-w-2xl mx-auto animate-in slide-in-from-bottom-4 duration-700 delay-300 px-4">
-            Em apenas 3 etapas simples, você terá um agente inteligente respondendo seus clientes automaticamente
+            {t('howItWorks.subtitle')}
           </p>
         </div>
 

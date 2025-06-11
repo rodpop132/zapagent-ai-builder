@@ -1,22 +1,26 @@
 
+import { useTranslation } from 'react-i18next';
+
 const Testimonials = () => {
+  const { t } = useTranslation();
+
   const testimonials = [
     {
-      name: "Carlos Mendes",
-      business: "Loja de Roupas Online",
-      content: "O ZapAgent AI revolucionou meu atendimento! Agora consigo responder os clientes 24h e minhas vendas aumentaram 40%. Muito fácil de configurar.",
+      name: t('testimonials.customer1.name'),
+      business: t('testimonials.customer1.business'),
+      content: t('testimonials.customer1.content'),
       avatar: "CM"
     },
     {
-      name: "Ana Paula",
-      business: "Clínica Odontológica", 
-      content: "Estava perdendo muitos pacientes porque não conseguia responder as mensagens rapidamente. Com o agente IA, marco consultas automaticamente!",
+      name: t('testimonials.customer2.name'),
+      business: t('testimonials.customer2.business'), 
+      content: t('testimonials.customer2.content'),
       avatar: "AP"
     },
     {
-      name: "Ricardo Silva", 
-      business: "Delivery de Comida",
-      content: "Incrível como o bot entende exatamente o que preciso. Responde sobre cardápio, preços e ainda ajuda com os pedidos. Recomendo demais!",
+      name: t('testimonials.customer3.name'), 
+      business: t('testimonials.customer3.business'),
+      content: t('testimonials.customer3.content'),
       avatar: "RS"
     }
   ];
@@ -26,10 +30,10 @@ const Testimonials = () => {
       <div className="container mx-auto max-w-6xl">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-brand-dark mb-4">
-            O que nossos clientes dizem
+            {t('testimonials.title')}
           </h2>
           <p className="text-xl text-brand-gray">
-            Histórias reais de quem transformou o atendimento com IA
+            {t('testimonials.subtitle')}
           </p>
         </div>
 

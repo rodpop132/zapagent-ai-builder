@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 
 const SupportWidget = () => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -18,7 +20,7 @@ const SupportWidget = () => {
     e.preventDefault();
     
     if (!name || !email || !message) {
-      toast.error('Preencha todos os campos');
+      toast.error(t('support.fillAllFields'));
       return;
     }
 
@@ -28,14 +30,14 @@ const SupportWidget = () => {
       // Simular envio de mensagem
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      toast.success('Mensagem enviada com sucesso! Nossa equipe entrará em contato em breve.');
+      toast.success(t('support.successMessage'));
       setName('');
       setEmail('');
       setMessage('');
       setIsOpen(false);
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
-      toast.error('Erro ao enviar mensagem. Tente novamente.');
+      toast.error(t('support.errorMessage'));
     } finally {
       setLoading(false);
     }
@@ -59,7 +61,7 @@ const SupportWidget = () => {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <Card className="w-full max-w-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-lg">Suporte</CardTitle>
+              <CardTitle className="text-lg">{t('support.title')}</CardTitle>
               <Button
                 variant="ghost"
                 size="sm"
@@ -72,40 +74,40 @@ const SupportWidget = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium mb-1">
-                    Nome
+                    {t('support.name')}
                   </label>
                   <Input
                     id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Seu nome"
+                    placeholder={t('support.namePlaceholder')}
                     required
                   />
                 </div>
                 
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium mb-1">
-                    Email
+                    {t('support.email')}
                   </label>
                   <Input
                     id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="seu@email.com"
+                    placeholder={t('support.emailPlaceholder')}
                     required
                   />
                 </div>
                 
                 <div>
                   <label htmlFor="message" className="block text-sm font-medium mb-1">
-                    Mensagem
+                    {t('support.message')}
                   </label>
                   <Textarea
                     id="message"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Como podemos ajudar?"
+                    placeholder={t('support.messagePlaceholder')}
                     rows={4}
                     required
                   />
@@ -116,7 +118,7 @@ const SupportWidget = () => {
                   className="w-full bg-green-600 hover:bg-green-700"
                   disabled={loading}
                 >
-                  {loading ? 'Enviando...' : 'Enviar Mensagem'}
+                  {loading ? t('support.sending') : t('support.sendButton')}
                 </Button>
               </form>
             </CardContent>

@@ -1,39 +1,42 @@
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useTranslation } from 'react-i18next';
 
 const FAQ = () => {
+  const { t } = useTranslation();
+
   const faqs = [
     {
-      question: "Como funciona o plano gratuito?",
-      answer: "No plano gratuito você pode criar 1 agente IA e enviar até 30 mensagens por mês. Você pode treinar sua IA, usar o simulador e testar todas as funcionalidades. Para conectar com WhatsApp e enviar mais mensagens, precisa upgradar para um plano pago."
+      question: t('faq.questions.q1.question'),
+      answer: t('faq.questions.q1.answer')
     },
     {
-      question: "Preciso saber programar para usar?",
-      answer: "Não! O ZapAgent AI foi criado para ser totalmente no-code. Você configura tudo através de uma interface simples e intuitiva. Basta carregar seus documentos, digitar as informações do seu negócio e pronto."
+      question: t('faq.questions.q2.question'),
+      answer: t('faq.questions.q2.answer')
     },
     {
-      question: "Como a IA aprende sobre meu negócio?",
-      answer: "Você pode treinar sua IA de 3 formas: carregando arquivos PDF (como catálogos, manuais), digitando perguntas e respostas frequentes, ou colando textos livres sobre seu negócio. Quanto mais informação, melhor ela responde."
+      question: t('faq.questions.q3.question'),
+      answer: t('faq.questions.q3.answer')
     },
     {
-      question: "Funciona com WhatsApp Business?",
-      answer: "Sim! Oferecemos integração tanto com WhatsApp Business API quanto com WhatsApp Web. Você escolhe a opção que melhor se adapta ao seu negócio."
+      question: t('faq.questions.q4.question'),
+      answer: t('faq.questions.q4.answer')
     },
     {
-      question: "Posso cancelar a qualquer momento?",
-      answer: "Claro! Não temos contratos de fidelidade. Você pode cancelar seu plano a qualquer momento pelo painel de controle, sem burocracia."
+      question: t('faq.questions.q5.question'),
+      answer: t('faq.questions.q5.answer')
     },
     {
-      question: "Quantos clientes o agente consegue atender?",
-      answer: "Seu agente IA pode conversar com múltiplos clientes simultaneamente, 24 horas por dia. O limite é apenas o número de mensagens do seu plano mensal."
+      question: t('faq.questions.q6.question'),
+      answer: t('faq.questions.q6.answer')
     },
     {
-      question: "Tem garantia?",
-      answer: "Sim! Oferecemos 7 dias de garantia em todos os planos pagos. Se não ficar satisfeito, devolvemos 100% do valor."
+      question: t('faq.questions.q7.question'),
+      answer: t('faq.questions.q7.answer')
     },
     {
-      question: "Quando vem a integração com Instagram e Telegram?",
-      answer: "Estamos trabalhando nas integrações com Instagram Direct e Telegram. A previsão é lançar essas funcionalidades nos próximos meses. Clientes atuais terão acesso prioritário."
+      question: t('faq.questions.q8.question'),
+      answer: t('faq.questions.q8.answer')
     }
   ];
 
@@ -42,10 +45,10 @@ const FAQ = () => {
       <div className="container mx-auto max-w-4xl">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-brand-dark mb-4">
-            Perguntas Frequentes
+            {t('faq.title')}
           </h2>
           <p className="text-xl text-brand-gray">
-            Tire suas dúvidas sobre o ZapAgent AI
+            {t('faq.subtitle')}
           </p>
         </div>
 
@@ -68,13 +71,13 @@ const FAQ = () => {
 
         <div className="text-center mt-12">
           <p className="text-brand-gray mb-4">
-            Ainda tem dúvidas? Estamos aqui para ajudar!
+            {t('faq.contactText')}
           </p>
           <a 
             href="mailto:suporte@zapagent.ai" 
             className="text-brand-green hover:text-brand-green/80 font-medium"
           >
-            Entre em contato conosco
+            {t('faq.contactLink')}
           </a>
         </div>
       </div>

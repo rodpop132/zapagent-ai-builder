@@ -2,9 +2,11 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleCreateAgent = () => {
     navigate('/auth');
@@ -23,14 +25,12 @@ const HeroSection = () => {
         <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
           <div className="text-center lg:text-left order-2 lg:order-1">
             <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-brand-dark leading-tight mb-4 md:mb-6 animate-in slide-in-from-left-8 duration-700">
-              Crie seu agente com IA e{" "}
-              <span className="text-brand-green animate-in slide-in-from-bottom-4 duration-1000 delay-300 inline-block">atenda seus clientes</span>{" "}
-              automaticamente
+              {t('hero.title')}
             </h1>
             
             <p className="text-lg md:text-xl text-brand-gray mb-6 md:mb-8 leading-relaxed animate-in fade-in-50 duration-700 delay-500 px-4 lg:px-0">
-              Transforme o seu atendimento com inteligência artificial. 
-              <strong className="text-brand-dark block mt-2"> Você cria de graça. Só paga quando começar a usar no WhatsApp.</strong>
+              {t('hero.subtitle')}
+              <strong className="text-brand-dark block mt-2">{t('hero.description')}</strong>
             </p>
             
             <div className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center lg:justify-start animate-in slide-in-from-bottom-6 duration-700 delay-700 px-4 lg:px-0">
@@ -39,7 +39,7 @@ const HeroSection = () => {
                 onClick={handleCreateAgent}
                 className="bg-brand-green hover:bg-brand-green/90 text-white px-6 md:px-8 py-3 md:py-4 text-base md:text-lg font-semibold transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-brand-green/25 transform group w-full sm:w-auto"
               >
-                Criar agente grátis
+                {t('hero.cta')}
                 <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5 group-hover:translate-x-1 transition-transform duration-300" />
               </Button>
               
@@ -50,22 +50,22 @@ const HeroSection = () => {
                 className="border-brand-green text-brand-green hover:bg-brand-green/10 px-6 md:px-8 py-3 md:py-4 text-base md:text-lg transition-all duration-300 hover:scale-105 hover:shadow-lg group w-full sm:w-auto"
               >
                 <Play className="mr-2 h-4 w-4 md:h-5 md:w-5 group-hover:scale-110 transition-transform duration-300" />
-                Simular conversa
+                {t('hero.watchDemo')}
               </Button>
             </div>
             
             <div className="mt-6 md:mt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start space-y-2 sm:space-y-0 sm:space-x-6 text-sm text-brand-gray animate-in fade-in-50 duration-700 delay-1000">
               <div className="flex items-center group hover:scale-105 transition-transform duration-200">
                 <div className="w-2 h-2 bg-brand-green rounded-full mr-2"></div>
-                Criação gratuita
+                {t('hero.features.free')}
               </div>
               <div className="flex items-center group hover:scale-105 transition-transform duration-200">
                 <div className="w-2 h-2 bg-brand-green rounded-full mr-2"></div>
-                Sem código necessário
+                {t('hero.features.noCode')}
               </div>
               <div className="flex items-center group hover:scale-105 transition-transform duration-200">
                 <div className="w-2 h-2 bg-brand-green rounded-full mr-2"></div>
-                24h por dia
+                {t('hero.features.alwaysOn')}
               </div>
             </div>
           </div>
@@ -78,7 +78,7 @@ const HeroSection = () => {
                     <span className="text-white font-bold text-xs md:text-sm">AI</span>
                   </div>
                   <div>
-                    <p className="font-semibold text-brand-dark text-sm md:text-base">Agente IA</p>
+                    <p className="font-semibold text-brand-dark text-sm md:text-base">{t('hero.chat.agent')}</p>
                     <p className="text-xs text-brand-gray flex items-center">
                       <span className="w-1.5 h-1.5 md:w-2 md:h-2 bg-green-500 rounded-full mr-1"></span>
                       online agora
@@ -87,17 +87,17 @@ const HeroSection = () => {
                 </div>
                 <div className="space-y-3">
                   <div className="bg-white p-2 md:p-3 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 animate-in slide-in-from-left-4 delay-1000">
-                    <p className="text-xs md:text-sm text-brand-gray">Cliente:</p>
-                    <p className="text-brand-dark text-sm md:text-base">Olá, vocês fazem entrega?</p>
+                    <p className="text-xs md:text-sm text-brand-gray">{t('hero.chat.client')}</p>
+                    <p className="text-brand-dark text-sm md:text-base">{t('hero.chat.clientMessage')}</p>
                   </div>
                   <div className="bg-brand-green/10 p-2 md:p-3 rounded-lg hover:bg-brand-green/15 transition-all duration-300 animate-in slide-in-from-right-4 delay-1200">
-                    <p className="text-xs md:text-sm text-brand-gray">Agente IA:</p>
-                    <p className="text-brand-dark text-sm md:text-base">Sim! Fazemos entregas em toda a cidade. O prazo é de 2-4 horas e a taxa é R$ 5,00. Gostaria de fazer um pedido?</p>
+                    <p className="text-xs md:text-sm text-brand-gray">{t('hero.chat.agent')}</p>
+                    <p className="text-brand-dark text-sm md:text-base">{t('hero.chat.agentMessage')}</p>
                   </div>
                 </div>
               </div>
               <p className="text-xs text-center text-brand-gray">
-                Seu agente responde automaticamente 24/7
+                {t('hero.chat.description')}
               </p>
             </div>
             
