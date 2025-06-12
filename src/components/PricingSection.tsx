@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -65,54 +66,50 @@ const PricingSection = () => {
   };
 
   return (
-    <section id="planos" className="py-20 px-4 bg-gray-50">
+    <section id="planos" className="py-12 md:py-20 px-4 bg-gray-50">
       <div className="container mx-auto max-w-6xl">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold text-brand-dark mb-4">
+        <div className="text-center mb-12 md:mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-brand-dark mb-4">
             {t('pricing.title')}
           </h2>
-          <p className="text-xl text-brand-gray">
+          <p className="text-lg md:text-xl text-brand-gray">
             {t('pricing.subtitle')}
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6 md:gap-8 max-w-5xl mx-auto">
           {/* Plano Gratuito */}
-          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow border border-gray-100">
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold text-brand-dark mb-2">{t('pricing.free.title')}</h3>
+          <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg hover:shadow-xl transition-shadow border border-gray-100">
+            <div className="text-center mb-6 md:mb-8">
+              <h3 className="text-xl md:text-2xl font-bold text-brand-dark mb-2">{t('pricing.free.title')}</h3>
               <div className="mb-4">
-                <span className="text-4xl font-bold text-brand-dark">{t('pricing.free.price')}</span>
+                <span className="text-3xl md:text-4xl font-bold text-brand-dark">{t('pricing.free.price')}</span>
                 <span className="text-brand-gray ml-2">{t('pricing.free.period')}</span>
               </div>
-              <p className="text-brand-gray">{t('pricing.free.description')}</p>
+              <p className="text-sm md:text-base text-brand-gray">{t('pricing.free.description')}</p>
             </div>
             
-            <ul className="space-y-4 mb-8">
+            <ul className="space-y-3 md:space-y-4 mb-6 md:mb-8">
               <li className="flex items-center">
-                <Check className="h-5 w-5 text-brand-green mr-3" />
-                <span className="text-brand-gray">{t('pricing.free.features.agents')}</span>
+                <Check className="h-4 w-4 md:h-5 md:w-5 text-brand-green mr-2 md:mr-3 flex-shrink-0" />
+                <span className="text-sm md:text-base text-brand-gray">{t('pricing.free.features.agents')}</span>
               </li>
               <li className="flex items-center">
-                <Check className="h-5 w-5 text-brand-green mr-3" />
-                <span className="text-brand-gray">{t('pricing.free.features.messages')}</span>
+                <Check className="h-4 w-4 md:h-5 md:w-5 text-brand-green mr-2 md:mr-3 flex-shrink-0" />
+                <span className="text-sm md:text-base text-brand-gray">{t('pricing.free.features.messages')}</span>
               </li>
               <li className="flex items-center">
-                <Check className="h-5 w-5 text-brand-green mr-3" />
-                <span className="text-brand-gray">{t('pricing.free.features.training')}</span>
+                <Check className="h-4 w-4 md:h-5 md:w-5 text-brand-green mr-2 md:mr-3 flex-shrink-0" />
+                <span className="text-sm md:text-base text-brand-gray">{t('pricing.free.features.simulator')}</span>
               </li>
               <li className="flex items-center">
-                <Check className="h-5 w-5 text-brand-green mr-3" />
-                <span className="text-brand-gray">{t('pricing.free.features.simulator')}</span>
-              </li>
-              <li className="flex items-center">
-                <Check className="h-5 w-5 text-brand-green mr-3" />
-                <span className="text-brand-gray">{t('pricing.free.features.support')}</span>
+                <Check className="h-4 w-4 md:h-5 md:w-5 text-brand-green mr-2 md:mr-3 flex-shrink-0" />
+                <span className="text-sm md:text-base text-brand-gray">{t('pricing.free.features.support')}</span>
               </li>
             </ul>
             
             <Button 
-              className="w-full bg-brand-green hover:bg-brand-green/90 text-white"
+              className="w-full bg-brand-green hover:bg-brand-green/90 text-white text-sm md:text-base"
               onClick={() => handlePlanClick('free')}
             >
               {t('pricing.free.cta')}
@@ -120,56 +117,60 @@ const PricingSection = () => {
           </div>
 
           {/* Plano Pro */}
-          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow border-2 border-brand-green relative">
-            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-              <div className="bg-brand-green text-white px-6 py-2 rounded-full text-sm font-medium flex items-center space-x-2">
+          <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg hover:shadow-xl transition-shadow border-2 border-brand-green relative">
+            <div className="absolute -top-3 md:-top-4 left-1/2 transform -translate-x-1/2">
+              <div className="bg-brand-green text-white px-4 md:px-6 py-1 md:py-2 rounded-full text-xs md:text-sm font-medium flex items-center space-x-2">
                 <span>{t('pricing.pro.popular')}</span>
                 <span className="bg-white text-brand-green px-2 py-1 rounded text-xs">{t('pricing.pro.promotion')}</span>
               </div>
             </div>
             
-            <div className="text-center mb-8 mt-4">
-              <h3 className="text-2xl font-bold text-brand-dark mb-2">{t('pricing.pro.title')}</h3>
+            <div className="text-center mb-6 md:mb-8 mt-4">
+              <h3 className="text-xl md:text-2xl font-bold text-brand-dark mb-2">{t('pricing.pro.title')}</h3>
               <div className="mb-2">
-                <span className="text-lg text-brand-gray line-through">{t('pricing.pro.originalPrice')}</span>
-                <span className="text-sm bg-red-100 text-red-600 px-2 py-1 rounded ml-2">{t('pricing.pro.discount')}</span>
+                <span className="text-sm md:text-lg text-brand-gray line-through">{t('pricing.pro.originalPrice')}</span>
+                <span className="text-xs md:text-sm bg-red-100 text-red-600 px-2 py-1 rounded ml-2">{t('pricing.pro.discount')}</span>
               </div>
               <div className="mb-4">
-                <span className="text-4xl font-bold text-brand-green">{t('pricing.pro.price')}</span>
+                <span className="text-3xl md:text-4xl font-bold text-brand-green">{t('pricing.pro.price')}</span>
                 <span className="text-brand-gray ml-2">{t('pricing.pro.period')}</span>
               </div>
-              <p className="text-brand-gray">{t('pricing.pro.description')}</p>
+              <p className="text-sm md:text-base text-brand-gray">{t('pricing.pro.description')}</p>
             </div>
             
-            <ul className="space-y-4 mb-8">
+            <ul className="space-y-3 md:space-y-4 mb-6 md:mb-8">
               <li className="flex items-center">
-                <Check className="h-5 w-5 text-brand-green mr-3" />
-                <span className="text-brand-gray">{t('pricing.pro.features.agents')}</span>
+                <Check className="h-4 w-4 md:h-5 md:w-5 text-brand-green mr-2 md:mr-3 flex-shrink-0" />
+                <span className="text-sm md:text-base text-brand-gray">{t('pricing.pro.features.agents')}</span>
               </li>
               <li className="flex items-center">
-                <Check className="h-5 w-5 text-brand-green mr-3" />
-                <span className="text-brand-gray">{t('pricing.pro.features.messages')}</span>
+                <Check className="h-4 w-4 md:h-5 md:w-5 text-brand-green mr-2 md:mr-3 flex-shrink-0" />
+                <span className="text-sm md:text-base text-brand-gray">{t('pricing.pro.features.messages')}</span>
               </li>
               <li className="flex items-center">
-                <Check className="h-5 w-5 text-brand-green mr-3" />
-                <span className="text-brand-gray">{t('pricing.pro.features.whatsapp')}</span>
+                <Check className="h-4 w-4 md:h-5 md:w-5 text-brand-green mr-2 md:mr-3 flex-shrink-0" />
+                <span className="text-sm md:text-base text-brand-gray">{t('pricing.pro.features.training')}</span>
               </li>
               <li className="flex items-center">
-                <Check className="h-5 w-5 text-brand-green mr-3" />
-                <span className="text-brand-gray">{t('pricing.pro.features.analytics')}</span>
+                <Check className="h-4 w-4 md:h-5 md:w-5 text-brand-green mr-2 md:mr-3 flex-shrink-0" />
+                <span className="text-sm md:text-base text-brand-gray">{t('pricing.pro.features.whatsapp')}</span>
               </li>
               <li className="flex items-center">
-                <Check className="h-5 w-5 text-brand-green mr-3" />
-                <span className="text-brand-gray">{t('pricing.pro.features.support')}</span>
+                <Check className="h-4 w-4 md:h-5 md:w-5 text-brand-green mr-2 md:mr-3 flex-shrink-0" />
+                <span className="text-sm md:text-base text-brand-gray">{t('pricing.pro.features.analytics')}</span>
               </li>
               <li className="flex items-center">
-                <Check className="h-5 w-5 text-brand-green mr-3" />
-                <span className="text-brand-gray">{t('pricing.pro.features.customizations')}</span>
+                <Check className="h-4 w-4 md:h-5 md:w-5 text-brand-green mr-2 md:mr-3 flex-shrink-0" />
+                <span className="text-sm md:text-base text-brand-gray">{t('pricing.pro.features.support')}</span>
+              </li>
+              <li className="flex items-center">
+                <Check className="h-4 w-4 md:h-5 md:w-5 text-brand-green mr-2 md:mr-3 flex-shrink-0" />
+                <span className="text-sm md:text-base text-brand-gray">{t('pricing.pro.features.customizations')}</span>
               </li>
             </ul>
             
             <Button 
-              className="w-full bg-brand-green hover:bg-brand-green/90 text-white"
+              className="w-full bg-brand-green hover:bg-brand-green/90 text-white text-sm md:text-base"
               onClick={() => handlePlanClick('pro')}
             >
               {t('pricing.pro.cta')}
@@ -177,59 +178,63 @@ const PricingSection = () => {
           </div>
 
           {/* Plano Ultra */}
-          <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-xl transition-shadow border border-gray-100 relative">
-            <div className="absolute -top-4 right-4">
+          <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg hover:shadow-xl transition-shadow border border-gray-100 relative">
+            <div className="absolute -top-3 md:-top-4 right-4">
               <div className="bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-medium">
                 {t('pricing.ultra.promotion')}
               </div>
             </div>
             
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold text-brand-dark mb-2">{t('pricing.ultra.title')}</h3>
+            <div className="text-center mb-6 md:mb-8">
+              <h3 className="text-xl md:text-2xl font-bold text-brand-dark mb-2">{t('pricing.ultra.title')}</h3>
               <div className="mb-2">
-                <span className="text-lg text-brand-gray line-through">{t('pricing.ultra.originalPrice')}</span>
-                <span className="text-sm bg-red-100 text-red-600 px-2 py-1 rounded ml-2">{t('pricing.ultra.discount')}</span>
+                <span className="text-sm md:text-lg text-brand-gray line-through">{t('pricing.ultra.originalPrice')}</span>
+                <span className="text-xs md:text-sm bg-red-100 text-red-600 px-2 py-1 rounded ml-2">{t('pricing.ultra.discount')}</span>
               </div>
               <div className="mb-4">
-                <span className="text-4xl font-bold text-purple-600">{t('pricing.ultra.price')}</span>
+                <span className="text-3xl md:text-4xl font-bold text-purple-600">{t('pricing.ultra.price')}</span>
                 <span className="text-brand-gray ml-2">{t('pricing.ultra.period')}</span>
               </div>
-              <p className="text-brand-gray">{t('pricing.ultra.description')}</p>
+              <p className="text-sm md:text-base text-brand-gray">{t('pricing.ultra.description')}</p>
             </div>
             
-            <ul className="space-y-4 mb-8">
+            <ul className="space-y-3 md:space-y-4 mb-6 md:mb-8">
               <li className="flex items-center">
-                <Check className="h-5 w-5 text-purple-600 mr-3" />
-                <span className="text-brand-gray">{t('pricing.ultra.features.agents')}</span>
+                <Check className="h-4 w-4 md:h-5 md:w-5 text-purple-600 mr-2 md:mr-3 flex-shrink-0" />
+                <span className="text-sm md:text-base text-brand-gray">{t('pricing.ultra.features.agents')}</span>
               </li>
               <li className="flex items-center">
-                <Check className="h-5 w-5 text-purple-600 mr-3" />
-                <span className="text-brand-gray">{t('pricing.ultra.features.messages')}</span>
+                <Check className="h-4 w-4 md:h-5 md:w-5 text-purple-600 mr-2 md:mr-3 flex-shrink-0" />
+                <span className="text-sm md:text-base text-brand-gray">{t('pricing.ultra.features.messages')}</span>
               </li>
               <li className="flex items-center">
-                <Check className="h-5 w-5 text-purple-600 mr-3" />
-                <span className="text-brand-gray">{t('pricing.ultra.features.analytics')}</span>
+                <Check className="h-4 w-4 md:h-5 md:w-5 text-purple-600 mr-2 md:mr-3 flex-shrink-0" />
+                <span className="text-sm md:text-base text-brand-gray">{t('pricing.ultra.features.training')}</span>
               </li>
               <li className="flex items-center">
-                <Check className="h-5 w-5 text-purple-600 mr-3" />
-                <span className="text-brand-gray">{t('pricing.ultra.features.integrations')}</span>
+                <Check className="h-4 w-4 md:h-5 md:w-5 text-purple-600 mr-2 md:mr-3 flex-shrink-0" />
+                <span className="text-sm md:text-base text-brand-gray">{t('pricing.ultra.features.analytics')}</span>
               </li>
               <li className="flex items-center">
-                <Check className="h-5 w-5 text-purple-600 mr-3" />
-                <span className="text-brand-gray">{t('pricing.ultra.features.support')}</span>
+                <Check className="h-4 w-4 md:h-5 md:w-5 text-purple-600 mr-2 md:mr-3 flex-shrink-0" />
+                <span className="text-sm md:text-base text-brand-gray">{t('pricing.ultra.features.integrations')}</span>
               </li>
               <li className="flex items-center">
-                <Check className="h-5 w-5 text-purple-600 mr-3" />
-                <span className="text-brand-gray">{t('pricing.ultra.features.api')}</span>
+                <Check className="h-4 w-4 md:h-5 md:w-5 text-purple-600 mr-2 md:mr-3 flex-shrink-0" />
+                <span className="text-sm md:text-base text-brand-gray">{t('pricing.ultra.features.support')}</span>
               </li>
               <li className="flex items-center">
-                <Check className="h-5 w-5 text-purple-600 mr-3" />
-                <span className="text-brand-gray">{t('pricing.ultra.features.telegram')}</span>
+                <Check className="h-4 w-4 md:h-5 md:w-5 text-purple-600 mr-2 md:mr-3 flex-shrink-0" />
+                <span className="text-sm md:text-base text-brand-gray">{t('pricing.ultra.features.api')}</span>
+              </li>
+              <li className="flex items-center">
+                <Check className="h-4 w-4 md:h-5 md:w-5 text-purple-600 mr-2 md:mr-3 flex-shrink-0" />
+                <span className="text-sm md:text-base text-brand-gray">{t('pricing.ultra.features.telegram')}</span>
               </li>
             </ul>
             
             <Button 
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white text-sm md:text-base"
               onClick={() => handlePlanClick('ultra')}
             >
               {t('pricing.ultra.cta')}
@@ -237,9 +242,9 @@ const PricingSection = () => {
           </div>
         </div>
 
-        <div className="text-center mt-12">
-          <p className="text-brand-gray mb-4">{t('pricing.guarantee')}</p>
-          <p className="text-brand-dark font-medium">{t('pricing.comingSoon')}</p>
+        <div className="text-center mt-8 md:mt-12">
+          <p className="text-sm md:text-base text-brand-gray mb-4">{t('pricing.guarantee')}</p>
+          <p className="text-sm md:text-base text-brand-dark font-medium">{t('pricing.comingSoon')}</p>
         </div>
       </div>
     </section>

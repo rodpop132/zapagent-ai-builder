@@ -46,26 +46,27 @@ const SupportWidget = () => {
   return (
     <>
       {/* Botão flutuante */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50">
         <Button
           onClick={() => setIsOpen(true)}
           size="lg"
-          className="rounded-full w-14 h-14 bg-green-600 hover:bg-green-700 shadow-lg"
+          className="rounded-full w-12 h-12 md:w-14 md:h-14 bg-green-600 hover:bg-green-700 shadow-lg"
         >
-          <MessageCircle className="w-6 h-6" />
+          <MessageCircle className="w-5 h-5 md:w-6 md:h-6" />
         </Button>
       </div>
 
       {/* Modal de suporte */}
       {isOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md">
+          <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-lg">{t('support.title')}</CardTitle>
+              <CardTitle className="text-base md:text-lg">{t('support.title')}</CardTitle>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsOpen(false)}
+                className="h-8 w-8 p-0"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -82,6 +83,7 @@ const SupportWidget = () => {
                     onChange={(e) => setName(e.target.value)}
                     placeholder={t('support.namePlaceholder')}
                     required
+                    className="text-sm"
                   />
                 </div>
                 
@@ -96,6 +98,7 @@ const SupportWidget = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder={t('support.emailPlaceholder')}
                     required
+                    className="text-sm"
                   />
                 </div>
                 
@@ -110,12 +113,13 @@ const SupportWidget = () => {
                     placeholder={t('support.messagePlaceholder')}
                     rows={4}
                     required
+                    className="text-sm resize-none"
                   />
                 </div>
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-green-600 hover:bg-green-700"
+                  className="w-full bg-green-600 hover:bg-green-700 text-sm"
                   disabled={loading}
                 >
                   {loading ? t('support.sending') : t('support.sendButton')}

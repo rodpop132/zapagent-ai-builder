@@ -12,6 +12,7 @@ import AdminPanel from "./pages/AdminPanel";
 import Staff from "./pages/Staff";
 import Sucesso from "./pages/Sucesso";
 import Cancelado from "./pages/Cancelado";
+import Sobre from "./pages/Sobre";
 import ProtectedRoute from "./components/ProtectedRoute";
 import NotFound from "./pages/NotFound";
 
@@ -36,6 +37,7 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/sobre" element={<Sobre />} />
               <Route path="/rodpop132" element={<AdminPanel />} />
               <Route path="/staff" element={<Staff />} />
               <Route path="/sucesso" element={<Sucesso />} />
