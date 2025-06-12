@@ -37,7 +37,8 @@ export const useAgentCreation = () => {
   const validateForm = (): boolean => {
     console.log('🔍 MODAL: Validando formulário...', formData);
     
-    if (!formData.name.trim()) {
+    const trimmedName = formData.name.trim();
+    if (!trimmedName) {
       toast({
         title: "Nome obrigatório",
         description: "Por favor, insira o nome do agente.",
@@ -55,7 +56,8 @@ export const useAgentCreation = () => {
       return false;
     }
 
-    if (!formData.phone_number.trim()) {
+    const trimmedPhone = formData.phone_number.trim();
+    if (!trimmedPhone) {
       toast({
         title: "Número obrigatório",
         description: "Por favor, insira o número do WhatsApp.",
@@ -64,7 +66,7 @@ export const useAgentCreation = () => {
       return false;
     }
 
-    const numeroNormalizado = normalizarNumero(formData.phone_number);
+    const numeroNormalizado = normalizarNumero(trimmedPhone);
     if (!validarNumero(numeroNormalizado)) {
       toast({
         title: "Número inválido",
@@ -91,9 +93,9 @@ export const useAgentCreation = () => {
     console.log('🚀 Iniciando criação do agente...', {
       user: user.email,
       userId: user.id,
-      agentName: formData.name,
-      phoneNumber: formData.phone_number,
-      personalityPrompt: formData.personality_prompt
+      agentName: formData.name.trim(),
+      phoneNumber: formData.phone_number.trim(),
+      personalityPrompt: formData.personality_prompt.trim()
     });
 
     try {
@@ -106,7 +108,7 @@ export const useAgentCreation = () => {
         throw new Error('Sessão inválida. Faça login novamente.');
       }
 
-      const numeroNormalizado = normalizarNumero(formData.phone_number);
+      const numeroNormalizado = normalizarNumero(formData.phone_number.trim());
       const numeroCompleto = numeroNormalizado.startsWith('+') ? numeroNormalizado : `+${numeroNormalizado}`;
 
       const { data: existingAgent } = await supabase
@@ -136,12 +138,13 @@ export const useAgentCreation = () => {
         .insert(agentPayload);
 
       if (insertError) {
-        throw new Error(insertError.message || 'Erro inesperado ao salvar agente');
+        console.error('❌ Erro do Supabase:', insertError);
+        throw new Error(insertError.message || 'Erro inesperado ao salvar agente no banco de dados');
       }
 
       setCreationState('creating_zapagent');
 
-      // Garantir que o prompt tenha um valor válido
+      // Garantir que o prompt tenha um valor válido e não vazio
       const promptValue = formData.personality_prompt.trim() || 
         formData.training_data.trim() || 
         "Você é um atendente simpático e rápido. Responda de forma educada e ajude o cliente da melhor forma possível.";
@@ -160,53 +163,69 @@ export const useAgentCreation = () => {
         nome: formData.name.trim(),
         tipo: formData.business_type,
         descricao: formData.description.trim() || '',
-        prompt: promptValue, // Campo obrigatório garantido
+        prompt: promptValue,
         plano: 'free'
       });
 
       console.log('✅ API respondeu com sucesso:', apiResponse);
 
-      // Caso o QR code já venha de cara
+      // Caso o QR code já venha na resposta
       if (apiResponse.qrcodeUrl) {
         setQrcodeUrl(apiResponse.qrcodeUrl);
         setCreationState('success');
+        toast({
+          title: "✅ Agente criado com sucesso!",
+          description: `${formData.name.trim()} foi criado e está pronto para uso.`,
+          variant: "default"
+        });
         onAgentCreated();
         return;
       }
 
-      // Caso contrário, iniciar polling manual para buscar o QR
+      // Caso contrário, iniciar polling para buscar o QR
       setCreationState('awaiting_qr');
 
       const maxTentativas = 20;
       for (let i = 1; i <= maxTentativas; i++) {
         console.log(`🔁 Buscando QR (${i}/${maxTentativas})...`);
-        const qrResponse = await ZapAgentService.getQrCode(numeroCompleto);
+        
+        try {
+          const qrResponse = await ZapAgentService.getQrCode(numeroCompleto);
 
-        if (qrResponse.conectado) {
-          setCreationState('success');
-          toast({
-            title: "WhatsApp já conectado",
-            description: "O número já estava ativo.",
-            variant: "default"
-          });
-          onAgentCreated();
-          return;
+          if (qrResponse.conectado) {
+            setCreationState('success');
+            toast({
+              title: "✅ WhatsApp já conectado",
+              description: "O número já estava ativo e funcionando.",
+              variant: "default"
+            });
+            onAgentCreated();
+            return;
+          }
+
+          if (qrResponse.qr_code) {
+            setQrcodeUrl(qrResponse.qr_code);
+            setCreationState('success');
+            toast({
+              title: "✅ Agente criado com sucesso!",
+              description: `${formData.name.trim()} foi criado. Escaneie o QR Code para ativar o WhatsApp.`,
+              variant: "default"
+            });
+            onAgentCreated();
+            return;
+          }
+        } catch (qrError: any) {
+          console.warn(`⚠️ Tentativa ${i} falhou:`, qrError.message);
         }
 
-        if (qrResponse.qr_code) {
-          setQrcodeUrl(qrResponse.qr_code);
-          setCreationState('success');
-          onAgentCreated();
-          return;
-        }
-
-        await new Promise(resolve => setTimeout(resolve, 500)); // aguarda 0.5s
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
 
+      // Se chegou até aqui, não conseguimos o QR a tempo
       toast({
-        title: "QR Code ainda não disponível",
-        description: "Agente criado, mas QR não gerado a tempo. Tente novamente no painel.",
-        variant: "destructive"
+        title: "⚠️ QR Code ainda não disponível",
+        description: "Agente criado com sucesso, mas o QR Code ainda está sendo gerado. Verifique novamente no painel.",
+        variant: "default"
       });
 
       setCreationState('success');
@@ -215,10 +234,29 @@ export const useAgentCreation = () => {
     } catch (error: any) {
       console.error('❌ Erro ao criar agente:', error);
       setCreationState('error');
-      setError(error.message || 'Erro desconhecido');
+      
+      let errorMessage = 'Erro desconhecido';
+      
+      // Tratar diferentes tipos de erro de forma mais explícita
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.data?.msg) {
+        errorMessage = error.response.data.msg;
+      } else if (error.response?.status === 400) {
+        errorMessage = 'Dados inválidos enviados para o servidor. Verifique se todos os campos estão preenchidos corretamente.';
+      } else if (error.response?.status === 500) {
+        errorMessage = 'Erro interno do servidor. Tente novamente em alguns momentos.';
+      } else if (error.code === 'ECONNABORTED') {
+        errorMessage = 'Timeout: O servidor demorou muito para responder. Tente novamente.';
+      }
+      
+      setError(errorMessage);
+      
       toast({
         title: "❌ Erro ao criar agente",
-        description: error.message || 'Erro inesperado',
+        description: errorMessage,
         variant: "destructive"
       });
     }

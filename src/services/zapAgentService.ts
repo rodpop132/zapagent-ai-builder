@@ -87,23 +87,36 @@ export class ZapAgentService {
         
         if (error.response) {
           const status = error.response.status;
-          if (status === 401) {
-            throw new Error('JWT expired');
+          const data = error.response.data;
+          
+          // Tentar extrair mensagem de erro mais específica
+          let errorMessage = `Erro do servidor (${status})`;
+          
+          if (data?.error) {
+            errorMessage = data.error;
+          } else if (data?.msg) {
+            errorMessage = data.msg;
+          } else if (data?.message) {
+            errorMessage = data.message;
+          } else if (status === 400) {
+            errorMessage = 'Dados inválidos. Verifique se todos os campos obrigatórios estão preenchidos.';
+          } else if (status === 401) {
+            errorMessage = 'Acesso não autorizado. Verifique suas credenciais.';
+          } else if (status === 403) {
+            errorMessage = 'Acesso negado.';
+          } else if (status === 404) {
+            errorMessage = 'Endpoint não encontrado.';
+          } else if (status >= 500) {
+            errorMessage = 'Erro interno do servidor. Tente novamente em alguns momentos.';
           }
-          if (status >= 500) {
-            throw new Error('Erro interno do servidor. Tente novamente em alguns momentos.');
-          }
-          if (status === 404) {
-            throw new Error('Endpoint não encontrado.');
-          }
-          if (status === 403) {
-            throw new Error('Acesso negado.');
-          }
-          throw new Error(`Erro do servidor: ${status}`);
+          
+          const customError = new Error(errorMessage);
+          (customError as any).response = error.response;
+          throw customError;
         }
         
         if (error.request) {
-          throw new Error('Erro de conectividade. Verifique sua internet.');
+          throw new Error('Erro de conectividade. Verifique sua conexão com a internet.');
         }
       }
       
@@ -156,6 +169,15 @@ export class ZapAgentService {
     if (!numeroNormalizado || numeroNormalizado.length < 10) {
       throw new Error('Número de telefone inválido. Deve ter pelo menos 10 dígitos.');
     }
+
+    // Validar campos obrigatórios antes de enviar
+    if (!agentData.nome?.trim()) {
+      throw new Error('Nome do agente é obrigatório.');
+    }
+
+    if (!agentData.prompt?.trim()) {
+      throw new Error('Prompt/personalidade do agente é obrigatório.');
+    }
     
     try {
       const isOnline = await this.checkApiStatus();
@@ -163,13 +185,18 @@ export class ZapAgentService {
         throw new Error('API não está disponível no momento. Tente novamente em alguns segundos.');
       }
       
-      // Payload com número normalizado
+      // Payload com dados limpos e validados
       const payload = {
-        ...agentData,
-        numero: numeroNormalizado
+        nome: agentData.nome.trim(),
+        tipo: agentData.tipo,
+        descricao: agentData.descricao?.trim() || '',
+        prompt: agentData.prompt.trim(),
+        numero: numeroNormalizado,
+        plano: agentData.plano || 'free',
+        webhook: agentData.webhook || null
       };
       
-      console.log('📦 ZapAgentService: Payload normalizado:', payload);
+      console.log('📦 ZapAgentService: Payload limpo:', payload);
       
       const response = await this.makeRequest<CreateAgentResponse>(`${this.BASE_URL}/zapagent`, {
         method: 'POST',
