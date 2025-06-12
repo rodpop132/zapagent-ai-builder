@@ -1,16 +1,16 @@
 
 import axios from 'axios';
 
-const API_URL = 'https://zapagent.com.br/api';
+const API_URL = 'https://zapagent-bot.onrender.com';
 
 export interface CreateAgentPayload {
   user_id: string;
   numero: string;
-  nome: string;
-  tipo: string;
-  descricao: string;
+  nome?: string;
+  tipo?: string;
+  descricao?: string;
   prompt: string;
-  plano: string;
+  plano?: string;
   webhook?: string;
 }
 
@@ -25,23 +25,31 @@ export interface ApiResponse {
   error?: string;
   msg?: string;
   qrcodeUrl?: string;
+  numero?: string;
+  user_id?: string;
+  agente?: any;
 }
 
 export interface MessagesUsedResponse {
-  messages_used: number;
-  messages_limit: number;
-  percentage: number;
+  numero: string;
+  mensagensUsadas: number;
+  plano: string;
+  agentesAtivos: number;
 }
 
 export interface AgentStatusResponse {
+  numero: string;
   conectado: boolean;
-  mensagens_enviadas: number;
-  historico: any[];
-  ultima_mensagem?: {
+  historico?: any[];
+}
+
+export interface HistoryResponse {
+  numero: string;
+  historico: Array<{
     user?: string;
     bot?: string;
     timestamp?: string;
-  };
+  }>;
 }
 
 export interface SendMessageResponse {
@@ -124,12 +132,12 @@ export const ZapAgentService = {
     }
   },
 
-  async getMessagesUsed(numero: string): Promise<MessagesUsedResponse> {
+  async getMessagesUsed(user_id: string, numero: string): Promise<MessagesUsedResponse | null> {
     try {
-      console.log('📊 Buscando uso de mensagens para:', numero);
+      console.log('📊 Buscando uso de mensagens para:', { user_id, numero });
       
-      const response = await axios.get(`${API_URL}/messages-used`, {
-        params: { numero },
+      const response = await axios.get(`${API_URL}/mensagens-usadas`, {
+        params: { user_id, numero },
         timeout: 10000
       });
       
@@ -137,20 +145,15 @@ export const ZapAgentService = {
       return response.data;
     } catch (error: any) {
       console.error('❌ Erro ao buscar mensagens usadas:', error);
-      
-      return {
-        messages_used: 0,
-        messages_limit: 0,
-        percentage: 0
-      };
+      return null;
     }
   },
 
   async getAgentStatus(numero: string): Promise<AgentStatusResponse> {
     try {
-      console.log('🔍 Buscando status do agente:', numero);
+      console.log('🔍 Verificando status do agente:', numero);
       
-      const response = await axios.get(`${API_URL}/agent-status`, {
+      const response = await axios.get(`${API_URL}/verificar`, {
         params: { numero },
         timeout: 10000
       });
@@ -158,57 +161,49 @@ export const ZapAgentService = {
       console.log('✅ Agent status response:', response.data);
       return response.data;
     } catch (error: any) {
-      console.error('❌ Erro ao buscar status do agente:', error);
+      console.error('❌ Erro ao verificar status do agente:', error);
       
       return {
-        conectado: false,
-        mensagens_enviadas: 0,
-        historico: []
+        numero,
+        conectado: false
       };
     }
   },
 
-  async sendMessage(numero: string, message: string, prompt: string): Promise<SendMessageResponse> {
+  async getAgentHistory(user_id: string, numero: string): Promise<HistoryResponse | null> {
     try {
-      console.log('💬 Enviando mensagem:', { numero, message });
+      console.log('📋 Buscando histórico do agente:', { user_id, numero });
       
-      const response = await axios.post(`${API_URL}/send-message`, {
-        numero,
-        message,
-        prompt
-      }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await axios.get(`${API_URL}/historico`, {
+        params: { user_id, numero },
+        timeout: 10000
+      });
+      
+      console.log('✅ Agent history response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Erro ao buscar histórico do agente:', error);
+      return null;
+    }
+  },
+
+  async restartAgent(numero: string): Promise<ApiResponse> {
+    try {
+      console.log('🔄 Reiniciando agente:', numero);
+      
+      const response = await axios.get(`${API_URL}/reiniciar`, {
+        params: { numero },
         timeout: 15000
       });
       
-      console.log('✅ Message sent response:', response.data);
-      
-      return {
-        success: true,
-        response: response.data.response || 'Mensagem enviada com sucesso'
-      };
+      console.log('✅ Restart response:', response.data);
+      return response.data;
     } catch (error: any) {
-      console.error('❌ Erro ao enviar mensagem:', error);
-      
-      if (error.response?.status === 400) {
-        return {
-          success: false,
-          error: error.response.data?.error || 'Dados inválidos enviados'
-        };
-      }
-      
-      if (error.code === 'ECONNABORTED') {
-        return {
-          success: false,
-          error: 'Timeout ao enviar mensagem. Tente novamente.'
-        };
-      }
+      console.error('❌ Erro ao reiniciar agente:', error);
       
       return {
-        success: false,
-        error: error.response?.data?.error || error.message || 'Erro ao enviar mensagem'
+        status: 'error',
+        error: error.response?.data?.error || error.message || 'Erro ao reiniciar agente'
       };
     }
   },
@@ -217,11 +212,11 @@ export const ZapAgentService = {
     try {
       console.log('🔍 Verificando status da API...');
       
-      const response = await axios.get(`${API_URL}/health`, {
+      const response = await axios.get(`${API_URL}/`, {
         timeout: 5000
       });
       
-      const isOnline = response.status === 200;
+      const isOnline = response.status === 200 && response.data.includes('ZapAgent Bot ativo');
       console.log('✅ API Status:', isOnline ? 'Online' : 'Offline');
       
       return isOnline;
@@ -235,34 +230,35 @@ export const ZapAgentService = {
     try {
       console.log('🔍 Verificando conexão para:', numero);
       
-      const response = await axios.get(`${API_URL}/verify-connection`, {
-        params: { numero },
-        timeout: 10000
-      });
+      const statusResponse = await this.getAgentStatus(numero);
       
-      console.log('✅ Connection verification response:', response.data);
-      return response.data;
+      if (statusResponse.conectado) {
+        return { 
+          conectado: true, 
+          message: "Agente conectado e funcionando" 
+        };
+      }
+      
+      // Se não estiver conectado, tenta buscar o QR code
+      const qrResponse = await this.getQrCode(numero);
+      return qrResponse;
+      
     } catch (error: any) {
       console.error('❌ Erro ao verificar conexão:', error);
-      
-      if (error.response?.status === 404) {
-        return { 
-          conectado: false, 
-          message: "Agente não encontrado para verificação" 
-        };
-      }
-      
-      if (error.code === 'ECONNABORTED') {
-        return { 
-          conectado: false, 
-          message: "Timeout ao verificar conexão. Tente novamente." 
-        };
-      }
       
       return { 
         conectado: false, 
         message: error.response?.data?.message || "Erro ao verificar conexão" 
       };
     }
+  },
+
+  // Método de compatibilidade para sendMessage (se necessário no futuro)
+  async sendMessage(numero: string, message: string, prompt: string): Promise<SendMessageResponse> {
+    console.warn('⚠️ sendMessage não implementado na API atual');
+    return {
+      success: false,
+      error: 'Funcionalidade não disponível na API atual'
+    };
   }
 };
