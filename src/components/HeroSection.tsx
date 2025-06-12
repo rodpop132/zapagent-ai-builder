@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play, MessageCircle, Zap, Clock } from "lucide-react";
+import { ArrowRight, Play, MessageCircle, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import ConversationSimulator from "./ConversationSimulator";
@@ -18,10 +18,6 @@ const HeroSection = () => {
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="space-y-6 md:space-y-8">
               <div className="space-y-4">
-                <div className="inline-flex items-center px-3 md:px-4 py-2 bg-green-100 text-green-700 rounded-full text-xs md:text-sm font-medium">
-                  <Zap className="h-3 w-3 md:h-4 md:w-4 mr-2" />
-                  {t('hero.badge')}
-                </div>
                 <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold text-brand-dark leading-tight">
                   {t('hero.title')}
                 </h1>
