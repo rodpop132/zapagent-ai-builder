@@ -1,8 +1,7 @@
 
 import { lazy, Suspense } from 'react';
 
-// Lazy load do Recharts para melhor performance
-const LazyRechartsChart = lazy(() => import('recharts').then(module => ({ default: module.Chart })));
+// Lazy load dos componentes específicos do Recharts
 const LazyLineChart = lazy(() => import('recharts').then(module => ({ default: module.LineChart })));
 const LazyBarChart = lazy(() => import('recharts').then(module => ({ default: module.BarChart })));
 const LazyAreaChart = lazy(() => import('recharts').then(module => ({ default: module.AreaChart })));
