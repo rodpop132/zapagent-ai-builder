@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -149,24 +148,21 @@ export const useAgentCreation = () => {
         formData.training_data.trim() || 
         "Você é um atendente simpático e rápido. Responda de forma educada e ajude o cliente da melhor forma possível.";
 
-      console.log('📦 Enviando payload para ZapAgent:', {
+      // Criar payload para API externa incluindo user_id
+      const zapAgentPayload = {
+        user_id: user.id,  // ✅ Agora incluindo user_id
         numero: numeroCompleto,
         nome: formData.name.trim(),
         tipo: formData.business_type,
         descricao: formData.description.trim() || '',
         prompt: promptValue,
         plano: 'free'
-      });
+      };
+
+      console.log('📦 Enviando payload para ZapAgent:', zapAgentPayload);
 
       // Chamar API externa com melhor tratamento de erro
-      const apiResponse = await ZapAgentService.createAgent({
-        numero: numeroCompleto,
-        nome: formData.name.trim(),
-        tipo: formData.business_type,
-        descricao: formData.description.trim() || '',
-        prompt: promptValue,
-        plano: 'free'
-      });
+      const apiResponse = await ZapAgentService.createAgent(zapAgentPayload);
 
       console.log('✅ API respondeu com sucesso:', apiResponse);
 
