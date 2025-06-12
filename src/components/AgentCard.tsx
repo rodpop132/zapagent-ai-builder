@@ -65,15 +65,6 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
     }
   };
 
-  const loadAgentStats = async () => {
-    try {
-      const statusData = await ZapAgentService.getAgentStatus(agent.phone_number);
-      setAgentStats(statusData);
-    } catch (error) {
-      console.error('❌ Erro ao carregar estatísticas do agente:', error);
-    }
-  };
-
   const handleToggleActive = async () => {
     setIsLoading(true);
     try {
@@ -149,7 +140,7 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
     // Verificar limite de mensagens
     const planType = subscription?.plan_type || 'free';
     const limit = getMessagesLimitByPlan(planType);
-    const used = agentStats?.mensagens_enviadas || 0;
+    const used = messageStats?.mensagensUsadas || 0;
 
     if (!subscription?.is_unlimited && used >= limit) {
       toast({
@@ -181,8 +172,7 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
         variant: "default"
       });
 
-      // Recarregar estatísticas e dados do agente
-      await loadAgentStats();
+      // Recarregar dados do agente
       onUpdate();
 
     } catch (error) {
