@@ -77,30 +77,37 @@ export const ZapAgentService = {
     try {
       console.log('🚀 Enviando payload para API:', payload);
       
-      const response = await axios.post(`${API_URL}/zapagent`, payload, {
+      // Ensure numero is clean (digits only)
+      const cleanedPayload = {
+        ...payload,
+        numero: payload.numero.replace(/\D/g, ''),
+      };
+      
+      console.log('📦 Payload limpo:', cleanedPayload);
+      
+      const response = await fetch(`${API_URL}/zapagent`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        timeout: 30000
+        body: JSON.stringify(cleanedPayload)
       });
 
-      console.log('✅ API respondeu:', response.data);
-      return response.data;
+      const json = await response.json();
+      console.log('✅ API respondeu:', json);
+
+      if (!response.ok) {
+        throw new Error(json.error || 'Erro ao criar agente');
+      }
+
+      return json;
     } catch (error: any) {
       console.error('❌ Erro na API:', error);
       
-      if (error.response?.data) {
+      if (error.message.includes('NetworkError')) {
         return {
           status: 'error',
-          error: error.response.data.error || error.response.data.msg || 'Erro na API',
-          msg: error.response.data.msg
-        };
-      }
-      
-      if (error.code === 'ECONNABORTED') {
-        return {
-          status: 'error',
-          error: 'Timeout: O servidor demorou muito para responder. Tente novamente.'
+          error: 'Erro de conexão: Verifique se a API está online.'
         };
       }
       
@@ -115,33 +122,25 @@ export const ZapAgentService = {
     try {
       console.log('🔍 Buscando QR Code para:', numero);
       
-      const response = await axios.get(`${API_URL}/qrcode`, {
-        params: { numero },
-        timeout: 10000
+      const cleanNumero = numero.replace(/\D/g, '');
+      const response = await fetch(`${API_URL}/qrcode?numero=${cleanNumero}`, {
+        method: 'GET',
       });
       
-      console.log('✅ QR Code response:', response.data);
-      return response.data;
+      const json = await response.json();
+      console.log('✅ QR Code response:', json);
+      
+      if (!response.ok) {
+        throw new Error(json.message || 'Erro ao buscar QR Code');
+      }
+      
+      return json;
     } catch (error: any) {
       console.error('❌ Erro ao buscar QR Code:', error);
       
-      if (error.response?.status === 404) {
-        return { 
-          conectado: false, 
-          message: "Agente não encontrado. Verifique se o número está correto." 
-        };
-      }
-      
-      if (error.code === 'ECONNABORTED') {
-        return { 
-          conectado: false, 
-          message: "Timeout ao buscar QR Code. Tente novamente." 
-        };
-      }
-      
       return { 
         conectado: false, 
-        message: error.response?.data?.message || "Erro ao obter QR Code" 
+        message: error.message || "Erro ao obter QR Code" 
       };
     }
   },
@@ -150,13 +149,18 @@ export const ZapAgentService = {
     try {
       console.log('📊 Buscando uso de mensagens para:', { user_id, numero });
       
-      const response = await axios.get(`${API_URL}/mensagens-usadas`, {
-        params: { user_id, numero },
-        timeout: 10000
+      const cleanNumero = numero.replace(/\D/g, '');
+      const response = await fetch(`${API_URL}/mensagens-usadas?user_id=${user_id}&numero=${cleanNumero}`, {
+        method: 'GET',
       });
       
-      console.log('✅ Messages used response:', response.data);
-      return response.data;
+      if (!response.ok) {
+        throw new Error('Erro ao buscar mensagens usadas');
+      }
+      
+      const json = await response.json();
+      console.log('✅ Messages used response:', json);
+      return json;
     } catch (error: any) {
       console.error('❌ Erro ao buscar mensagens usadas:', error);
       return null;
@@ -167,26 +171,31 @@ export const ZapAgentService = {
     try {
       console.log('🔍 Verificando status do agente:', numero);
       
-      const response = await axios.get(`${API_URL}/verificar`, {
-        params: { numero },
-        timeout: 10000
+      const cleanNumero = numero.replace(/\D/g, '');
+      const response = await fetch(`${API_URL}/verificar?numero=${cleanNumero}`, {
+        method: 'GET',
       });
       
-      console.log('✅ Agent status response:', response.data);
+      if (!response.ok) {
+        throw new Error('Erro ao verificar status');
+      }
+      
+      const json = await response.json();
+      console.log('✅ Agent status response:', json);
       
       // Map the response to include expected properties
       return {
-        numero: response.data.numero || numero,
-        conectado: response.data.conectado || false,
-        mensagens_enviadas: response.data.mensagens_enviadas || response.data.mensagensUsadas || 0,
-        ultima_mensagem: response.data.ultima_mensagem,
-        historico: response.data.historico || []
+        numero: json.numero || cleanNumero,
+        conectado: json.conectado || false,
+        mensagens_enviadas: json.mensagens_enviadas || json.mensagensUsadas || 0,
+        ultima_mensagem: json.ultima_mensagem,
+        historico: json.historico || []
       };
     } catch (error: any) {
       console.error('❌ Erro ao verificar status do agente:', error);
       
       return {
-        numero,
+        numero: numero.replace(/\D/g, ''),
         conectado: false,
         mensagens_enviadas: 0,
         historico: []
@@ -198,13 +207,18 @@ export const ZapAgentService = {
     try {
       console.log('📋 Buscando histórico do agente:', { user_id, numero });
       
-      const response = await axios.get(`${API_URL}/historico`, {
-        params: { user_id, numero },
-        timeout: 10000
+      const cleanNumero = numero.replace(/\D/g, '');
+      const response = await fetch(`${API_URL}/historico?user_id=${user_id}&numero=${cleanNumero}`, {
+        method: 'GET',
       });
       
-      console.log('✅ Agent history response:', response.data);
-      return response.data;
+      if (!response.ok) {
+        throw new Error('Erro ao buscar histórico');
+      }
+      
+      const json = await response.json();
+      console.log('✅ Agent history response:', json);
+      return json;
     } catch (error: any) {
       console.error('❌ Erro ao buscar histórico do agente:', error);
       return null;
@@ -215,19 +229,25 @@ export const ZapAgentService = {
     try {
       console.log('🔄 Reiniciando agente:', numero);
       
-      const response = await axios.get(`${API_URL}/reiniciar`, {
-        params: { numero },
-        timeout: 15000
+      const cleanNumero = numero.replace(/\D/g, '');
+      const response = await fetch(`${API_URL}/reiniciar?numero=${cleanNumero}`, {
+        method: 'GET',
       });
       
-      console.log('✅ Restart response:', response.data);
-      return response.data;
+      const json = await response.json();
+      console.log('✅ Restart response:', json);
+      
+      if (!response.ok) {
+        throw new Error(json.error || 'Erro ao reiniciar agente');
+      }
+      
+      return json;
     } catch (error: any) {
       console.error('❌ Erro ao reiniciar agente:', error);
       
       return {
         status: 'error',
-        error: error.response?.data?.error || error.message || 'Erro ao reiniciar agente'
+        error: error.message || 'Erro ao reiniciar agente'
       };
     }
   },
@@ -236,11 +256,16 @@ export const ZapAgentService = {
     try {
       console.log('🔍 Verificando status da API...');
       
-      const response = await axios.get(`${API_URL}/`, {
-        timeout: 5000
+      const response = await fetch(`${API_URL}/`, {
+        method: 'GET',
       });
       
-      const isOnline = response.status === 200 && response.data.includes('ZapAgent Bot ativo');
+      if (!response.ok) {
+        return false;
+      }
+      
+      const text = await response.text();
+      const isOnline = text.includes('ZapAgent Bot ativo');
       console.log('✅ API Status:', isOnline ? 'Online' : 'Offline');
       
       return isOnline;
@@ -272,7 +297,7 @@ export const ZapAgentService = {
       
       return { 
         conectado: false, 
-        message: error.response?.data?.message || "Erro ao verificar conexão" 
+        message: error.message || "Erro ao verificar conexão" 
       };
     }
   },

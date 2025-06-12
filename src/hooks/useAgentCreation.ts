@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -101,8 +102,8 @@ export const useAgentCreation = () => {
       setCreationState('saving');
       setError('');
 
+      // Verificar sessão válida
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-
       if (sessionError || !sessionData?.session || sessionData.session.user.id !== user.id) {
         throw new Error('Sessão inválida. Faça login novamente.');
       }
@@ -110,6 +111,7 @@ export const useAgentCreation = () => {
       const numeroNormalizado = normalizarNumero(formData.phone_number.trim());
       const numeroCompleto = numeroNormalizado.startsWith('+') ? numeroNormalizado : `+${numeroNormalizado}`;
 
+      // Verificar se já existe agente com este número
       const { data: existingAgent } = await supabase
         .from('agents')
         .select('id')
@@ -120,6 +122,7 @@ export const useAgentCreation = () => {
         throw new Error('Já existe um agente com este número de telefone.');
       }
 
+      // Salvar no Supabase primeiro
       const agentPayload = {
         name: formData.name.trim(),
         description: formData.description.trim() || null,
@@ -143,32 +146,32 @@ export const useAgentCreation = () => {
 
       setCreationState('creating_zapagent');
 
-      // Garantir que o prompt tenha um valor válido e não vazio
-      const promptValue = formData.personality_prompt.trim() || 
-        formData.training_data.trim() || 
+      // Construir o prompt conforme especificado no checklist
+      const promptValue = `${formData.training_data.trim() || ''}\n\n${formData.personality_prompt.trim() || ''}`.trim() || 
         "Você é um atendente simpático e rápido. Responda de forma educada e ajude o cliente da melhor forma possível.";
 
-      // Criar payload para API externa incluindo user_id
+      // Criar payload para API externa seguindo exatamente o padrão especificado
       const zapAgentPayload = {
-        user_id: user.id,  // ✅ Agora incluindo user_id
-        numero: numeroCompleto,
+        user_id: user.id,
+        numero: numeroCompleto.replace(/\D/g, ''), // apenas dígitos
         nome: formData.name.trim(),
         tipo: formData.business_type,
         descricao: formData.description.trim() || '',
         prompt: promptValue,
-        plano: 'free'
+        plano: 'gratuito', // ou 'pro', 'ultra' baseado na assinatura
+        webhook: null
       };
 
-      console.log('📦 Enviando payload para ZapAgent:', zapAgentPayload);
+      console.log('📦 Enviando payload para ZapAgent conforme checklist:', zapAgentPayload);
 
-      // Chamar API externa com melhor tratamento de erro
+      // Chamar API externa
       const apiResponse = await ZapAgentService.createAgent(zapAgentPayload);
 
       console.log('✅ API respondeu com sucesso:', apiResponse);
 
       // Verificar se a resposta foi bem-sucedida
-      if (!apiResponse || (apiResponse.status && apiResponse.status !== 'success')) {
-        const errorMsg = apiResponse?.error || apiResponse?.msg || 'Erro desconhecido na API externa';
+      if (apiResponse.status === 'error' || apiResponse.error) {
+        const errorMsg = apiResponse.error || 'Erro desconhecido na API externa';
         throw new Error(`Falha na API externa: ${errorMsg}`);
       }
 
@@ -240,19 +243,12 @@ export const useAgentCreation = () => {
       
       let errorMessage = 'Erro desconhecido';
       
-      // Tratar diferentes tipos de erro de forma mais explícita
       if (error.message) {
         errorMessage = error.message;
-      } else if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      } else if (error.response?.data?.msg) {
-        errorMessage = error.response.data.msg;
-      } else if (error.response?.status === 400) {
-        errorMessage = 'Dados inválidos enviados para o servidor. Verifique se todos os campos estão preenchidos corretamente.';
-      } else if (error.response?.status === 500) {
-        errorMessage = 'Erro interno do servidor. Tente novamente em alguns momentos.';
-      } else if (error.code === 'ECONNABORTED') {
-        errorMessage = 'Timeout: O servidor demorou muito para responder. Tente novamente.';
+      } else if (error.message?.includes('user_id, número ou prompt ausente')) {
+        errorMessage = 'Dados obrigatórios ausentes. Verifique se todos os campos estão preenchidos.';
+      } else if (error.message?.includes('NetworkError')) {
+        errorMessage = 'Erro de conexão: A API pode estar offline. Tente novamente em alguns momentos.';
       }
       
       setError(errorMessage);
