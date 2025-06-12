@@ -186,50 +186,6 @@ const ConversationSimulator = ({ isOpen, onClose }: ConversationSimulatorProps) 
             { text: "Quero comprar", next: 33 },
             { text: "Tem garantia?", next: 34 }
           ]
-        },
-        {
-          bot: "📧 Link enviado para seu WhatsApp! Pagamento 100% seguro. Processamos em até 2 horas úteis.",
-          options: [
-            { text: "Obrigado!", next: 35 }
-          ]
-        },
-        {
-          bot: "📱 Galaxy S24: 256GB, câmera 200MP, tela 6.2\" AMOLED. R$ 3.999 ou 12x R$ 374.",
-          options: [
-            { text: "Comparar com iPhone", next: 36 },
-            { text: "Fechar negócio", next: 37 }
-          ]
-        },
-        {
-          bot: "🎯 Perfeito! João tem 5 anos de experiência e vai te dar o melhor atendimento!",
-          options: [
-            { text: "Aguardo contato", next: 38 }
-          ]
-        },
-        {
-          bot: "🛒 Ótimo! Vou te enviar nosso catálogo completo. Frete grátis para sua região!",
-          options: [
-            { text: "Envie o catálogo", next: 39 }
-          ]
-        },
-        {
-          bot: "👔 Terno tamanho M disponível! Cor azul marinho e cinza. R$ 399 completo. Quer experimentar?",
-          options: [
-            { text: "Sim, quero experimentar", next: 40 }
-          ]
-        },
-        {
-          bot: "🕒 Funcionamos: Seg-Sex 8h às 18h, Sáb 8h às 14h. Domingo fechado. WhatsApp 24h!",
-          options: [
-            { text: "Perfeito, obrigado!", next: 41 }
-          ]
-        },
-        {
-          bot: "💳 Aceitamos: PIX, cartão (até 12x), boleto, PicPay e PayPal. Qual prefere?",
-          options: [
-            { text: "PIX", next: 42 },
-            { text: "Cartão parcelado", next: 43 }
-          ]
         }
       ]
     },
@@ -319,6 +275,30 @@ const ConversationSimulator = ({ isOpen, onClose }: ConversationSimulatorProps) 
           bot: "Found your order #12345! Status: In transit. Delivery estimate: tomorrow at 2 PM. 📦",
           options: [
             { text: "Great, thank you!", next: 20 }
+          ]
+        },
+        {
+          bot: "No problem! You can find the order number in your confirmation email or purchase WhatsApp.",
+          options: [
+            { text: "I'll look for it", next: 21 }
+          ]
+        },
+        {
+          bot: "📱 iPhone 15: 6.1\" screen, A17 Pro chip, 48MP camera, 5G, water resistant. All-day battery!",
+          options: [
+            { text: "Other colors available?", next: 22 }
+          ]
+        },
+        {
+          bot: "💻 Dell Inspiron Laptop: Intel i7, 16GB RAM, 512GB SSD, 15.6\" screen. Perfect for work and study!",
+          options: [
+            { text: "What's the price?", next: 23 }
+          ]
+        },
+        {
+          bot: "🎉 Excellent choice! I'll send you the payment link. We offer up to 12x interest-free installments!",
+          options: [
+            { text: "Send the link", next: 24 }
           ]
         }
       ]
@@ -410,6 +390,30 @@ const ConversationSimulator = ({ isOpen, onClose }: ConversationSimulatorProps) 
           options: [
             { text: "¡Genial, gracias!", next: 20 }
           ]
+        },
+        {
+          bot: "¡Sin problema! Puedes encontrar el número de pedido en tu email de confirmación o WhatsApp de compra.",
+          options: [
+            { text: "Lo buscaré", next: 21 }
+          ]
+        },
+        {
+          bot: "📱 iPhone 15: Pantalla 6.1\", chip A17 Pro, cámara 48MP, 5G, resistente al agua. ¡Batería todo el día!",
+          options: [
+            { text: "¿Otros colores disponibles?", next: 22 }
+          ]
+        },
+        {
+          bot: "💻 Laptop Dell Inspiron: Intel i7, 16GB RAM, SSD 512GB, pantalla 15.6\". ¡Perfecto para trabajo y estudio!",
+          options: [
+            { text: "¿Cuál es el precio?", next: 23 }
+          ]
+        },
+        {
+          bot: "🎉 ¡Excelente elección! Te enviaré el enlace de pago. ¡Ofrecemos hasta 12 cuotas sin interés!",
+          options: [
+            { text: "Envía el enlace", next: 24 }
+          ]
         }
       ]
     }
@@ -500,6 +504,11 @@ const ConversationSimulator = ({ isOpen, onClose }: ConversationSimulatorProps) 
                     {lang.name}
                   </Button>
                 ))}
+              </div>
+              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  Esta é uma simulação interativa onde você pode experimentar como seria uma conversa real com nosso assistente virtual. Escolha um idioma para começar!
+                </p>
               </div>
             </div>
           ) : (

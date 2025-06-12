@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play, MessageCircle, Clock } from "lucide-react";
+import { ArrowRight, Play, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import ConversationSimulator from "./ConversationSimulator";
@@ -42,29 +42,8 @@ const HeroSection = () => {
                   onClick={() => setShowSimulator(true)}
                 >
                   <Play className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-                  {t('hero.simulate')}
+                  Simular Conversa
                 </Button>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-4 md:gap-8 pt-4 md:pt-6">
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 md:w-10 md:h-10 bg-green-100 rounded-full flex items-center justify-center">
-                    <MessageCircle className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-brand-dark text-sm md:text-base">{t('hero.feature1.title')}</p>
-                    <p className="text-xs md:text-sm text-brand-gray">{t('hero.feature1.desc')}</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Clock className="h-4 w-4 md:h-5 md:w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-brand-dark text-sm md:text-base">{t('hero.feature2.title')}</p>
-                    <p className="text-xs md:text-sm text-brand-gray">{t('hero.feature2.desc')}</p>
-                  </div>
-                </div>
               </div>
             </div>
 
