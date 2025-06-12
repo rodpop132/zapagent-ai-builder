@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,8 @@ import { Bot, Settings, MessageCircle, Phone, Users, MoreVertical, Edit, History
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { useMessageTracking } from '@/hooks/useMessageTracking';
 import WhatsAppStatus from './WhatsAppStatus';
 import EditAgentModal from './EditAgentModal';
 import AgentHistory from './AgentHistory';
@@ -43,13 +46,19 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [whatsappStatus, setWhatsappStatus] = useState<'connected' | 'pending'>('pending');
-  const [agentStats, setAgentStats] = useState<any>(null);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
+  
+  // Hook para rastreamento automático de mensagens
+  const { messageStats, isLoading: isLoadingStats } = useMessageTracking({
+    phoneNumber: agent.phone_number,
+    intervalMs: 30000 // Atualiza a cada 30 segundos
+  });
 
   const getMessagesLimitByPlan = (planType: string) => {
     switch (planType) {
       case 'free': return 30;
-      case 'pro': return 10000; // Corrigido para 10.000
+      case 'pro': return 10000;
       case 'ultra': return 999999;
       case 'unlimited': return 999999;
       default: return 30;
@@ -189,7 +198,13 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
   };
 
   const formatPhoneNumber = (phone: string) => {
-    return phone.replace(/(\d{3})(\d{3})(\d{3})(\d{3})/, '+$1 $2 $3 $4');
+    const cleaned = phone.replace(/\D/g, '');
+    if (cleaned.length >= 11) {
+      return cleaned.replace(/(\d{2})(\d{2})(\d{5})(\d{4})/, '+$1 $2 $3-$4');
+    } else if (cleaned.length >= 10) {
+      return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '+$1 $2-$3');
+    }
+    return `+${cleaned}`;
   };
 
   const getBusinessTypeIcon = (type: string) => {
@@ -206,50 +221,53 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
     return icons[type] || '📋';
   };
 
-  const messagesUsed = agentStats?.mensagens_enviadas || 0;
-  const planType = subscription?.plan_type || 'free';
-  const messagesLimit = subscription?.is_unlimited ? '∞' : getMessagesLimitByPlan(planType);
-  const isLimitReached = !subscription?.is_unlimited && messagesUsed >= getMessagesLimitByPlan(planType);
+  // Usar dados em tempo real quando disponíveis
+  const messagesUsed = messageStats?.mensagensUsadas ?? 0;
+  const planTypeFromStats = messageStats?.plano || subscription?.plan_type || 'free';
+  const messagesLimit = subscription?.is_unlimited ? '∞' : getMessagesLimitByPlan(planTypeFromStats);
+  const isLimitReached = !subscription?.is_unlimited && messagesUsed >= getMessagesLimitByPlan(planTypeFromStats);
 
   return (
     <>
-      <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-l-4 border-l-brand-green">
-        <CardHeader className="pb-3">
+      <Card className={`group hover:shadow-lg transition-all duration-300 hover:scale-[1.02] border-l-4 border-l-brand-green ${
+        isMobile ? 'mx-2' : ''
+      }`}>
+        <CardHeader className={`${isMobile ? 'pb-2 px-4' : 'pb-3'}`}>
           <div className="flex items-start justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-brand-green to-green-600 rounded-lg flex items-center justify-center text-white font-bold shadow-md">
+              <div className={`${isMobile ? 'w-8 h-8' : 'w-10 h-10'} bg-gradient-to-br from-brand-green to-green-600 rounded-lg flex items-center justify-center text-white font-bold shadow-md ${isMobile ? 'text-sm' : ''}`}>
                 {getBusinessTypeIcon(agent.business_type)}
               </div>
               <div className="flex-1 min-w-0">
-                <CardTitle className="text-lg font-bold text-gray-900 truncate group-hover:text-brand-green transition-colors">
+                <CardTitle className={`${isMobile ? 'text-base' : 'text-lg'} font-bold text-gray-900 truncate group-hover:text-brand-green transition-colors`}>
                   {agent.name}
                 </CardTitle>
-                <p className="text-sm text-gray-600 flex items-center mt-1">
-                  <Users className="h-3 w-3 mr-1" />
+                <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600 flex items-center mt-1`}>
+                  <Users className={`${isMobile ? 'h-2 w-2' : 'h-3 w-3'} mr-1`} />
                   {agent.business_type}
                 </p>
               </div>
             </div>
             
-            <div className="flex items-center space-x-2">
-              <Badge variant={agent.is_active ? "default" : "secondary"} className="text-xs">
+            <div className={`flex items-center ${isMobile ? 'space-x-1' : 'space-x-2'}`}>
+              <Badge variant={agent.is_active ? "default" : "secondary"} className={`${isMobile ? 'text-xs px-1' : 'text-xs'}`}>
                 {agent.is_active ? "Ativo" : "Inativo"}
               </Badge>
               
               {isLimitReached && (
-                <Badge variant="destructive" className="text-xs">
-                  <AlertTriangle className="h-3 w-3 mr-1" />
-                  Limite
+                <Badge variant="destructive" className={`${isMobile ? 'text-xs px-1' : 'text-xs'}`}>
+                  <AlertTriangle className={`${isMobile ? 'h-2 w-2' : 'h-3 w-3'} mr-1`} />
+                  {isMobile ? 'Lim' : 'Limite'}
                 </Badge>
               )}
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-gray-100">
-                    <MoreVertical className="h-4 w-4" />
+                  <Button variant="ghost" size="sm" className={`${isMobile ? 'h-6 w-6 p-0' : 'h-8 w-8 p-0'} hover:bg-gray-100`}>
+                    <MoreVertical className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" className={`${isMobile ? 'w-44' : 'w-48'}`}>
                   <DropdownMenuItem 
                     onClick={() => setShowEditModal(true)}
                     className="cursor-pointer hover:bg-gray-50"
@@ -260,7 +278,6 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
                   <DropdownMenuItem 
                     onClick={() => {
                       setShowHistory(!showHistory);
-                      if (!showHistory) loadAgentStats();
                     }}
                     className="cursor-pointer hover:bg-gray-50"
                   >
@@ -289,17 +306,17 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent className={`${isMobile ? 'space-y-3 px-4' : 'space-y-4'}`}>
           {agent.description && (
-            <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+            <p className={`${isMobile ? 'text-xs' : 'text-sm'} text-gray-600 leading-relaxed line-clamp-2`}>
               {agent.description}
             </p>
           )}
 
-          <div className="space-y-3">
-            <div className="flex items-center text-sm text-gray-600 bg-gray-50 p-2 rounded-lg">
-              <Phone className="h-4 w-4 mr-2 text-brand-green" />
-              <span className="font-mono">{formatPhoneNumber(agent.phone_number)}</span>
+          <div className={`${isMobile ? 'space-y-2' : 'space-y-3'}`}>
+            <div className={`flex items-center ${isMobile ? 'text-xs' : 'text-sm'} text-gray-600 bg-gray-50 ${isMobile ? 'p-1.5' : 'p-2'} rounded-lg`}>
+              <Phone className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} mr-2 text-brand-green`} />
+              <span className={`font-mono ${isMobile ? 'text-xs' : ''}`}>{formatPhoneNumber(agent.phone_number)}</span>
             </div>
 
             <WhatsAppStatus 
@@ -307,12 +324,15 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
               onStatusChange={setWhatsappStatus}
             />
 
-            <div className={`flex items-center justify-between text-sm p-2 rounded-lg ${
+            <div className={`flex items-center justify-between ${isMobile ? 'text-xs' : 'text-sm'} ${isMobile ? 'p-1.5' : 'p-2'} rounded-lg ${
               isLimitReached ? 'bg-red-50' : 'bg-blue-50'
             }`}>
               <div className={`flex items-center ${isLimitReached ? 'text-red-700' : 'text-blue-700'}`}>
-                <MessageCircle className="h-4 w-4 mr-2" />
+                <MessageCircle className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} mr-2`} />
                 <span>Mensagens</span>
+                {isLoadingStats && (
+                  <div className="ml-2 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                )}
               </div>
               <span className={`font-semibold ${isLimitReached ? 'text-red-800' : 'text-blue-800'}`}>
                 {messagesUsed}/{messagesLimit}
@@ -320,41 +340,45 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
             </div>
 
             {isLimitReached && (
-              <div className="p-2 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-xs text-red-700">
+              <div className={`${isMobile ? 'p-1.5' : 'p-2'} bg-red-50 border border-red-200 rounded-lg`}>
+                <p className={`${isMobile ? 'text-xs' : 'text-xs'} text-red-700`}>
                   ⚠️ Limite de mensagens atingido. O agente não pode enviar mais respostas.
                 </p>
               </div>
             )}
           </div>
 
-          <div className="flex gap-2 pt-2">
+          <div className={`flex ${isMobile ? 'gap-1' : 'gap-2'} pt-2`}>
             <Button
-              size="sm"
+              size={isMobile ? "sm" : "sm"}
               variant="outline"
               onClick={handleSendTestMessage}
               disabled={isLoading || whatsappStatus !== 'connected' || isLimitReached}
-              className="flex-1 hover:bg-brand-green hover:text-white hover:border-brand-green transition-all duration-200"
+              className={`flex-1 hover:bg-brand-green hover:text-white hover:border-brand-green transition-all duration-200 ${
+                isMobile ? 'text-xs px-2 py-1' : ''
+              }`}
             >
-              <MessageCircle className="h-4 w-4 mr-2" />
+              <MessageCircle className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} mr-1`} />
               {isLoading ? 'Enviando...' : 'Testar'}
             </Button>
             
             <Button
-              size="sm"
+              size={isMobile ? "sm" : "sm"}
               variant="outline"
               onClick={() => setShowEditModal(true)}
-              className="flex-1 hover:bg-blue-500 hover:text-white hover:border-blue-500 transition-all duration-200"
+              className={`flex-1 hover:bg-blue-500 hover:text-white hover:border-blue-500 transition-all duration-200 ${
+                isMobile ? 'text-xs px-2 py-1' : ''
+              }`}
             >
-              <Settings className="h-4 w-4 mr-2" />
-              Configurar
+              <Settings className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} mr-1`} />
+              {isMobile ? 'Config' : 'Configurar'}
             </Button>
           </div>
         </CardContent>
 
         {/* Histórico de conversas */}
         {showHistory && (
-          <CardContent className="pt-0">
+          <CardContent className={`${isMobile ? 'pt-0 px-4' : 'pt-0'}`}>
             <AgentHistory 
               phoneNumber={agent.phone_number}
               agentName={agent.name}
