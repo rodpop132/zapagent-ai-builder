@@ -158,6 +158,7 @@ export const useAgentCreation = () => {
         plano: 'free'
       });
 
+      // Chamar API externa com melhor tratamento de erro
       const apiResponse = await ZapAgentService.createAgent({
         numero: numeroCompleto,
         nome: formData.name.trim(),
@@ -168,6 +169,12 @@ export const useAgentCreation = () => {
       });
 
       console.log('✅ API respondeu com sucesso:', apiResponse);
+
+      // Verificar se a resposta foi bem-sucedida
+      if (!apiResponse || (apiResponse.status && apiResponse.status !== 'success')) {
+        const errorMsg = apiResponse?.error || apiResponse?.msg || 'Erro desconhecido na API externa';
+        throw new Error(`Falha na API externa: ${errorMsg}`);
+      }
 
       // Caso o QR code já venha na resposta
       if (apiResponse.qrcodeUrl) {

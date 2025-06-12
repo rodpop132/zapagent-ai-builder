@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { normalizarNumero } from '@/utils/phoneUtils';
 
@@ -136,7 +135,6 @@ export class ZapAgentService {
         }
       });
       
-      // Considerar como online se responder com status 200, 404 ou 405
       if (response.status === 200 || response.status === 404 || response.status === 405) {
         console.log('✅ ZapAgentService: API está online e funcional');
         return true;
@@ -151,7 +149,7 @@ export class ZapAgentService {
     }
   }
 
-  // 1. Criar agente (POST /zapagent)
+  // Criar agente com melhor tratamento de erro
   static async createAgent(agentData: {
     nome: string;
     tipo: string;
@@ -163,23 +161,23 @@ export class ZapAgentService {
   }): Promise<CreateAgentResponse> {
     console.log('🚀 ZapAgentService: Criando agente:', agentData.nome);
     
-    // SEMPRE normalizar o número antes de enviar
-    const numeroNormalizado = normalizarNumero(agentData.numero);
-    
-    if (!numeroNormalizado || numeroNormalizado.length < 10) {
-      throw new Error('Número de telefone inválido. Deve ter pelo menos 10 dígitos.');
-    }
-
-    // Validar campos obrigatórios antes de enviar
-    if (!agentData.nome?.trim()) {
-      throw new Error('Nome do agente é obrigatório.');
-    }
-
-    if (!agentData.prompt?.trim()) {
-      throw new Error('Prompt/personalidade do agente é obrigatório.');
-    }
-    
     try {
+      // SEMPRE normalizar o número antes de enviar
+      const numeroNormalizado = normalizarNumero(agentData.numero);
+      
+      if (!numeroNormalizado || numeroNormalizado.length < 10) {
+        throw new Error('Número de telefone inválido. Deve ter pelo menos 10 dígitos.');
+      }
+
+      // Validar campos obrigatórios antes de enviar
+      if (!agentData.nome?.trim()) {
+        throw new Error('Nome do agente é obrigatório.');
+      }
+
+      if (!agentData.prompt?.trim()) {
+        throw new Error('Prompt/personalidade do agente é obrigatório.');
+      }
+      
       const isOnline = await this.checkApiStatus();
       if (!isOnline) {
         throw new Error('API não está disponível no momento. Tente novamente em alguns segundos.');
@@ -203,57 +201,77 @@ export class ZapAgentService {
         data: payload,
       });
       
+      // Validar resposta do backend
+      if (!response) {
+        throw new Error('Resposta vazia do servidor');
+      }
+      
+      if (response.status !== 'success' && response.error) {
+        throw new Error(`Erro do backend: ${response.error}`);
+      }
+      
       console.log('✅ ZapAgentService: Agente criado com sucesso:', response);
       return response;
     } catch (error) {
       console.error('❌ ZapAgentService: Erro ao criar agente:', error);
+      // Re-throw para que o hook possa capturar e mostrar o erro
       throw error;
     }
   }
 
-  // 2. Obter QR code (GET /qrcode)
+  // Obter QR code com melhor tratamento de erro
   static async getQrCode(phoneNumber: string): Promise<QrCodeResponse> {
     if (!phoneNumber) {
       throw new Error('Número do telefone é obrigatório');
     }
     
-    // SEMPRE normalizar o número
-    const numeroNormalizado = normalizarNumero(phoneNumber);
-    console.log('📱 ZapAgentService: Buscando QR code para número normalizado:', numeroNormalizado);
-    
-    if (!numeroNormalizado || numeroNormalizado.length < 10) {
-      throw new Error('Número de telefone inválido');
-    }
-    
     try {
+      // SEMPRE normalizar o número
+      const numeroNormalizado = normalizarNumero(phoneNumber);
+      console.log('📱 ZapAgentService: Buscando QR code para número normalizado:', numeroNormalizado);
+      
+      if (!numeroNormalizado || numeroNormalizado.length < 10) {
+        throw new Error('Número de telefone inválido');
+      }
+      
       const response = await this.makeRequest<QrCodeResponse>(`${this.BASE_URL}/qrcode`, {
         method: 'GET',
         params: { numero: numeroNormalizado }
       });
       
       console.log('📊 ZapAgentService: Resposta QR code:', response);
+      
+      // Fallback para respostas inconsistentes
+      if (!response) {
+        return { conectado: false, message: "QR Code não disponível no momento." };
+      }
+      
       return response;
     } catch (error) {
       console.error('❌ ZapAgentService: Erro ao obter QR code:', error);
-      throw error;
+      // Retornar estado seguro em vez de quebrar a aplicação
+      return { 
+        conectado: false, 
+        message: error instanceof Error ? error.message : "Erro ao obter QR Code." 
+      };
     }
   }
 
-  // 3. Verificar conexão (GET /verificar)
+  // Verificar conexão com fallback seguro
   static async verifyConnection(phoneNumber: string): Promise<VerifyConnectionResponse> {
     if (!phoneNumber) {
       throw new Error('Número do telefone é obrigatório');
     }
     
-    // SEMPRE normalizar o número
-    const numeroNormalizado = normalizarNumero(phoneNumber);
-    console.log('🔍 ZapAgentService: Verificando conexão para número normalizado:', numeroNormalizado);
-    
-    if (!numeroNormalizado || numeroNormalizado.length < 10) {
-      throw new Error('Número de telefone inválido');
-    }
-    
     try {
+      // SEMPRE normalizar o número
+      const numeroNormalizado = normalizarNumero(phoneNumber);
+      console.log('🔍 ZapAgentService: Verificando conexão para número normalizado:', numeroNormalizado);
+      
+      if (!numeroNormalizado || numeroNormalizado.length < 10) {
+        throw new Error('Número de telefone inválido');
+      }
+      
       const response = await this.makeRequest<VerifyConnectionResponse>(`${this.BASE_URL}/verificar`, {
         method: 'GET',
         params: { numero: numeroNormalizado }
@@ -263,7 +281,11 @@ export class ZapAgentService {
       return response;
     } catch (error) {
       console.error('❌ ZapAgentService: Erro ao verificar conexão:', error);
-      throw error;
+      // Retornar estado desconectado em vez de quebrar
+      return { 
+        conectado: false, 
+        message: error instanceof Error ? error.message : "Erro ao verificar conexão." 
+      };
     }
   }
 

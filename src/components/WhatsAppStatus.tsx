@@ -22,8 +22,9 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
   const [error, setError] = useState<string>('');
   const { toast } = useToast();
   
-  // Flag para evitar state updates após unmount
+  // Flag para evitar state updates após unmount e controlar intervals
   const isMountedRef = useRef(true);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Log helper para controlar logs em produção
   const devLog = (message: string, data?: any) => {
@@ -98,11 +99,6 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
       
       const qrResponse = await ZapAgentService.getQrCode(numeroNormalizado);
       
-      // Validar se a resposta é um objeto válido
-      if (typeof qrResponse !== 'object' || qrResponse === null) {
-        throw new Error('Resposta inesperada do servidor (formato inválido)');
-      }
-      
       devLog('📋 WhatsAppStatus: Resposta da API:', qrResponse);
 
       if (!isMountedRef.current) return;
@@ -121,26 +117,18 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
         return;
       }
 
-      // Debug logs para verificar o QR code recebido
-      devLog('✅ qr_code recebido (primeiros 100 chars):', qrResponse.qr_code?.substring(0, 100));
-      
       // ✅ QR Code disponível como base64 PNG válido
       if (qrResponse.qr_code && 
           typeof qrResponse.qr_code === 'string' && 
           qrResponse.qr_code.startsWith('data:image/png;base64,')) {
         devLog('📱 WhatsAppStatus: QR Code PNG válido recebido');
-        devLog('📏 WhatsAppStatus: Tamanho do QR code:', qrResponse.qr_code.length);
-        
         setQrCodeData(qrResponse.qr_code);
-        devLog('✅ Estado do QR code setado com sucesso');
         setError('');
       } else if (qrResponse.message) {
-        // ⚠️ Backend retornou apenas uma mensagem (ex: "QR code ainda não gerado")
         devLog('📨 WhatsAppStatus: Mensagem do backend:', qrResponse.message);
         setError(qrResponse.message);
         setQrCodeData('');
       } else {
-        // ❌ Resposta inesperada sem QR nem mensagem
         devLog('❌ WhatsAppStatus: Resposta inesperada:', qrResponse);
         setError('QR code não disponível. Tente novamente em alguns segundos.');
         setQrCodeData('');
@@ -194,28 +182,46 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
     setError('');
   };
 
-  // Verificar status inicialmente e a cada 30 segundos
+  // Verificar status inicialmente e a cada 30 segundos - com cleanup adequado
   useEffect(() => {
-    if (phoneNumber) {
+    if (phoneNumber && isMountedRef.current) {
       devLog('🚀 WhatsAppStatus: Iniciando verificação para:', phoneNumber);
       checkConnection();
       
-      const interval = setInterval(() => {
-        devLog('⏰ WhatsAppStatus: Verificação automática...');
-        checkConnection();
-      }, 30000);
+      // Clear any existing interval
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
       
-      return () => {
-        devLog('🛑 WhatsAppStatus: Limpando interval');
-        clearInterval(interval);
-      };
+      // Set new interval
+      intervalRef.current = setInterval(() => {
+        if (isMountedRef.current) {
+          devLog('⏰ WhatsAppStatus: Verificação automática...');
+          checkConnection();
+        }
+      }, 30000);
     }
+    
+    // Cleanup function
+    return () => {
+      if (intervalRef.current) {
+        devLog('🛑 WhatsAppStatus: Limpando interval');
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
   }, [phoneNumber]);
 
   // Cleanup flag ao desmontar componente
   useEffect(() => {
+    isMountedRef.current = true;
+    
     return () => {
       isMountedRef.current = false;
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     };
   }, []);
 
@@ -309,9 +315,6 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
                     <div className="text-center">
                       <RefreshCw className="h-8 w-8 animate-spin text-brand-green mx-auto mb-2" />
                       <p className="text-sm text-gray-600">Carregando QR Code...</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Aguarde enquanto o sistema gera o código
-                      </p>
                     </div>
                   </div>
                 ) : qrCodeData ? (
@@ -322,11 +325,9 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
                         alt="QR Code do WhatsApp" 
                         style={{ width: '300px', height: '300px' }}
                         className="border rounded-lg shadow-lg"
-                        onError={(e) => {
+                        onError={() => {
                           devLog('❌ WhatsAppStatus: Erro ao carregar imagem QR');
                           setError('Erro ao exibir QR code - imagem inválida');
-                          // Remover temporariamente para debug
-                          // e.currentTarget.style.display = 'none';
                         }}
                         onLoad={() => {
                           devLog('✅ WhatsAppStatus: QR code exibido com sucesso');
@@ -375,17 +376,6 @@ const WhatsAppStatus = ({ phoneNumber, onStatusChange }: WhatsAppStatusProps) =>
                     Verificar Status
                   </Button>
                 </div>
-
-                {/* Debug button for development */}
-                {process.env.NODE_ENV === 'development' && (
-                  <Button
-                    onClick={() => console.log('🧪 Estado atual do QR:', { qrCodeData, error })}
-                    variant="ghost"
-                    className="text-xs"
-                  >
-                    Ver Debug QR
-                  </Button>
-                )}
               </>
             )}
           </div>
