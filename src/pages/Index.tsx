@@ -1,5 +1,4 @@
 
-import { useIsMobile } from "@/hooks/use-mobile";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import HowItWorks from "@/components/HowItWorks";
@@ -12,20 +11,16 @@ import Footer from "@/components/Footer";
 import SupportWidget from "@/components/SupportWidget";
 
 const Index = () => {
-  const isMobile = useIsMobile();
-
   return (
     <div className="min-h-screen">
       <Header />
-      <div className={`${isMobile ? 'px-2' : ''}`}>
-        <HeroSection />
-        <HowItWorks />
-        <Dashboard />
-        <Benefits />
-        <PricingSection />
-        <Testimonials />
-        <FAQ />
-      </div>
+      <HeroSection />
+      <HowItWorks />
+      <Dashboard />
+      <Benefits />
+      <PricingSection />
+      <Testimonials />
+      <FAQ />
       <Footer />
       <SupportWidget />
     </div>

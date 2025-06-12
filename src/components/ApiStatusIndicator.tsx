@@ -1,17 +1,16 @@
+
 import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Server, AlertTriangle, CheckCircle } from 'lucide-react';
 import { ZapAgentService } from '@/services/zapAgentService';
 import { useToast } from '@/hooks/use-toast';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 const ApiStatusIndicator = () => {
   const [isOnline, setIsOnline] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastCheck, setLastCheck] = useState<Date | null>(null);
   const { toast } = useToast();
-  const isMobile = useIsMobile();
 
   const checkApiStatus = async (showToast: boolean = false) => {
     setLoading(true);
@@ -62,32 +61,32 @@ const ApiStatusIndicator = () => {
   const getStatusBadge = () => {
     if (isOnline === null) {
       return (
-        <Badge variant="secondary" className={`flex items-center space-x-1 ${isMobile ? 'text-xs px-1' : ''}`}>
-          <RefreshCw className={`${isMobile ? 'h-2 w-2' : 'h-3 w-3'} animate-spin`} />
-          <span>{isMobile ? 'Verif...' : 'Verificando...'}</span>
+        <Badge variant="secondary" className="flex items-center space-x-1">
+          <RefreshCw className="h-3 w-3 animate-spin" />
+          <span>Verificando...</span>
         </Badge>
       );
     }
     
     if (isOnline) {
       return (
-        <Badge variant="default" className={`bg-green-100 text-green-700 border-green-200 flex items-center space-x-1 ${isMobile ? 'text-xs px-1' : ''}`}>
-          <CheckCircle className={`${isMobile ? 'h-2 w-2' : 'h-3 w-3'}`} />
-          <span>{isMobile ? 'Online' : 'API Online'}</span>
+        <Badge variant="default" className="bg-green-100 text-green-700 border-green-200 flex items-center space-x-1">
+          <CheckCircle className="h-3 w-3" />
+          <span>API Online</span>
         </Badge>
       );
     }
     
     return (
-      <Badge variant="destructive" className={`flex items-center space-x-1 ${isMobile ? 'text-xs px-1' : ''}`}>
-        <AlertTriangle className={`${isMobile ? 'h-2 w-2' : 'h-3 w-3'}`} />
-        <span>{isMobile ? 'Offline' : 'API Indisponível'}</span>
+      <Badge variant="destructive" className="flex items-center space-x-1">
+        <AlertTriangle className="h-3 w-3" />
+        <span>API Indisponível</span>
       </Badge>
     );
   };
 
   return (
-    <div className={`flex items-center ${isMobile ? 'space-x-1' : 'space-x-2'}`}>
+    <div className="flex items-center space-x-2">
       <div className="flex items-center space-x-2">
         {getStatusBadge()}
       </div>
@@ -97,19 +96,19 @@ const ApiStatusIndicator = () => {
         size="sm"
         onClick={handleManualCheck}
         disabled={loading}
-        className={`${isMobile ? 'h-5 w-5' : 'h-6 w-6'} p-0`}
+        className="h-6 w-6 p-0"
         title="Verificar status da API"
       >
-        <RefreshCw className={`${isMobile ? 'h-2 w-2' : 'h-3 w-3'} ${loading ? 'animate-spin' : ''}`} />
+        <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
       </Button>
       
-      {lastCheck && !isMobile && (
+      {lastCheck && (
         <span className="text-xs text-gray-500 hidden md:block">
           Última verificação: {lastCheck.toLocaleTimeString()}
         </span>
       )}
       
-      {isOnline === false && !isMobile && (
+      {isOnline === false && (
         <span className="text-xs text-orange-600 hidden sm:block">
           Servidor pode estar inicializando
         </span>
