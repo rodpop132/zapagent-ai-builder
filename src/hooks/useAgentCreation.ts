@@ -92,7 +92,8 @@ export const useAgentCreation = () => {
       user: user.email,
       userId: user.id,
       agentName: formData.name,
-      phoneNumber: formData.phone_number
+      phoneNumber: formData.phone_number,
+      personalityPrompt: formData.personality_prompt
     });
 
     try {
@@ -140,12 +141,26 @@ export const useAgentCreation = () => {
 
       setCreationState('creating_zapagent');
 
+      // Garantir que o prompt tenha um valor válido
+      const promptValue = formData.personality_prompt.trim() || 
+        formData.training_data.trim() || 
+        "Você é um atendente simpático e rápido. Responda de forma educada e ajude o cliente da melhor forma possível.";
+
+      console.log('📦 Enviando payload para ZapAgent:', {
+        numero: numeroCompleto,
+        nome: formData.name.trim(),
+        tipo: formData.business_type,
+        descricao: formData.description.trim() || '',
+        prompt: promptValue,
+        plano: 'free'
+      });
+
       const apiResponse = await ZapAgentService.createAgent({
         numero: numeroCompleto,
         nome: formData.name.trim(),
         tipo: formData.business_type,
         descricao: formData.description.trim() || '',
-        prompt: formData.personality_prompt.trim() || '',
+        prompt: promptValue, // Campo obrigatório garantido
         plano: 'free'
       });
 
