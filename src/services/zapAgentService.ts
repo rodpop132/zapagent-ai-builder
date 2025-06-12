@@ -40,7 +40,19 @@ export interface MessagesUsedResponse {
 export interface AgentStatusResponse {
   numero: string;
   conectado: boolean;
-  historico?: any[];
+  mensagens_enviadas?: number;
+  ultima_mensagem?: {
+    user?: string;
+    bot?: string;
+    timestamp?: string;
+  };
+  historico?: Array<{
+    user?: string;
+    bot?: string;
+    message?: string;
+    response?: string;
+    timestamp?: string;
+  }>;
 }
 
 export interface HistoryResponse {
@@ -48,6 +60,8 @@ export interface HistoryResponse {
   historico: Array<{
     user?: string;
     bot?: string;
+    message?: string;
+    response?: string;
     timestamp?: string;
   }>;
 }
@@ -159,13 +173,23 @@ export const ZapAgentService = {
       });
       
       console.log('✅ Agent status response:', response.data);
-      return response.data;
+      
+      // Map the response to include expected properties
+      return {
+        numero: response.data.numero || numero,
+        conectado: response.data.conectado || false,
+        mensagens_enviadas: response.data.mensagens_enviadas || response.data.mensagensUsadas || 0,
+        ultima_mensagem: response.data.ultima_mensagem,
+        historico: response.data.historico || []
+      };
     } catch (error: any) {
       console.error('❌ Erro ao verificar status do agente:', error);
       
       return {
         numero,
-        conectado: false
+        conectado: false,
+        mensagens_enviadas: 0,
+        historico: []
       };
     }
   },
