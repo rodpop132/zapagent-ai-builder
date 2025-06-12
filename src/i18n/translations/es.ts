@@ -1,4 +1,3 @@
-
 export const es = {
   translation: {
     header: {
@@ -49,18 +48,18 @@ export const es = {
       }
     },
     dashboard: {
-      title: "Panel completo para gestionar tu agente",
-      subtitle: "Monitorea conversaciones, analytics y rendimiento de tu agente IA en tiempo real",
+      title: "Ve tu sistema en acción",
+      subtitle: "Rastrea en tiempo real cómo nuestros agentes de IA están transformando tu atención al cliente en WhatsApp",
       upgradePlan: "Actualizar Plan",
-      messagesSent: "Mensajes enviados",
-      responseRate: "Tasa de respuesta",
-      clientsServed: "Clientes atendidos",
-      recentConversations: "Conversaciones recientes",
-      live: "En vivo",
-      newMessages: "nuevos mensajes llegando...",
+      messagesSent: "Mensajes Enviados",
+      responseRate: "Tasa de Respuesta",
+      clientsServed: "Clientes Atendidos",
+      recentConversations: "Conversaciones Recientes",
+      live: "En Vivo",
+      newMessages: "mensajes nuevos",
       status: {
         online: "En línea",
-        typing: "Escribiendo...",
+        typing: "Escribiendo",
         read: "Leído",
         delivered: "Entregado",
         offline: "Desconectado"
@@ -68,19 +67,19 @@ export const es = {
       conversations: {
         joao: {
           name: "Juan Silva",
-          message: "¿Cuál es el horario de atención?"
+          message: "¿Cuál es el tiempo de entrega?"
         },
         maria: {
           name: "María Santos",
-          message: "¿Hacen entregas los sábados?"
+          message: "¿Lo tienen disponible en azul?"
         },
         pedro: {
           name: "Pedro Costa",
-          message: "Me gustaría saber sobre los precios"
+          message: "¿Aceptan pago instantáneo?"
         },
         ana: {
           name: "Ana Oliveira",
-          message: "¿Productos disponibles hoy?"
+          message: "¿Hacen entrega en mi zona?"
         }
       }
     },
@@ -263,6 +262,37 @@ export const es = {
       privacy: "Política de Privacidad",
       cookies: "Cookies",
       rights: "Todos los derechos reservados."
+    },
+    userDashboard: {
+      title: "Panel de Control",
+      welcome: "Hola",
+      agents: "Agentes",
+      messages: "Mensajes",
+      plan: "Plan",
+      active: "Activos",
+      myAgents: "Mis Agentes",
+      createAgent: "Crear Agente",
+      loading: "Cargando...",
+      limitReached: "(Límite alcanzado)",
+      noAgentsYet: "Aún no has creado agentes",
+      noAgentsDescription: "Crea tu primer agente de IA para comenzar a automatizar tu atención al cliente en WhatsApp",
+      createFirstAgent: "Crear Primer Agente",
+      planUpgrade: "Actualizar Plan",
+      upgradeToUltra: "Actualizar a Ultra",
+      verifyPlan: "Verificar Plan",
+      verifying: "Verificando...",
+      logout: "Cerrar Sesión",
+      menu: "Menú",
+      upgrade: "Actualizar",
+      unlimited: "Ilimitado",
+      planNames: {
+        free: "Gratuito",
+        pro: "Pro",
+        ultra: "Ultra",
+        unlimited: "👑 Ilimitado"
+      },
+      limitWarning: "⚠️ Estás cerca del límite de mensajes. Considera actualizar tu plan",
+      limitInfo: "En el plan {planName} puedes crear hasta {limit} agente. Actualiza para crear más agentes"
     }
   }
 };

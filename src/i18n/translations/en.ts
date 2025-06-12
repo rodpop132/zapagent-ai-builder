@@ -1,4 +1,3 @@
-
 export const en = {
   translation: {
     header: {
@@ -49,18 +48,18 @@ export const en = {
       }
     },
     dashboard: {
-      title: "Complete dashboard to manage your agent",
-      subtitle: "Track conversations, analytics and performance of your AI agent in real time",
+      title: "See your system in action",
+      subtitle: "Track in real-time how our AI agents are transforming your WhatsApp customer service",
       upgradePlan: "Upgrade Plan",
-      messagesSent: "Messages sent",
-      responseRate: "Response rate",
-      clientsServed: "Clients served",
-      recentConversations: "Recent conversations",
+      messagesSent: "Messages Sent",
+      responseRate: "Response Rate",
+      clientsServed: "Clients Served",
+      recentConversations: "Recent Conversations",
       live: "Live",
-      newMessages: "new messages coming...",
+      newMessages: "new messages",
       status: {
         online: "Online",
-        typing: "Typing...",
+        typing: "Typing",
         read: "Read",
         delivered: "Delivered",
         offline: "Offline"
@@ -68,19 +67,19 @@ export const en = {
       conversations: {
         joao: {
           name: "John Silva",
-          message: "What are your business hours?"
+          message: "What's the delivery time?"
         },
         maria: {
           name: "Mary Santos",
-          message: "Do you deliver on Saturday?"
+          message: "Do you have it available in blue?"
         },
         pedro: {
           name: "Peter Costa",
-          message: "I'd like to know about prices"
+          message: "Do you accept instant payment?"
         },
         ana: {
           name: "Anna Oliveira",
-          message: "Products available today?"
+          message: "Do you deliver to my area?"
         }
       }
     },
@@ -263,6 +262,37 @@ export const en = {
       privacy: "Privacy Policy",
       cookies: "Cookies",
       rights: "All rights reserved."
+    },
+    userDashboard: {
+      title: "Dashboard",
+      welcome: "Hello",
+      agents: "Agents",
+      messages: "Messages",
+      plan: "Plan",
+      active: "Active",
+      myAgents: "My Agents",
+      createAgent: "Create Agent",
+      loading: "Loading...",
+      limitReached: "(Limit reached)",
+      noAgentsYet: "No agents created yet",
+      noAgentsDescription: "Create your first AI agent to start automating your WhatsApp customer service",
+      createFirstAgent: "Create First Agent",
+      planUpgrade: "Upgrade Plan",
+      upgradeToUltra: "Upgrade to Ultra",
+      verifyPlan: "Verify Plan",
+      verifying: "Verifying...",
+      logout: "Logout",
+      menu: "Menu",
+      upgrade: "Upgrade",
+      unlimited: "Unlimited",
+      planNames: {
+        free: "Free",
+        pro: "Pro",
+        ultra: "Ultra",
+        unlimited: "👑 Unlimited"
+      },
+      limitWarning: "⚠️ You're close to your message limit. Consider upgrading your plan",
+      limitInfo: "On the {planName} plan you can create up to {limit} agent. Upgrade to create more agents"
     }
   }
 };

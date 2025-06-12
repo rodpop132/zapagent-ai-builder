@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,9 @@ import { useToast } from '@/hooks/use-toast';
 import AgentCard from '@/components/AgentCard';
 import CreateAgentModal from '@/components/CreateAgentModal';
 import PlanUpgradeModal from '@/components/PlanUpgradeModal';
+import LanguageSelector from '@/components/LanguageSelector';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useTranslation } from 'react-i18next';
 
 interface Agent {
   id: string;
@@ -35,6 +36,8 @@ interface Subscription {
 
 const Dashboard = () => {
   const { user, signOut } = useAuth();
+  const { t } = useTranslation();
+  
   const [agents, setAgents] = useState<Agent[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
@@ -291,13 +294,7 @@ const Dashboard = () => {
   };
 
   const getPlanDisplayName = (planType: string) => {
-    switch (planType) {
-      case 'free': return 'Gratuito';
-      case 'pro': return 'Pro';
-      case 'ultra': return 'Ultra';
-      case 'unlimited': return '👑 Ilimitado';
-      default: return 'Gratuito';
-    }
+    return t(`userDashboard.planNames.${planType}`) || t('userDashboard.planNames.free');
   };
 
   const getTotalMessagesUsed = () => {
@@ -342,7 +339,7 @@ const Dashboard = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando dashboard...</p>
+          <p className="text-gray-600">{t('userDashboard.loading')}</p>
         </div>
       </div>
     );
@@ -366,6 +363,7 @@ const Dashboard = () => {
             
             {/* Desktop Header Content */}
             <div className="hidden md:flex items-center space-x-4">
+              <LanguageSelector />
               <div className="flex items-center space-x-2">
                 <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-medium`}>
                   {getPlanDisplayName(subscription?.plan_type || 'free')}
@@ -378,7 +376,7 @@ const Dashboard = () => {
                   className="text-blue-600 border-blue-600 hover:bg-blue-50 transition-all duration-200"
                 >
                   <RefreshCw className={`h-4 w-4 mr-1 ${verifyingSubscription ? 'animate-spin' : ''}`} />
-                  {verifyingSubscription ? 'Verificando...' : 'Verificar Plano'}
+                  {verifyingSubscription ? t('userDashboard.verifying') : t('userDashboard.verifyPlan')}
                 </Button>
                 {shouldShowUpgradeButton() && (
                   <Button
@@ -393,14 +391,14 @@ const Dashboard = () => {
                 )}
               </div>
               
-              <span className="text-sm text-gray-600 hidden lg:block">Olá, {user?.email}</span>
+              <span className="text-sm text-gray-600 hidden lg:block">{t('userDashboard.welcome')}, {user?.email}</span>
               <Button 
                 variant="outline" 
                 onClick={handleSignOut}
                 className="hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all duration-200"
               >
                 <LogOut className="h-4 w-4 mr-2" />
-                Sair
+                {t('userDashboard.logout')}
               </Button>
             </div>
 
@@ -418,9 +416,12 @@ const Dashboard = () => {
             <div className="md:hidden border-t border-gray-200 py-4">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
+                  <LanguageSelector />
                   <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-medium`}>
                     {getPlanDisplayName(subscription?.plan_type || 'free')}
                   </Badge>
+                </div>
+                <div className="flex items-center justify-between">
                   <div className="flex space-x-2">
                     <Button
                       variant="outline"
@@ -430,7 +431,7 @@ const Dashboard = () => {
                       className="text-blue-600 border-blue-600 hover:bg-blue-50"
                     >
                       <RefreshCw className={`h-4 w-4 mr-1 ${verifyingSubscription ? 'animate-spin' : ''}`} />
-                      Verificar
+                      {t('userDashboard.verifyPlan')}
                     </Button>
                     {shouldShowUpgradeButton() && (
                       <Button
@@ -443,19 +444,19 @@ const Dashboard = () => {
                         className="text-brand-green border-brand-green hover:bg-brand-green hover:text-white"
                       >
                         <Crown className="h-4 w-4 mr-1" />
-                        Upgrade
+                        {t('userDashboard.upgrade')}
                       </Button>
                     )}
                   </div>
                 </div>
-                <p className="text-sm text-gray-600">Olá, {user?.email}</p>
+                <p className="text-sm text-gray-600">{t('userDashboard.welcome')}, {user?.email}</p>
                 <Button 
                   variant="outline" 
                   onClick={handleSignOut}
                   className="w-full justify-center hover:bg-red-50 hover:text-red-600 hover:border-red-200"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
-                  Sair
+                  {t('userDashboard.logout')}
                 </Button>
               </div>
             </div>
@@ -468,12 +469,12 @@ const Dashboard = () => {
         {shouldShowLimitWarning() && (
           <Alert className="mb-6 border-yellow-200 bg-yellow-50">
             <AlertDescription className="text-yellow-800">
-              ⚠️ Você está próximo do limite de mensagens ({getMessagesDisplay()}). 
+              {t('userDashboard.limitWarning')}
               <button 
                 onClick={() => setShowUpgradeModal(true)}
                 className="ml-1 text-brand-green hover:underline font-medium"
               >
-                Considere fazer upgrade do seu plano
+                {t('userDashboard.planUpgrade')}
               </button>
             </AlertDescription>
           </Alert>
@@ -482,22 +483,22 @@ const Dashboard = () => {
         {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
           {[
-            { icon: Bot, label: 'Agentes', value: `${agents.length}/${agentLimit === 999999 ? '∞' : agentLimit}`, color: 'text-brand-green' },
+            { icon: Bot, label: t('userDashboard.agents'), value: `${agents.length}/${agentLimit === 999999 ? '∞' : agentLimit}`, color: 'text-brand-green' },
             { 
               icon: MessageCircle, 
-              label: 'Mensagens', 
+              label: t('userDashboard.messages'), 
               value: getMessagesDisplay(), 
               color: 'text-blue-600'
             },
             { 
               icon: BarChart3, 
-              label: 'Plano', 
+              label: t('userDashboard.plan'), 
               value: getPlanDisplayName(subscription?.plan_type || 'free'), 
               color: 'text-purple-600'
             },
             { 
               icon: Settings, 
-              label: 'Ativos', 
+              label: t('userDashboard.active'), 
               value: agents.filter(agent => agent.is_active).length, 
               color: 'text-orange-600'
             }
@@ -522,17 +523,17 @@ const Dashboard = () => {
         {/* Agents Section */}
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900">Meus Agentes</h2>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900">{t('userDashboard.myAgents')}</h2>
             <Button 
               onClick={handleCreateAgent}
               className="bg-brand-green hover:bg-brand-green/90 text-white transition-all duration-200 hover:scale-105 w-full sm:w-auto"
               disabled={loading || !canCreateAgent()}
             >
               <Plus className="h-4 w-4 mr-2" />
-              {loading ? 'Carregando...' : 'Criar Agente'}
+              {loading ? t('userDashboard.loading') : t('userDashboard.createAgent')}
               {!loading && !canCreateAgent() && (
                 <span className="ml-2 text-xs">
-                  (Limite atingido)
+                  {t('userDashboard.limitReached')}
                 </span>
               )}
             </Button>
@@ -542,12 +543,12 @@ const Dashboard = () => {
           {!loading && !canCreateAgent() && (
             <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <p className="text-sm text-yellow-800">
-                <strong>Limite atingido:</strong> No plano {getPlanDisplayName(planType)} você pode criar até {agentLimit} agente{agentLimit > 1 ? 's' : ''}. 
+                <strong>{t('userDashboard.limitReached')}:</strong> {t('userDashboard.limitInfo', { planName: getPlanDisplayName(planType), limit: agentLimit })}
                 <button 
                   onClick={() => setShowUpgradeModal(true)}
                   className="ml-1 text-brand-green hover:underline font-medium"
                 >
-                  Faça upgrade para criar mais agentes
+                  {t('userDashboard.planUpgrade')}
                 </button>
               </p>
             </div>
@@ -558,10 +559,10 @@ const Dashboard = () => {
               <CardContent className="p-8 md:p-12 text-center">
                 <Bot className="h-12 w-12 md:h-16 md:w-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Nenhum agente criado ainda
+                  {t('userDashboard.noAgentsYet')}
                 </h3>
                 <p className="text-gray-600 mb-6 text-sm md:text-base px-4">
-                  Crie seu primeiro agente de IA para começar a automatizar seu atendimento no WhatsApp
+                  {t('userDashboard.noAgentsDescription')}
                 </p>
                 <Button 
                   onClick={handleCreateAgent}
@@ -569,7 +570,7 @@ const Dashboard = () => {
                   disabled={loading || !canCreateAgent()}
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  {loading ? 'Carregando...' : 'Criar Primeiro Agente'}
+                  {loading ? t('userDashboard.loading') : t('userDashboard.createFirstAgent')}
                 </Button>
               </CardContent>
             </Card>
