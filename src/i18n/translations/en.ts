@@ -1,3 +1,4 @@
+
 export const en = {
   translation: {
     header: {
@@ -125,6 +126,8 @@ export const en = {
     pricing: {
       title: "Plans that fit your budget",
       subtitle: "Start free and scale as your business grows. No long contracts or gotchas.",
+      freeTrial: "+ 7 days free",
+      freeTrialNote: "First subscription only",
       free: {
         title: "Free",
         price: "$ 0",

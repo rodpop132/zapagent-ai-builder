@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -118,6 +117,11 @@ const PricingSection = () => {
 
           {/* Plano Pro */}
           <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg hover:shadow-xl transition-shadow border-2 border-brand-green relative">
+            {/* Badge "+ 7 dias grátis" no canto superior direito */}
+            <div className="absolute -top-2 -right-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-xs md:text-sm font-bold shadow-lg">
+              {t('pricing.freeTrial')}
+            </div>
+            
             <div className="absolute -top-3 md:-top-4 left-1/2 transform -translate-x-1/2">
               <div className="bg-brand-green text-white px-4 md:px-6 py-1 md:py-2 rounded-full text-xs md:text-sm font-medium flex items-center space-x-2">
                 <span>{t('pricing.pro.popular')}</span>
@@ -136,6 +140,7 @@ const PricingSection = () => {
                 <span className="text-brand-gray ml-2">{t('pricing.pro.period')}</span>
               </div>
               <p className="text-sm md:text-base text-brand-gray">{t('pricing.pro.description')}</p>
+              <p className="text-xs text-gray-500 mt-2 italic">{t('pricing.freeTrialNote')}</p>
             </div>
             
             <ul className="space-y-3 md:space-y-4 mb-6 md:mb-8">
@@ -179,6 +184,11 @@ const PricingSection = () => {
 
           {/* Plano Ultra */}
           <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg hover:shadow-xl transition-shadow border border-gray-100 relative">
+            {/* Badge "+ 7 dias grátis" no canto superior direito */}
+            <div className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-violet-500 text-white px-3 py-1 rounded-full text-xs md:text-sm font-bold shadow-lg">
+              {t('pricing.freeTrial')}
+            </div>
+            
             <div className="absolute -top-3 md:-top-4 right-4">
               <div className="bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-medium">
                 {t('pricing.ultra.promotion')}
@@ -196,6 +206,7 @@ const PricingSection = () => {
                 <span className="text-brand-gray ml-2">{t('pricing.ultra.period')}</span>
               </div>
               <p className="text-sm md:text-base text-brand-gray">{t('pricing.ultra.description')}</p>
+              <p className="text-xs text-gray-500 mt-2 italic">{t('pricing.freeTrialNote')}</p>
             </div>
             
             <ul className="space-y-3 md:space-y-4 mb-6 md:mb-8">
