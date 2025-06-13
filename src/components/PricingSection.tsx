@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -117,15 +118,16 @@ const PricingSection = () => {
 
           {/* Plano Pro */}
           <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg hover:shadow-xl transition-shadow border-2 border-brand-green relative">
-            {/* Badge "+ 7 dias grátis" no canto superior direito */}
-            <div className="absolute -top-2 -right-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-xs md:text-sm font-bold shadow-lg">
+            {/* Badge "+ 7 dias grátis" no canto superior esquerdo */}
+            <div className="absolute -top-2 -left-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-xs md:text-sm font-bold shadow-lg">
               {t('pricing.freeTrial')}
             </div>
             
-            <div className="absolute -top-3 md:-top-4 left-1/2 transform -translate-x-1/2">
-              <div className="bg-brand-green text-white px-4 md:px-6 py-1 md:py-2 rounded-full text-xs md:text-sm font-medium flex items-center space-x-2">
+            {/* Badge "Most Popular" + "PROMOTION" no canto superior direito */}
+            <div className="absolute -top-3 md:-top-4 -right-2">
+              <div className="bg-brand-green text-white px-3 md:px-4 py-1 md:py-2 rounded-full text-xs md:text-sm font-medium flex items-center space-x-1 md:space-x-2">
                 <span>{t('pricing.pro.popular')}</span>
-                <span className="bg-white text-brand-green px-2 py-1 rounded text-xs">{t('pricing.pro.promotion')}</span>
+                <span className="bg-white text-brand-green px-1 md:px-2 py-0.5 md:py-1 rounded text-xs">{t('pricing.pro.promotion')}</span>
               </div>
             </div>
             
@@ -184,12 +186,13 @@ const PricingSection = () => {
 
           {/* Plano Ultra */}
           <div className="bg-white rounded-2xl p-6 md:p-8 shadow-lg hover:shadow-xl transition-shadow border border-gray-100 relative">
-            {/* Badge "+ 7 dias grátis" no canto superior direito */}
-            <div className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-violet-500 text-white px-3 py-1 rounded-full text-xs md:text-sm font-bold shadow-lg">
+            {/* Badge "+ 7 dias grátis" no canto superior esquerdo */}
+            <div className="absolute -top-2 -left-2 bg-gradient-to-r from-purple-500 to-violet-500 text-white px-3 py-1 rounded-full text-xs md:text-sm font-bold shadow-lg">
               {t('pricing.freeTrial')}
             </div>
             
-            <div className="absolute -top-3 md:-top-4 right-4">
+            {/* Badge "PROMOTION" no canto superior direito */}
+            <div className="absolute -top-3 md:-top-4 -right-2">
               <div className="bg-purple-600 text-white px-3 py-1 rounded-full text-xs font-medium">
                 {t('pricing.ultra.promotion')}
               </div>
