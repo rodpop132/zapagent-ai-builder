@@ -20,6 +20,12 @@ export const es = {
         noCode: "Sin código necesario",
         alwaysOn: "24h al día"
       },
+      chatExample: {
+        bot1: "¡Hola! 👋 ¡Bienvenido a nuestra tienda! ¿Cómo puedo ayudarte hoy?",
+        user1: "¡Hola! Quería preguntar sobre las zapatillas en oferta",
+        bot2: "¡Perfecto! Tenemos varias opciones con 30% de descuento. ¿Cuál es tu talla? ¡Puedo enviarte el catálogo! 🔥",
+        typing: "escribiendo..."
+      },
       chat: {
         client: "Cliente:",
         agent: "Agente IA:",
