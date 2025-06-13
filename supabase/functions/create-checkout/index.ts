@@ -41,35 +41,35 @@ serve(async (req) => {
       apiVersion: "2023-10-16",
     });
 
-    // Definir URLs dos produtos baseado no país/idioma
+    // URLs atualizadas dos produtos baseado no país/idioma
     const productUrls = {
       brasil: {
-        pro: "https://buy.stripe.com/test_fZucMY5vMeGq59OcYD1RC06",
-        ultra: "https://buy.stripe.com/test_14A7sEgaq0PA8m07Ej1RC01"
+        pro: "https://buy.stripe.com/6oUdRb0Kp3kj9Zxf5KafS00",
+        ultra: "https://buy.stripe.com/dRmdRb1Ot4on1t11eUafS01"
       },
       usa: {
-        pro: "https://buy.stripe.com/test_14A3co6zQdCmgSw6Af1RC02",
-        ultra: "https://buy.stripe.com/test_9B6bIU4rI41MgSw2jZ1RC03"
+        pro: "https://buy.stripe.com/cNi4gBeBfaML3B99LqafS02",
+        ultra: "https://buy.stripe.com/4gM9AVdxb9IHb3B9LqafS03"
       },
       spain: {
-        pro: "https://buy.stripe.com/test_eVq28k9M2dCm59O1fV1RC04",
-        ultra: "https://buy.stripe.com/test_dRmeV64rIbue9q47Ej1RC05"
+        pro: "https://buy.stripe.com/5kQcN71Otf31dbJ4r6afS04",
+        ultra: "https://buy.stripe.com/6oU14pct7f312x5aPuafS05"
       }
     };
 
-    // Definir IDs dos produtos baseado no país/idioma
+    // IDs atualizados dos produtos baseado no país/idioma
     const productIds = {
       brasil: {
-        pro: "prod_STmfzkSSMpD35w",
-        ultra: "prod_SToyLyjbb8R2Ds"
+        pro: "prod_SUZ84Ym66dvLIW",
+        ultra: "prod_SUZ8aGCiSLHXzt"
       },
       usa: {
-        pro: "prod_STp0xvRnEZxeDM", 
-        ultra: "prod_STp2DD4hfv6qDw"
+        pro: "prod_SUZ9Eya6vsJB8r", 
+        ultra: "prod_SUZAd2vttAy0qC"
       },
       spain: {
-        pro: "prod_STp3p9V59yRrlv",
-        ultra: "prod_STp5by78vNuem9"
+        pro: "prod_SUZBJvi0IHu3bG",
+        ultra: "prod_SUZCqBdDx8vg5m"
       }
     };
 
