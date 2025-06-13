@@ -73,7 +73,7 @@ const Sucesso = () => {
       const timer = setInterval(() => {
         setCountdown(prev => {
           if (prev <= 1) {
-            navigate('/dashboard');
+            navigate('/auth');
             return 0;
           }
           return prev - 1;
@@ -135,17 +135,17 @@ const Sucesso = () => {
             </p>
             <div className="bg-blue-50 p-3 rounded-lg">
               <p className="text-sm text-blue-700 font-medium">
-                Redirecionando para o dashboard em {countdown} segundos...
+                Redirecionando para o login em {countdown} segundos...
               </p>
             </div>
           </div>
           
           <div className="space-y-3">
             <Button 
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/auth')}
               className="w-full bg-green-600 hover:bg-green-700"
             >
-              Ir para Dashboard
+              Ir para Login
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
             <Button 

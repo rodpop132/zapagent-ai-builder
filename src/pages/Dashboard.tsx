@@ -183,36 +183,28 @@ const Dashboard = () => {
     try {
       console.log('🔄 DASHBOARD: Verificando assinatura no Stripe...');
       
-      const { data, error } = await supabase.functions.invoke('verify-subscription');
-
-      if (error) {
-        console.error('❌ DASHBOARD: Erro ao verificar plano:', error);
-        toast({
-          title: "Erro na verificação",
-          description: "Não foi possível verificar sua assinatura",
-          variant: "destructive"
-        });
-      } else {
-        console.log('✅ DASHBOARD: Verificação completa:', data);
-        
-        if (data?.subscribed) {
-          const planName = data.plan_type === 'pro' ? 'Pro' : 
-                         data.plan_type === 'ultra' ? 'Ultra' : 'Premium';
-          toast({
-            title: "Plano atualizado",
-            description: `Plano ${planName} confirmado!`,
-            variant: "default"
-          });
-        } else {
-          toast({
-            title: "Verificação completa",
-            description: "Nenhuma assinatura ativa encontrada",
-            variant: "default"
-          });
+      const response = await fetch('/api/verify-subscription', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+          'Content-Type': 'application/json'
         }
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('✅ DASHBOARD: Verificação completa:', result);
         
-        // Recarregar dados após verificação
+        toast({
+          title: "Verificação completa",
+          description: `Plano atualizado: ${result.plan_type}`,
+          variant: "default"
+        });
+        
+        // Recarregar dados
         await fetchSubscription();
+      } else {
+        throw new Error('Erro na verificação');
       }
     } catch (error) {
       console.error('❌ DASHBOARD: Erro na verificação:', error);

@@ -3,43 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { XCircle, ArrowLeft, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { useState } from 'react';
-import { toast } from 'sonner';
 
 const Cancelado = () => {
   const navigate = useNavigate();
-  const [verifyingPlan, setVerifyingPlan] = useState(false);
-
-  const verifyPlan = async () => {
-    setVerifyingPlan(true);
-    try {
-      console.log('🔄 CANCELADO: Verificando plano no Stripe...');
-      
-      const { data, error } = await supabase.functions.invoke('verify-subscription');
-      
-      if (error) {
-        console.error('❌ CANCELADO: Erro ao verificar plano:', error);
-        toast.error('Erro ao verificar plano');
-      } else {
-        console.log('✅ CANCELADO: Verificação completa:', data);
-        
-        if (data?.subscribed) {
-          const planName = data.plan_type === 'pro' ? 'Pro' : 
-                         data.plan_type === 'ultra' ? 'Ultra' : 'Premium';
-          toast.success(`Plano ${planName} confirmado! Redirecionando...`);
-          setTimeout(() => navigate('/dashboard'), 1500);
-        } else {
-          toast.info('Nenhuma assinatura ativa encontrada');
-        }
-      }
-    } catch (error) {
-      console.error('❌ CANCELADO: Erro na verificação:', error);
-      toast.error('Erro ao verificar plano');
-    } finally {
-      setVerifyingPlan(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -73,17 +39,6 @@ const Cancelado = () => {
               <RefreshCw className="h-4 w-4 mr-2" />
               Tentar Novamente
             </Button>
-            
-            <Button 
-              variant="outline"
-              onClick={verifyPlan}
-              disabled={verifyingPlan}
-              className="w-full text-green-600 border-green-600 hover:bg-green-50"
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${verifyingPlan ? 'animate-spin' : ''}`} />
-              {verifyingPlan ? 'Verificando...' : 'Verificar Plano'}
-            </Button>
-            
             <Button 
               variant="outline" 
               onClick={() => navigate('/')}
