@@ -25,7 +25,12 @@ const languages: Language[] = [
 const LanguageSelector = () => {
   const { i18n } = useTranslation();
   const [currentLanguage, setCurrentLanguage] = useState(() => {
-    return languages.find(lang => lang.code === i18n.language) || languages[0];
+    // Se não há idioma salvo ou detectado, usar espanhol como padrão
+    const savedLanguage = localStorage.getItem('selectedLanguage');
+    if (!savedLanguage) {
+      return languages.find(lang => lang.code === 'es') || languages[1]; // Espanhol por padrão
+    }
+    return languages.find(lang => lang.code === i18n.language) || languages.find(lang => lang.code === 'es') || languages[1];
   });
 
   const handleLanguageChange = (language: Language) => {

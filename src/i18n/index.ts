@@ -6,7 +6,7 @@ import { pt } from './translations/pt';
 import { es } from './translations/es';
 import { en } from './translations/en';
 
-// Função para detectar país baseado em IP (usando um serviço gratuito)
+// Função para detectar país baseado em IP (mantida para funcionalidade futura se necessário)
 const detectCountryAndSetLanguage = async () => {
   try {
     const response = await fetch('https://ipapi.co/json/');
@@ -32,16 +32,13 @@ const detectCountryAndSetLanguage = async () => {
       'nz': 'en'
     };
     
-    const detectedLanguage = countryToLanguage[country] || 'en';
+    const detectedLanguage = countryToLanguage[country] || 'es';
     console.log('Idioma detectado:', detectedLanguage);
-    
-    // Definir idioma no localStorage para persistir
-    localStorage.setItem('selectedLanguage', detectedLanguage);
     
     return detectedLanguage;
   } catch (error) {
     console.error('Erro ao detectar país:', error);
-    return 'en'; // fallback para inglês
+    return 'es'; // fallback para espanhol
   }
 };
 
@@ -54,7 +51,7 @@ i18n
       es, 
       en
     },
-    fallbackLng: 'en',
+    fallbackLng: 'es', // Mudança aqui: fallback para espanhol
     debug: false,
     detection: {
       order: ['localStorage', 'navigator'],
@@ -65,9 +62,13 @@ i18n
     }
   });
 
-// Detectar país e definir idioma na inicialização
-detectCountryAndSetLanguage().then(language => {
-  i18n.changeLanguage(language);
-});
+// Definir espanhol como idioma padrão se não houver preferência salva
+const savedLanguage = localStorage.getItem('selectedLanguage');
+if (!savedLanguage) {
+  localStorage.setItem('selectedLanguage', 'es');
+  i18n.changeLanguage('es');
+} else {
+  i18n.changeLanguage(savedLanguage);
+}
 
 export default i18n;
