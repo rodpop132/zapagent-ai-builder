@@ -18,15 +18,15 @@ const Sucesso = () => {
   const sessionId = searchParams.get('session_id');
 
   useEffect(() => {
-    const verifyPayment = async () => {
-      console.log('💳 SUCESSO: Iniciando verificação de pagamento...');
+    const verifyAndUpdateSubscription = async () => {
+      console.log('💳 SUCESSO: Iniciando verificação e atualização de pagamento...');
       console.log('💳 SUCESSO: Session ID:', sessionId);
 
       try {
-        // Aguardar um pouco para o webhook processar
+        // Aguardar um pouco para o Stripe processar
         await new Promise(resolve => setTimeout(resolve, 2000));
         
-        console.log('💳 SUCESSO: Verificando assinatura...');
+        console.log('💳 SUCESSO: Verificando assinatura no Stripe...');
         const { data, error } = await supabase.functions.invoke('verify-subscription');
         
         if (error) {
@@ -34,15 +34,15 @@ const Sucesso = () => {
           toast.error('Erro ao verificar pagamento');
         } else {
           console.log('✅ SUCESSO: Resposta da verificação:', data);
-          setVerified(true);
           
           if (data?.subscribed) {
             const planName = data.plan_type === 'pro' ? 'Pro' : 
                            data.plan_type === 'ultra' ? 'Ultra' : 'Premium';
             setPlanInfo(planName);
+            setVerified(true);
             toast.success(`Pagamento confirmado! Plano ${planName} ativado com sucesso.`);
           } else {
-            console.log('⏳ SUCESSO: Aguardando processamento...');
+            console.log('⏳ SUCESSO: Pagamento ainda processando, tentando novamente...');
             // Tentar novamente após alguns segundos
             setTimeout(async () => {
               console.log('🔄 SUCESSO: Verificando novamente...');
@@ -51,9 +51,13 @@ const Sucesso = () => {
                 const planName = retryData.plan_type === 'pro' ? 'Pro' : 
                                retryData.plan_type === 'ultra' ? 'Ultra' : 'Premium';
                 setPlanInfo(planName);
+                setVerified(true);
                 toast.success(`Pagamento confirmado! Plano ${planName} ativado com sucesso.`);
+              } else {
+                console.log('⚠️ SUCESSO: Ainda processando, pode levar alguns minutos...');
+                toast.info('Pagamento sendo processado. Pode levar alguns minutos para aparecer.');
               }
-            }, 3000);
+            }, 5000);
           }
         }
       } catch (error) {
@@ -64,7 +68,7 @@ const Sucesso = () => {
       }
     };
 
-    verifyPayment();
+    verifyAndUpdateSubscription();
   }, [sessionId]);
 
   // Countdown para redirecionamento automático
@@ -73,7 +77,7 @@ const Sucesso = () => {
       const timer = setInterval(() => {
         setCountdown(prev => {
           if (prev <= 1) {
-            navigate('/auth');
+            navigate('/dashboard');
             return 0;
           }
           return prev - 1;
@@ -94,7 +98,7 @@ const Sucesso = () => {
               Verificando Pagamento
             </h2>
             <p className="text-gray-600">
-              Aguarde enquanto confirmamos sua assinatura...
+              Aguarde enquanto confirmamos e ativamos sua assinatura...
             </p>
             {sessionId && (
               <p className="text-xs text-gray-400 mt-2">
@@ -115,7 +119,7 @@ const Sucesso = () => {
             <CheckCircle className="h-10 w-10 text-green-600" />
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">
-            ✅ Transação Realizada!
+            ✅ Pagamento Confirmado!
           </CardTitle>
           <CardDescription className="text-lg">
             Sua assinatura foi ativada com sucesso
@@ -124,28 +128,28 @@ const Sucesso = () => {
         <CardContent className="space-y-6">
           <div className="text-center space-y-2">
             {planInfo && (
-              <div className="bg-green-50 p-3 rounded-lg mb-4">
-                <p className="text-green-700 font-medium">
-                  Plano {planInfo} ativado!
+              <div className="bg-green-50 p-4 rounded-lg mb-4">
+                <p className="text-green-700 font-semibold text-lg">
+                  🎉 Plano {planInfo} Ativado!
+                </p>
+                <p className="text-green-600 text-sm mt-1">
+                  Agora você tem acesso a todos os recursos premium
                 </p>
               </div>
             )}
-            <p className="text-gray-600">
-              Agora você tem acesso a todos os recursos do seu novo plano.
-            </p>
             <div className="bg-blue-50 p-3 rounded-lg">
               <p className="text-sm text-blue-700 font-medium">
-                Redirecionando para o login em {countdown} segundos...
+                Redirecionando para o dashboard em {countdown} segundos...
               </p>
             </div>
           </div>
           
           <div className="space-y-3">
             <Button 
-              onClick={() => navigate('/auth')}
+              onClick={() => navigate('/dashboard')}
               className="w-full bg-green-600 hover:bg-green-700"
             >
-              Ir para Login
+              Ir para Dashboard
               <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
             <Button 

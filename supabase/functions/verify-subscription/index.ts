@@ -22,15 +22,16 @@ serve(async (req) => {
   try {
     let user = null;
     
-    // Tentar obter usuário autenticado (pode não existir se for checkout de convidado)
+    // Tentar obter usuário autenticado
     const authHeader = req.headers.get("Authorization");
     if (authHeader) {
       try {
         const token = authHeader.replace("Bearer ", "");
         const { data: userData } = await supabaseClient.auth.getUser(token);
         user = userData.user;
+        console.log('✅ Usuário autenticado:', user?.email);
       } catch (error) {
-        console.log('Sem usuário autenticado, verificando pagamentos de convidado');
+        console.log('⚠️ Sem usuário autenticado, verificando pagamentos recentes');
       }
     }
 
@@ -45,14 +46,14 @@ serve(async (req) => {
 
     // Se não há usuário autenticado, verificar últimos pagamentos
     if (!user) {
-      console.log('Verificando últimos checkouts para identificar email do pagamento...');
+      console.log('🔍 Verificando últimos checkouts para identificar pagamentos recentes...');
       
       // Buscar sessões de checkout recentes (últimas 24 horas)
       const twentyFourHoursAgo = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
       
       try {
         const sessions = await stripe.checkout.sessions.list({
-          limit: 100,
+          limit: 20,
           created: { gte: twentyFourHoursAgo }
         });
         
@@ -65,15 +66,15 @@ serve(async (req) => {
         
         if (recentSession) {
           customerEmail = recentSession.customer_email;
-          console.log('Email encontrado em checkout recente:', customerEmail);
+          console.log('📧 Email encontrado em checkout recente:', customerEmail);
         }
       } catch (error) {
-        console.error('Erro ao buscar sessões de checkout:', error);
+        console.error('❌ Erro ao buscar sessões de checkout:', error);
       }
     }
 
     if (!customerEmail) {
-      console.log('Nenhum email encontrado para verificação');
+      console.log('⚠️ Nenhum email encontrado para verificação');
       return new Response(JSON.stringify({ 
         subscribed: false, 
         plan_type: 'free',
@@ -84,26 +85,28 @@ serve(async (req) => {
       });
     }
 
-    console.log(`Verificando assinatura para: ${customerEmail}`);
+    console.log(`🔍 Verificando assinatura para: ${customerEmail}`);
 
     // Buscar customer no Stripe
     const customers = await stripe.customers.list({ email: customerEmail, limit: 1 });
     
     if (customers.data.length === 0) {
-      console.log('Nenhum customer encontrado no Stripe');
+      console.log('❌ Nenhum customer encontrado no Stripe');
       
       // Garantir que existe registro na tabela subscriptions
-      await supabaseClient
-        .from("subscriptions")
-        .upsert({
-          user_id: user?.id || null,
-          plan_type: 'free',
-          status: 'active',
-          messages_used: 0,
-          messages_limit: 30,
-          is_unlimited: false,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: user?.id ? 'user_id' : undefined });
+      if (user?.id) {
+        await supabaseClient
+          .from("subscriptions")
+          .upsert({
+            user_id: user.id,
+            plan_type: 'free',
+            status: 'active',
+            messages_used: 0,
+            messages_limit: 30,
+            is_unlimited: false,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'user_id' });
+      }
 
       return new Response(JSON.stringify({ 
         subscribed: false, 
@@ -115,7 +118,7 @@ serve(async (req) => {
     }
 
     const customerId = customers.data[0].id;
-    console.log(`Customer encontrado: ${customerId}`);
+    console.log(`✅ Customer encontrado: ${customerId}`);
 
     // Buscar assinaturas ativas
     const subscriptions = await stripe.subscriptions.list({
@@ -124,31 +127,37 @@ serve(async (req) => {
       limit: 10,
     });
 
-    console.log(`Encontradas ${subscriptions.data.length} assinaturas ativas`);
+    console.log(`📊 Encontradas ${subscriptions.data.length} assinaturas ativas`);
 
     if (subscriptions.data.length > 0) {
       const subscription = subscriptions.data[0];
       const priceId = subscription.items.data[0].price.id;
       
-      console.log(`Price ID da assinatura ativa: ${priceId}`);
+      console.log(`💰 Price ID da assinatura ativa: ${priceId}`);
       
-      // Mapear price ID para plano
-      if (priceId === "price_1RVbYyPpmCy5gtzzPUjXC12Z") {
+      // Mapear price ID para plano - usando os novos links do Stripe
+      if (priceId === "price_1RVbYyPpmCy5gtzzPUjXC12Z" || priceId.includes("pro")) {
         planType = 'pro';
         messagesLimit = 10000;
-      } else if (priceId === "price_1RVfjlPpmCy5gtzzfOMaqUJO") {
+        console.log('✅ Plano Pro identificado');
+      } else if (priceId === "price_1RVfjlPpmCy5gtzzfOMaqUJO" || priceId.includes("ultra")) {
         planType = 'ultra';
         messagesLimit = 999999;
         isUnlimited = true;
+        console.log('✅ Plano Ultra identificado');
+      } else {
+        console.log(`⚠️ Price ID não reconhecido: ${priceId}, assumindo Pro`);
+        planType = 'pro';
+        messagesLimit = 10000;
       }
     }
 
-    console.log(`Atualizando banco: ${planType}, limite: ${messagesLimit}`);
+    console.log(`🔄 Atualizando banco: ${planType}, limite: ${messagesLimit}`);
 
     // Atualizar ou criar registro na tabela subscriptions
     if (user?.id) {
       // Usuário autenticado - atualizar por user_id
-      await supabaseClient
+      const { error: updateError } = await supabaseClient
         .from("subscriptions")
         .upsert({
           user_id: user.id,
@@ -158,17 +167,22 @@ serve(async (req) => {
           is_unlimited: isUnlimited,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' });
+
+      if (updateError) {
+        console.error('❌ Erro ao atualizar assinatura:', updateError);
+      } else {
+        console.log('✅ Assinatura atualizada com sucesso');
+      }
     } else {
-      // Checkout de convidado - criar registro temporário que será associado quando o usuário se registrar
-      console.log('Salvando dados de assinatura para futuro registro');
+      // Checkout sem usuário - verificar se já existe usuário com este email
+      console.log('🔍 Procurando usuário existente com email:', customerEmail);
       
-      // Verificar se já existe um usuário com este email
-      const { data: existingUser } = await supabaseClient.auth.admin.listUsers();
-      const userWithEmail = existingUser.users.find(u => u.email === customerEmail);
+      const { data: existingUsers } = await supabaseClient.auth.admin.listUsers();
+      const userWithEmail = existingUsers.users.find(u => u.email === customerEmail);
       
       if (userWithEmail) {
-        // Usuário já existe, atualizar sua assinatura
-        await supabaseClient
+        console.log('✅ Usuário encontrado, atualizando assinatura:', userWithEmail.id);
+        const { error: updateError } = await supabaseClient
           .from("subscriptions")
           .upsert({
             user_id: userWithEmail.id,
@@ -178,10 +192,16 @@ serve(async (req) => {
             is_unlimited: isUnlimited,
             updated_at: new Date().toISOString(),
           }, { onConflict: 'user_id' });
+
+        if (updateError) {
+          console.error('❌ Erro ao atualizar assinatura:', updateError);
+        } else {
+          console.log('✅ Assinatura atualizada para usuário existente');
+        }
       }
     }
 
-    console.log(`Verificação concluída para ${customerEmail}: ${planType}`);
+    console.log(`🎉 Verificação concluída para ${customerEmail}: ${planType}`);
 
     return new Response(JSON.stringify({
       subscribed: planType !== 'free',
@@ -194,9 +214,11 @@ serve(async (req) => {
       status: 200,
     });
   } catch (error) {
-    console.error("Erro ao verificar assinatura:", error);
+    console.error("💥 Erro ao verificar assinatura:", error);
     return new Response(JSON.stringify({ 
-      error: error.message
+      error: error.message,
+      subscribed: false,
+      plan_type: 'free'
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
