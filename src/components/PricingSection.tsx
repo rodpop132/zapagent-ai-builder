@@ -90,7 +90,7 @@ const PricingSection = () => {
             </div>
             
             <ul className="space-y-2 md:space-y-3 lg:space-y-4 mb-4 md:mb-6 lg:mb-8">
-              {t('pricing.free.features', { returnObjects: true }).map((feature: string, index: number) => (
+              {(t('pricing.free.features', { returnObjects: true }) as string[]).map((feature: string, index: number) => (
                 <li key={index} className="flex items-start">
                   <Check className="h-4 w-4 md:h-5 md:w-5 text-brand-green mr-2 md:mr-3 flex-shrink-0 mt-0.5" />
                   <span className="text-xs md:text-sm lg:text-base text-brand-gray leading-relaxed">{feature}</span>
@@ -136,7 +136,7 @@ const PricingSection = () => {
             </div>
             
             <ul className="space-y-2 md:space-y-3 lg:space-y-4 mb-4 md:mb-6 lg:mb-8">
-              {t('pricing.pro.features', { returnObjects: true }).map((feature: string, index: number) => (
+              {(t('pricing.pro.features', { returnObjects: true }) as string[]).map((feature: string, index: number) => (
                 <li key={index} className="flex items-start">
                   <Check className="h-4 w-4 md:h-5 md:w-5 text-brand-green mr-2 md:mr-3 flex-shrink-0 mt-0.5" />
                   <span className="text-xs md:text-sm lg:text-base text-brand-gray leading-relaxed">{feature}</span>
@@ -181,7 +181,7 @@ const PricingSection = () => {
             </div>
             
             <ul className="space-y-2 md:space-y-3 lg:space-y-4 mb-4 md:mb-6 lg:mb-8">
-              {t('pricing.ultra.features', { returnObjects: true }).map((feature: string, index: number) => (
+              {(t('pricing.ultra.features', { returnObjects: true }) as string[]).map((feature: string, index: number) => (
                 <li key={index} className="flex items-start">
                   <Check className="h-4 w-4 md:h-5 md:w-5 text-purple-600 mr-2 md:mr-3 flex-shrink-0 mt-0.5" />
                   <span className="text-xs md:text-sm lg:text-base text-brand-gray leading-relaxed">{feature}</span>
