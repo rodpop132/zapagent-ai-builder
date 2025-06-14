@@ -1,12 +1,13 @@
+
 export const es = {
   translation: {
     hero: {
       title: "Crea Agentes de IA para WhatsApp en Minutos",
-      subtitle: "Automatiza tu atención con inteligencia artificial. Responde clientes 24/7, aumenta ventas y mejora la satisfacción sin esfuerzo.",
+      subtitle: "Automatiza tu atención al cliente con inteligencia artificial. Responde a clientes 24/7, aumenta ventas y mejora la satisfacción sin esfuerzo.",
       cta: "Crear Agente Gratis",
       chatExample: {
         bot1: "¡Hola! ¿Cómo puedo ayudarte hoy?",
-        user1: "Quiero saber sobre los productos",
+        user1: "Quiero saber sobre productos",
         bot2: "¡Perfecto! Tenemos varias opciones disponibles. ¿Qué tipo de producto buscas?",
         typing: "ZapAgent está escribiendo..."
       }
@@ -16,20 +17,23 @@ export const es = {
       plans: "Planes",
       about: "Acerca de",
       login: "Iniciar Sesión",
-      dashboard: "Panel"
+      dashboard: "Panel",
+      logout: "Cerrar Sesión",
+      createAgent: "Crear Agente",
+      faq: "FAQ"
     },
     howItWorks: {
       title: "Cómo Funciona",
       subtitle: "En solo 3 pasos simples, tu agente de IA estará listo para atender a tus clientes",
       step1: {
         number: "1",
-        title: "Configura tu Agente",
-        description: "Define la personalidad, información del negocio e instrucciones específicas para tu agente de IA"
+        title: "Configura Tu Agente",
+        description: "Define personalidad, información del negocio e instrucciones específicas para tu agente de IA"
       },
       step2: {
         number: "2",
-        title: "Entrena con tu Información",
-        description: "Agrega datos sobre productos, servicios y preguntas frecuentes para entrenar tu agente"
+        title: "Entrena con Tu Información",
+        description: "Añade datos sobre productos, servicios y preguntas frecuentes para entrenar tu agente"
       },
       step3: {
         number: "3",
@@ -38,26 +42,26 @@ export const es = {
       }
     },
     testimonials: {
-      title: "Qué dicen nuestros clientes",
-      subtitle: "Historias reales de empresas que transformaron su atención",
+      title: "Lo que dicen nuestros clientes",
+      subtitle: "Historias reales de empresas que transformaron su atención al cliente",
       customer1: {
-        name: "Carlos Méndez",
+        name: "Carlos Mendes",
         business: "Tienda de Electrónicos",
-        content: "Aumentamos nuestras ventas en 40% después de implementar ZapAgent. ¡La atención 24/7 hizo toda la diferencia!"
+        content: "Aumentamos nuestras ventas en 40% después de implementar ZapAgent. ¡La atención 24/7 marcó toda la diferencia!"
       },
       customer2: {
         name: "Ana Paula",
-        business: "Consultoría Jurídica",
-        content: "Nuestros clientes aman la rapidez en las respuestas. El agente logra responder 80% de las dudas automáticamente."
+        business: "Consultoría Legal",
+        content: "Nuestros clientes aman la rapidez de las respuestas. El agente logra responder el 80% de las preguntas automáticamente."
       },
       customer3: {
         name: "Roberto Silva",
         business: "E-commerce de Moda",
-        content: "Redujo drásticamente nuestra carga de trabajo en atención. Ahora nos enfocamos solo en casos más complejos."
+        content: "Redujo drásticamente nuestra carga de trabajo en atención. Ahora nos enfocamos solo en los casos más complejos."
       }
     },
     pricing: {
-      title: "Planes que Crecen con tu Negocio",
+      title: "Planes que Crecen con Tu Negocio",
       subtitle: "Elige el plan ideal para tus necesidades. Sin compromisos, cancela cuando quieras.",
       monthly: "Mensual",
       annually: "Anual",
@@ -65,49 +69,61 @@ export const es = {
       freeTrial: "+ 7 días gratis",
       promotion: "PROMOCIÓN",
       mostPopular: "Más Popular",
-      freeTrialNote: "* Solo en la primera suscripción",
-      starter: {
-        name: "Starter",
-        price: "Gratis",
+      freeTrialNote: "* Solo en primera suscripción",
+      guarantee: "Garantía de 30 días - Satisfacción garantizada o tu dinero de vuelta",
+      comingSoon: "Próximamente: Planes Enterprise personalizados para grandes empresas",
+      free: {
+        title: "Gratuito",
+        price: "$ 0",
+        period: "/mes",
         description: "Perfecto para probar nuestra plataforma",
-        features: [
-          "1 agente de IA",
-          "100 mensajes/mes",
-          "Soporte básico por email",
-          "Integración WhatsApp"
-        ],
+        features: {
+          agents: "1 agente de IA",
+          messages: "100 mensajes/mes",
+          simulator: "Simulador de conversaciones",
+          support: "Soporte por email"
+        },
         cta: "Comenzar Gratis"
       },
       pro: {
-        name: "Pro",
-        price: "€ 24",
-        originalPrice: "€ 49",
+        title: "Pro",
+        price: "$ 24",
+        originalPrice: "$ 49",
+        period: "/mes",
+        discount: "-50%",
         description: "Ideal para pequeñas y medianas empresas",
-        features: [
-          "5 agentes de IA",
-          "5.000 mensajes/mes",
-          "Soporte prioritario",
-          "Analytics avanzado",
-          "Integración CRM",
-          "Personalización avanzada"
-        ],
-        cta: "Comenzar Prueba Gratis"
+        popular: "Más Popular",
+        promotion: "PROMOCIÓN",
+        features: {
+          agents: "5 agentes de IA",
+          messages: "5.000 mensajes/mes",
+          training: "Entrenamiento personalizado",
+          whatsapp: "Integración WhatsApp",
+          analytics: "Análisis avanzados",
+          support: "Soporte prioritario",
+          customizations: "Personalizaciones avanzadas"
+        },
+        cta: "Iniciar Prueba Gratis"
       },
       ultra: {
-        name: "Ultra",
-        price: "€ 49",
-        originalPrice: "€ 99",
+        title: "Ultra",
+        price: "$ 49",
+        originalPrice: "$ 99",
+        period: "/mes",
+        discount: "-50%",
         description: "Para empresas que necesitan escala",
-        features: [
-          "Agentes ilimitados",
-          "50.000 mensajes/mes",
-          "Soporte 24/7",
-          "API personalizada",
-          "Integración completa",
-          "Gerente de cuenta dedicado",
-          "Entrenamiento personalizado"
-        ],
-        cta: "Comenzar Prueba Gratis"
+        promotion: "PROMOCIÓN",
+        features: {
+          agents: "Agentes ilimitados",
+          messages: "50.000 mensajes/mes",
+          training: "Entrenamiento avanzado",
+          analytics: "Analytics completos",
+          integrations: "Integraciones completas",
+          support: "Soporte 24/7",
+          api: "API personalizada",
+          telegram: "Soporte para Telegram"
+        },
+        cta: "Iniciar Prueba Gratis"
       }
     },
     benefits: {
@@ -126,7 +142,7 @@ export const es = {
         description: "Conecta con WhatsApp, CRM y otras herramientas que ya usas"
       },
       feature4: {
-        title: "Analytics Detallado",
+        title: "Análisis Detallados",
         description: "Sigue métricas importantes y optimiza tu atención"
       },
       feature5: {
@@ -140,14 +156,14 @@ export const es = {
     },
     faq: {
       title: "Preguntas Frecuentes",
-      subtitle: "Resuelve tus dudas sobre nuestra plataforma",
+      subtitle: "Aclara tus dudas sobre nuestra plataforma",
       questions: {
         q1: {
           question: "¿Cómo funciona el período de prueba gratuita?",
           answer: "Tienes 7 días gratis para probar todas las características del plan elegido. No cobramos nada durante este período y puedes cancelar en cualquier momento."
         },
         q2: {
-          question: "¿Necesito conocimiento técnico para usar?",
+          question: "¿Necesito conocimiento técnico para usarlo?",
           answer: "¡No! Nuestra plataforma fue desarrollada para ser intuitiva. Cualquier persona puede crear y configurar un agente de IA en pocos minutos."
         },
         q3: {
@@ -160,15 +176,15 @@ export const es = {
         },
         q5: {
           question: "¿Hay límite de mensajes?",
-          answer: "Cada plan tiene su límite mensual de mensajes. Si necesitas más, puedes actualizar el plan o comprar mensajes adicionales."
+          answer: "Cada plan tiene su límite mensual de mensajes. Si necesitas más, puedes actualizar tu plan o comprar mensajes adicionales."
         },
         q6: {
           question: "¿Cómo se calcula el límite de mensajes?",
-          answer: "Contamos cada mensaje enviado y recibido por tu agente. Los mensajes de configuración y pruebas no se contabilizan."
+          answer: "Contamos cada mensaje enviado y recibido por tu agente. Los mensajes de configuración y prueba no se contabilizan."
         },
         q7: {
           question: "¿Puedo entrenar el agente con mi propia información?",
-          answer: "¡Sí! Puedes agregar información sobre tus productos, servicios, políticas y cualquier contenido relevante para tu negocio."
+          answer: "¡Sí! Puedes añadir información sobre tus productos, servicios, políticas y cualquier contenido relevante para tu negocio."
         },
         q8: {
           question: "¿Qué tipo de soporte ofrecen?",
@@ -179,7 +195,7 @@ export const es = {
       contactLink: "Contáctanos"
     },
     footer: {
-      description: "Revoluciona tu atención con agentes de IA inteligentes para WhatsApp. Atención 24/7, aumento de ventas y satisfacción garantizada.",
+      description: "Revoluciona tu atención al cliente con agentes inteligentes de IA para WhatsApp. Atención 24/7, aumento de ventas y satisfacción garantizada.",
       email: "contacto@zapagent.ai",
       product: "Producto",
       simulate: "Simular",
@@ -205,17 +221,16 @@ export const es = {
       sendButton: "Enviar Mensaje",
       sending: "Enviando...",
       fillAllFields: "Por favor, completa todos los campos.",
-      successMessage: "¡Mensaje enviado con éxito! Te contactaremos pronto.",
+      successMessage: "¡Mensaje enviado con éxito! Nos pondremos en contacto pronto.",
       errorMessage: "Error al enviar mensaje. Inténtalo de nuevo."
     },
-    // Auth page translations
     auth: {
       welcome: "Bienvenido a ZapAgent AI",
       loginTitle: "Iniciar sesión",
       signupTitle: "Crear cuenta",
-      loginSubtitle: "Accede a tu panel de agentes IA",
-      signupSubtitle: "Comienza a crear agentes IA gratis",
-      loginButton: "Entrar",
+      loginSubtitle: "Accede al panel de tus agentes de IA",
+      signupSubtitle: "Comienza a crear agentes de IA gratis",
+      loginButton: "Iniciar Sesión",
       signupButton: "Registrarse",
       loginDescription: "Ingresa tus credenciales para acceder",
       signupDescription: "Completa los datos para comenzar",
@@ -231,27 +246,26 @@ export const es = {
       switchToLogin: "¿Ya tienes cuenta? Inicia sesión",
       loading: "Cargando..."
     },
-    // About page translations
     about: {
       title: "Acerca de ZapAgent AI",
-      subtitle: "Somos una empresa dedicada a revolucionar la atención al cliente a través de la inteligencia artificial, haciéndola más eficiente, personalizada y accesible para negocios de todos los tamaños.",
+      subtitle: "Somos una empresa dedicada a revolucionar la atención al cliente a través de la inteligencia artificial, haciéndola más eficiente, personalizada y accesible para empresas de todos los tamaños.",
       mission: "Nuestra Misión",
-      missionText: "Democratizar el acceso a la tecnología de IA para atención, permitiendo que cualquier negocio ofrezca soporte 24/7 de calidad profesional.",
+      missionText: "Democratizar el acceso a la tecnología de IA para atención al cliente, permitiendo que cualquier negocio ofrezca soporte de calidad profesional las 24 horas del día.",
       vision: "Nuestra Visión",
-      visionText: "Ser la plataforma de referencia mundial en agentes de IA para WhatsApp, conectando empresas y clientes de forma inteligente y humanizada.",
+      visionText: "Ser la plataforma líder mundial en agentes de IA para WhatsApp, conectando empresas y clientes de forma inteligente y humana.",
       values: "Nuestros Valores",
-      valuesText: "Innovación, simplicidad, transparencia y enfoque en el cliente. Creemos que la tecnología debe servir a las personas, no al contrario.",
+      valuesText: "Innovación, simplicidad, transparencia y enfoque en el cliente. Creemos que la tecnología debe servir a las personas, no al revés.",
       story: "Nuestra Historia",
-      storyText1: "ZapAgent AI nació de la necesidad real de pequeños y medianos negocios que luchaban por ofrecer atención de calidad 24 horas al día. Observamos que muchas empresas perdían clientes simplemente por no poder responder rápidamente a los mensajes de WhatsApp.",
+      storyText1: "ZapAgent AI nació de la necesidad real de pequeñas y medianas empresas que enfrentaban dificultades para ofrecer atención al cliente de calidad las 24 horas del día. Observamos que muchas empresas perdían clientes simplemente por no poder responder rápidamente a los mensajes de WhatsApp.",
       storyText2: "En 2024, nuestro equipo de desarrolladores y especialistas en IA se unió con el objetivo de crear una solución simple, efectiva y accesible. Queríamos que cualquier persona, independientemente del conocimiento técnico, pudiera crear y gestionar su propio agente de IA.",
-      storyText3: "Hoy, ayudamos a cientos de negocios a automatizar su atención, aumentar ventas y mejorar la satisfacción de los clientes. Nuestro compromiso es seguir innovando para hacer la inteligencia artificial cada vez más accesible y útil para todos.",
+      storyText3: "Hoy, ayudamos a cientos de empresas a automatizar su atención al cliente, aumentar ventas y mejorar la satisfacción de los clientes. Nuestro compromiso es seguir innovando para hacer que la inteligencia artificial sea cada vez más accesible y útil para todos.",
       stats: {
         agents: "Agentes Creados",
         messages: "Mensajes Procesados",
         satisfaction: "Satisfacción",
         support: "Soporte"
       },
-      ctaTitle: "¿Listo para revolucionar tu atención?",
+      ctaTitle: "¿Listo para revolucionar tu atención al cliente?",
       ctaButton: "Crear mi agente gratis",
       backButton: "Volver"
     }
