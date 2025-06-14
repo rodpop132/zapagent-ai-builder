@@ -1,307 +1,259 @@
-
 export const es = {
   translation: {
-    header: {
-      howItWorks: "Cómo funciona",
-      plans: "Planes", 
-      faq: "FAQ",
-      login: "Iniciar sesión",
-      logout: "Cerrar sesión",
-      dashboard: "Panel",
-      createAgent: "Crear agente gratis"
-    },
     hero: {
-      title: "Crea tu agente con IA y atiende a tus clientes automáticamente",
-      subtitle: "Transforma tu atención con inteligencia artificial.",
-      description: "Lo creas gratis. Solo pagas cuando empiezas a usar en WhatsApp.",
-      cta: "Crear agente gratis",
-      watchDemo: "Simular conversación",
-      features: {
-        free: "Creación gratuita",
-        noCode: "Sin código necesario",
-        alwaysOn: "24h al día"
-      },
+      title: "Crea Agentes de IA para WhatsApp en Minutos",
+      subtitle: "Automatiza tu atención con inteligencia artificial. Responde clientes 24/7, aumenta ventas y mejora la satisfacción sin esfuerzo.",
+      cta: "Crear Agente Gratis",
       chatExample: {
-        bot1: "¡Hola! 👋 ¡Bienvenido a nuestra tienda! ¿Cómo puedo ayudarte hoy?",
-        user1: "¡Hola! Quería preguntar sobre las zapatillas en oferta",
-        bot2: "¡Perfecto! Tenemos varias opciones con 30% de descuento. ¿Cuál es tu talla? ¡Puedo enviarte el catálogo! 🔥",
-        typing: "escribiendo..."
-      },
-      chat: {
-        client: "Cliente:",
-        agent: "Agente IA:",
-        clientMessage: "Hola, ¿hacen entregas?",
-        agentMessage: "¡Sí! Hacemos entregas en toda la ciudad. El tiempo es de 2-4 horas y la tarifa es €5,00. ¿Te gustaría hacer un pedido?",
-        description: "Tu agente responde automáticamente 24/7"
+        bot1: "¡Hola! ¿Cómo puedo ayudarte hoy?",
+        user1: "Quiero saber sobre los productos",
+        bot2: "¡Perfecto! Tenemos varias opciones disponibles. ¿Qué tipo de producto buscas?",
+        typing: "ZapAgent está escribiendo..."
       }
+    },
+    header: {
+      howItWorks: "Cómo Funciona",
+      plans: "Planes",
+      about: "Acerca de",
+      login: "Iniciar Sesión",
+      dashboard: "Panel"
     },
     howItWorks: {
-      title: "Cómo funciona ZapAgent AI",
-      subtitle: "En solo 3 pasos simples, tendrás un agente inteligente respondiendo a tus clientes automáticamente",
+      title: "Cómo Funciona",
+      subtitle: "En solo 3 pasos simples, tu agente de IA estará listo para atender a tus clientes",
       step1: {
-        number: "01",
-        title: "Crear",
-        description: "Configura tu agente en minutos, sin código. Define nombre, personalidad y área de actuación."
+        number: "1",
+        title: "Configura tu Agente",
+        description: "Define la personalidad, información del negocio e instrucciones específicas para tu agente de IA"
       },
       step2: {
-        number: "02",
-        title: "Entrenar",
-        description: "Carga PDFs, escribe preguntas frecuentes o pega textos. Tu IA aprende sobre tu negocio."
+        number: "2",
+        title: "Entrena con tu Información",
+        description: "Agrega datos sobre productos, servicios y preguntas frecuentes para entrenar tu agente"
       },
       step3: {
-        number: "03",
-        title: "Activar en WhatsApp",
-        description: "Conecta con WhatsApp y comienza a atender clientes automáticamente 24 horas al día."
+        number: "3",
+        title: "Conecta a WhatsApp",
+        description: "Integra fácilmente con WhatsApp y comienza a atender clientes automáticamente 24/7"
       }
     },
-    dashboard: {
-      title: "Ve tu sistema en acción",
-      subtitle: "Rastrea en tiempo real cómo nuestros agentes de IA están transformando tu atención al cliente en WhatsApp",
-      upgradePlan: "Actualizar Plan",
-      messagesSent: "Mensajes Enviados",
-      responseRate: "Tasa de Respuesta",
-      clientsServed: "Clientes Atendidos",
-      recentConversations: "Conversaciones Recientes",
-      live: "En Vivo",
-      newMessages: "mensajes nuevos",
-      status: {
-        online: "En línea",
-        typing: "Escribiendo",
-        read: "Leído",
-        delivered: "Entregado",
-        offline: "Desconectado"
+    testimonials: {
+      title: "Qué dicen nuestros clientes",
+      subtitle: "Historias reales de empresas que transformaron su atención",
+      customer1: {
+        name: "Carlos Méndez",
+        business: "Tienda de Electrónicos",
+        content: "Aumentamos nuestras ventas en 40% después de implementar ZapAgent. ¡La atención 24/7 hizo toda la diferencia!"
       },
-      conversations: {
-        joao: {
-          name: "Juan Silva",
-          message: "¿Cuál es el tiempo de entrega?"
-        },
-        maria: {
-          name: "María Santos",
-          message: "¿Lo tienen disponible en azul?"
-        },
-        pedro: {
-          name: "Pedro Costa",
-          message: "¿Aceptan pago instantáneo?"
-        },
-        ana: {
-          name: "Ana Oliveira",
-          message: "¿Hacen entrega en mi zona?"
-        }
+      customer2: {
+        name: "Ana Paula",
+        business: "Consultoría Jurídica",
+        content: "Nuestros clientes aman la rapidez en las respuestas. El agente logra responder 80% de las dudas automáticamente."
+      },
+      customer3: {
+        name: "Roberto Silva",
+        business: "E-commerce de Moda",
+        content: "Redujo drásticamente nuestra carga de trabajo en atención. Ahora nos enfocamos solo en casos más complejos."
+      }
+    },
+    pricing: {
+      title: "Planes que Crecen con tu Negocio",
+      subtitle: "Elige el plan ideal para tus necesidades. Sin compromisos, cancela cuando quieras.",
+      monthly: "Mensual",
+      annually: "Anual",
+      save: "Ahorra 20%",
+      freeTrial: "+ 7 días gratis",
+      promotion: "PROMOCIÓN",
+      mostPopular: "Más Popular",
+      freeTrialNote: "* Solo en la primera suscripción",
+      starter: {
+        name: "Starter",
+        price: "Gratis",
+        description: "Perfecto para probar nuestra plataforma",
+        features: [
+          "1 agente de IA",
+          "100 mensajes/mes",
+          "Soporte básico por email",
+          "Integración WhatsApp"
+        ],
+        cta: "Comenzar Gratis"
+      },
+      pro: {
+        name: "Pro",
+        price: "€ 24",
+        originalPrice: "€ 49",
+        description: "Ideal para pequeñas y medianas empresas",
+        features: [
+          "5 agentes de IA",
+          "5.000 mensajes/mes",
+          "Soporte prioritario",
+          "Analytics avanzado",
+          "Integración CRM",
+          "Personalización avanzada"
+        ],
+        cta: "Comenzar Prueba Gratis"
+      },
+      ultra: {
+        name: "Ultra",
+        price: "€ 49",
+        originalPrice: "€ 99",
+        description: "Para empresas que necesitan escala",
+        features: [
+          "Agentes ilimitados",
+          "50.000 mensajes/mes",
+          "Soporte 24/7",
+          "API personalizada",
+          "Integración completa",
+          "Gerente de cuenta dedicado",
+          "Entrenamiento personalizado"
+        ],
+        cta: "Comenzar Prueba Gratis"
       }
     },
     benefits: {
       title: "¿Por qué elegir ZapAgent AI?",
-      subtitle: "Ideal para pequeños negocios, freelancers y e-commerce que quieren automatizar la atención",
-      available24h: {
-        title: "Atención automática 24/7",
-        description: "Tu agente nunca para de trabajar. Responde a clientes a cualquier hora, incluso cuando duermes."
+      subtitle: "Características poderosas que marcan la diferencia en tu negocio",
+      feature1: {
+        title: "Atención 24/7",
+        description: "Tus clientes reciben respuestas instantáneas a cualquier hora del día"
       },
-      smartLearning: {
-        title: "IA entrenada en tu negocio",
-        description: "Carga tus propios datos y entrena la IA para responder exactamente como tú responderías."
+      feature2: {
+        title: "Fácil de Configurar",
+        description: "Configura tu agente en minutos, sin conocimiento técnico necesario"
       },
-      whatsappIntegration: {
-        title: "Integración directa con WhatsApp",
-        description: "Se conecta directamente con WhatsApp Business o WhatsApp Web. Tus clientes ni siquiera notarán que es un bot."
+      feature3: {
+        title: "Integración Completa",
+        description: "Conecta con WhatsApp, CRM y otras herramientas que ya usas"
       },
-      analytics: {
-        title: "Analytics completos",
-        description: "Ve cuántos mensajes se enviaron, tasa de respuesta y rendimiento de tu agente."
+      feature4: {
+        title: "Analytics Detallado",
+        description: "Sigue métricas importantes y optimiza tu atención"
       },
-      easySetup: {
-        title: "Fácil de usar - sin código",
-        description: "Interfaz intuitiva que cualquier persona puede usar. No necesitas ser programador."
+      feature5: {
+        title: "Soporte Especializado",
+        description: "Nuestro equipo está siempre listo para ayudarte"
       },
-      free: {
-        title: "Comienza gratis",
-        description: "Crea y prueba tu agente sin pagar nada. Solo pagas cuando quieras usar en WhatsApp."
-      },
-      cta: {
-        title: "Transforma tu atención con inteligencia artificial",
-        subtitle: "Únete a cientos de negocios que ya automatizaron su atención y aumentaron sus ventas",
-        guarantee: "Cancela cuando quieras, sin burocracia"
-      }
-    },
-    pricing: {
-      title: "Planes que se ajustan a tu presupuesto",
-      subtitle: "Comienza gratis y escala conforme tu negocio crece. Sin contratos largos o trampas.",
-      freeTrial: "+ 7 días gratis",
-      freeTrialNote: "Solo primera suscripción",
-      free: {
-        title: "Gratuito",
-        price: "€ 0",
-        period: "para siempre",
-        description: "Perfecto para probar y comenzar",
-        features: {
-          agents: "1 agente IA",
-          messages: "Hasta 30 mensajes/mes",
-          training: "Entrenamiento con PDFs",
-          simulator: "Simulador de conversación",
-          support: "Soporte básico"
-        },
-        cta: "Empezar gratis"
-      },
-      pro: {
-        title: "Pro",
-        originalPrice: "€ 49",
-        discount: "-76%",
-        price: "€ 12",
-        period: "/mes",
-        popular: "Más Popular",
-        promotion: "PROMOCIÓN",
-        description: "Ideal para pequeños negocios",
-        features: {
-          agents: "3 agentes IA activos",
-          messages: "10.000 mensajes/mes",
-          whatsapp: "Integración WhatsApp",
-          analytics: "Analytics básicos",
-          support: "Soporte prioritario",
-          customizations: "Personalizaciones extra"
-        },
-        cta: "Elegir Pro"
-      },
-      ultra: {
-        title: "Ultra",
-        originalPrice: "€ 79",
-        discount: "-65%",
-        price: "€ 28",
-        period: "/mes",
-        promotion: "PROMOCIÓN",
-        description: "Para negocios en crecimiento",
-        features: {
-          agents: "Agentes IA ilimitados",
-          messages: "Mensajes ilimitados",
-          analytics: "Analytics avanzados",
-          integrations: "Múltiples integraciones",
-          support: "Soporte VIP",
-          api: "API personalizada",
-          telegram: "Exportación a Telegram"
-        },
-        cta: "Elegir Ultra"
-      },
-      guarantee: "Todos los planes incluyen garantía de 7 días. Cancela cuando quieras.",
-      comingSoon: "Próximamente: Integración con Instagram y Telegram"
-    },
-    testimonials: {
-      title: "Lo que dicen nuestros clientes",
-      subtitle: "Historias reales de quienes transformaron su atención con IA",
-      customer1: {
-        name: "Carlos Méndez",
-        business: "Tienda de Ropa Online",
-        content: "¡ZapAgent AI revolucionó mi atención! Ahora puedo responder a los clientes 24h y mis ventas aumentaron 40%. Muy fácil de configurar."
-      },
-      customer2: {
-        name: "Ana Paula",
-        business: "Clínica Dental",
-        content: "Estaba perdiendo muchos pacientes porque no podía responder los mensajes rápidamente. ¡Con el agente IA, programo citas automáticamente!"
-      },
-      customer3: {
-        name: "Ricardo Silva",
-        business: "Delivery de Comida",
-        content: "Increíble cómo el bot entiende exactamente lo que necesito. Responde sobre menú, precios y también ayuda con los pedidos. ¡Lo recomiendo mucho!"
+      feature6: {
+        title: "Seguridad Garantizada",
+        description: "Tus datos y los de tus clientes están siempre protegidos"
       }
     },
     faq: {
       title: "Preguntas Frecuentes",
-      subtitle: "Resuelve tus dudas sobre ZapAgent AI",
+      subtitle: "Resuelve tus dudas sobre nuestra plataforma",
       questions: {
         q1: {
-          question: "¿Cómo funciona el plan gratuito?",
-          answer: "En el plan gratuito puedes crear 1 agente IA y enviar hasta 30 mensajes por mes. Puedes entrenar tu IA, usar el simulador y probar todas las funcionalidades. Para conectar con WhatsApp y enviar más mensajes, necesitas actualizar a un plan pago."
+          question: "¿Cómo funciona el período de prueba gratuita?",
+          answer: "Tienes 7 días gratis para probar todas las características del plan elegido. No cobramos nada durante este período y puedes cancelar en cualquier momento."
         },
         q2: {
-          question: "¿Necesito saber programar para usar?",
-          answer: "¡No! ZapAgent AI fue creado para ser totalmente no-code. Configuras todo a través de una interfaz simple e intuitiva. Solo carga tus documentos, escribe la información de tu negocio y listo."
+          question: "¿Necesito conocimiento técnico para usar?",
+          answer: "¡No! Nuestra plataforma fue desarrollada para ser intuitiva. Cualquier persona puede crear y configurar un agente de IA en pocos minutos."
         },
         q3: {
-          question: "¿Cómo aprende la IA sobre mi negocio?",
-          answer: "Puedes entrenar tu IA de 3 formas: cargando archivos PDF (como catálogos, manuales), escribiendo preguntas y respuestas frecuentes, o pegando textos libres sobre tu negocio. Cuanta más información, mejor responde."
+          question: "¿Cómo funciona la integración con WhatsApp?",
+          answer: "Conectamos directamente con la API oficial de WhatsApp Business. El proceso es guiado y toma solo unos clics para configurar."
         },
         q4: {
-          question: "¿Funciona con WhatsApp Business?",
-          answer: "¡Sí! Ofrecemos integración tanto con WhatsApp Business API como con WhatsApp Web. Eliges la opción que mejor se adapta a tu negocio."
+          question: "¿Puedo cancelar mi suscripción en cualquier momento?",
+          answer: "Sí, puedes cancelar tu suscripción en cualquier momento a través del panel administrativo. No hay tarifas de cancelación."
         },
         q5: {
-          question: "¿Puedo cancelar en cualquier momento?",
-          answer: "¡Por supuesto! No tenemos contratos de fidelidad. Puedes cancelar tu plan en cualquier momento desde el panel de control, sin burocracia."
+          question: "¿Hay límite de mensajes?",
+          answer: "Cada plan tiene su límite mensual de mensajes. Si necesitas más, puedes actualizar el plan o comprar mensajes adicionales."
         },
         q6: {
-          question: "¿Cuántos clientes puede atender el agente?",
-          answer: "Tu agente IA puede conversar con múltiples clientes simultáneamente, 24 horas al día. El límite es solo el número de mensajes de tu plan mensual."
+          question: "¿Cómo se calcula el límite de mensajes?",
+          answer: "Contamos cada mensaje enviado y recibido por tu agente. Los mensajes de configuración y pruebas no se contabilizan."
         },
         q7: {
-          question: "¿Hay garantía?",
-          answer: "¡Sí! Ofrecemos 7 días de garantía en todos los planes pagos. Si no quedas satisfecho, devolvemos el 100% del valor."
+          question: "¿Puedo entrenar el agente con mi propia información?",
+          answer: "¡Sí! Puedes agregar información sobre tus productos, servicios, políticas y cualquier contenido relevante para tu negocio."
         },
         q8: {
-          question: "¿Cuándo llega la integración con Instagram y Telegram?",
-          answer: "Estamos trabajando en las integraciones con Instagram Direct y Telegram. La previsión es lanzar estas funcionalidades en los próximos meses. Los clientes actuales tendrán acceso prioritario."
+          question: "¿Qué tipo de soporte ofrecen?",
+          answer: "Ofrecemos soporte por email, chat y teléfono (dependiendo del plan). También tenemos una base de conocimiento completa y tutoriales en video."
         }
       },
-      contactText: "¿Aún tienes dudas? ¡Estamos aquí para ayudar!",
+      contactText: "¿No encontraste tu pregunta?",
       contactLink: "Contáctanos"
     },
-    support: {
-      title: "Soporte",
-      name: "Nombre",
-      email: "Email",
-      message: "Mensaje",
-      namePlaceholder: "Tu nombre",
-      emailPlaceholder: "tu@email.com",
-      messagePlaceholder: "¿Cómo podemos ayudar?",
-      sendButton: "Enviar Mensaje",
-      sending: "Enviando...",
-      successMessage: "¡Mensaje enviado con éxito! Nuestro equipo se pondrá en contacto pronto.",
-      errorMessage: "Error al enviar mensaje. Inténtalo de nuevo.",
-      fillAllFields: "Completa todos los campos"
-    },
     footer: {
-      description: "Transforma tu atención con inteligencia artificial. Crea agentes IA que responden automáticamente en WhatsApp.",
-      email: "soporte@zapagent.ai",
+      description: "Revoluciona tu atención con agentes de IA inteligentes para WhatsApp. Atención 24/7, aumento de ventas y satisfacción garantizada.",
+      email: "contacto@zapagent.ai",
       product: "Producto",
+      simulate: "Simular",
+      integrations: "Integraciones",
       company: "Empresa",
-      about: "Sobre nosotros",
+      about: "Acerca de nosotros",
       blog: "Blog",
       careers: "Carreras",
       contact: "Contacto",
-      simulate: "Simular conversación",
-      integrations: "Integraciones",
+      rights: "Todos los derechos reservados.",
       terms: "Términos de Uso",
       privacy: "Política de Privacidad",
-      cookies: "Cookies",
-      rights: "Todos los derechos reservados."
+      cookies: "Política de Cookies"
     },
-    userDashboard: {
-      title: "Panel de Control",
-      welcome: "Hola",
-      agents: "Agentes",
-      messages: "Mensajes",
-      plan: "Plan",
-      active: "Activos",
-      myAgents: "Mis Agentes",
-      createAgent: "Crear Agente",
-      loading: "Cargando...",
-      limitReached: "(Límite alcanzado)",
-      noAgentsYet: "Aún no has creado agentes",
-      noAgentsDescription: "Crea tu primer agente de IA para comenzar a automatizar tu atención al cliente en WhatsApp",
-      createFirstAgent: "Crear Primer Agente",
-      planUpgrade: "Actualizar Plan",
-      upgradeToUltra: "Actualizar a Ultra",
-      verifyPlan: "Verificar Plan",
-      verifying: "Verificando...",
-      logout: "Cerrar Sesión",
-      menu: "Menú",
-      upgrade: "Actualizar",
-      unlimited: "Ilimitado",
-      planNames: {
-        free: "Gratuito",
-        pro: "Pro",
-        ultra: "Ultra",
-        unlimited: "👑 Ilimitado"
+    support: {
+      title: "¿Cómo podemos ayudarte?",
+      name: "Nombre",
+      namePlaceholder: "Tu nombre completo",
+      email: "Email",
+      emailPlaceholder: "tu@email.com",
+      message: "Mensaje",
+      messagePlaceholder: "Describe cómo podemos ayudarte...",
+      sendButton: "Enviar Mensaje",
+      sending: "Enviando...",
+      fillAllFields: "Por favor, completa todos los campos.",
+      successMessage: "¡Mensaje enviado con éxito! Te contactaremos pronto.",
+      errorMessage: "Error al enviar mensaje. Inténtalo de nuevo."
+    },
+    // Auth page translations
+    auth: {
+      welcome: "Bienvenido a ZapAgent AI",
+      loginTitle: "Iniciar sesión",
+      signupTitle: "Crear cuenta",
+      loginSubtitle: "Accede a tu panel de agentes IA",
+      signupSubtitle: "Comienza a crear agentes IA gratis",
+      loginButton: "Entrar",
+      signupButton: "Registrarse",
+      loginDescription: "Ingresa tus credenciales para acceder",
+      signupDescription: "Completa los datos para comenzar",
+      fullName: "Nombre completo",
+      fullNamePlaceholder: "Tu nombre completo",
+      email: "Email",
+      emailPlaceholder: "tu@email.com",
+      password: "Contraseña",
+      passwordPlaceholder: "Tu contraseña",
+      processing: "Procesando...",
+      createAccount: "Crear cuenta",
+      switchToSignup: "¿No tienes cuenta? Regístrate",
+      switchToLogin: "¿Ya tienes cuenta? Inicia sesión",
+      loading: "Cargando..."
+    },
+    // About page translations
+    about: {
+      title: "Acerca de ZapAgent AI",
+      subtitle: "Somos una empresa dedicada a revolucionar la atención al cliente a través de la inteligencia artificial, haciéndola más eficiente, personalizada y accesible para negocios de todos los tamaños.",
+      mission: "Nuestra Misión",
+      missionText: "Democratizar el acceso a la tecnología de IA para atención, permitiendo que cualquier negocio ofrezca soporte 24/7 de calidad profesional.",
+      vision: "Nuestra Visión",
+      visionText: "Ser la plataforma de referencia mundial en agentes de IA para WhatsApp, conectando empresas y clientes de forma inteligente y humanizada.",
+      values: "Nuestros Valores",
+      valuesText: "Innovación, simplicidad, transparencia y enfoque en el cliente. Creemos que la tecnología debe servir a las personas, no al contrario.",
+      story: "Nuestra Historia",
+      storyText1: "ZapAgent AI nació de la necesidad real de pequeños y medianos negocios que luchaban por ofrecer atención de calidad 24 horas al día. Observamos que muchas empresas perdían clientes simplemente por no poder responder rápidamente a los mensajes de WhatsApp.",
+      storyText2: "En 2024, nuestro equipo de desarrolladores y especialistas en IA se unió con el objetivo de crear una solución simple, efectiva y accesible. Queríamos que cualquier persona, independientemente del conocimiento técnico, pudiera crear y gestionar su propio agente de IA.",
+      storyText3: "Hoy, ayudamos a cientos de negocios a automatizar su atención, aumentar ventas y mejorar la satisfacción de los clientes. Nuestro compromiso es seguir innovando para hacer la inteligencia artificial cada vez más accesible y útil para todos.",
+      stats: {
+        agents: "Agentes Creados",
+        messages: "Mensajes Procesados",
+        satisfaction: "Satisfacción",
+        support: "Soporte"
       },
-      limitWarning: "⚠️ Estás cerca del límite de mensajes. Considera actualizar tu plan",
-      limitInfo: "En el plan {planName} puedes crear hasta {limit} agente. Actualiza para crear más agentes"
+      ctaTitle: "¿Listo para revolucionar tu atención?",
+      ctaButton: "Crear mi agente gratis",
+      backButton: "Volver"
     }
   }
 };

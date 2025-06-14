@@ -22,7 +22,7 @@ const Sobre = () => {
               className="flex items-center space-x-2"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span>Voltar</span>
+              <span>{t('about.backButton')}</span>
             </Button>
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center">
@@ -43,11 +43,10 @@ const Sobre = () => {
           {/* Hero Section */}
           <div className="text-center mb-12 md:mb-16">
             <h1 className="text-3xl md:text-5xl font-bold text-brand-dark mb-6">
-              Sobre a ZapAgent AI
+              {t('about.title')}
             </h1>
             <p className="text-lg md:text-xl text-brand-gray max-w-3xl mx-auto leading-relaxed">
-              Somos uma empresa dedicada a revolucionar o atendimento ao cliente através da inteligência artificial, 
-              tornando-o mais eficiente, personalizado e acessível para negócios de todos os tamanhos.
+              {t('about.subtitle')}
             </p>
           </div>
 
@@ -57,10 +56,9 @@ const Sobre = () => {
               <div className="w-16 h-16 bg-brand-green rounded-full flex items-center justify-center mx-auto mb-4">
                 <Target className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-xl md:text-2xl font-bold text-brand-dark mb-4">Nossa Missão</h3>
+              <h3 className="text-xl md:text-2xl font-bold text-brand-dark mb-4">{t('about.mission')}</h3>
               <p className="text-brand-gray text-sm md:text-base">
-                Democratizar o acesso à tecnologia de IA para atendimento, permitindo que qualquer negócio 
-                ofereça suporte 24/7 de qualidade profissional.
+                {t('about.missionText')}
               </p>
             </div>
 
@@ -68,10 +66,9 @@ const Sobre = () => {
               <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Lightbulb className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-xl md:text-2xl font-bold text-brand-dark mb-4">Nossa Visão</h3>
+              <h3 className="text-xl md:text-2xl font-bold text-brand-dark mb-4">{t('about.vision')}</h3>
               <p className="text-brand-gray text-sm md:text-base">
-                Ser a plataforma de referência mundial em agentes de IA para WhatsApp, 
-                conectando empresas e clientes de forma inteligente e humanizada.
+                {t('about.visionText')}
               </p>
             </div>
 
@@ -79,10 +76,9 @@ const Sobre = () => {
               <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Heart className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-xl md:text-2xl font-bold text-brand-dark mb-4">Nossos Valores</h3>
+              <h3 className="text-xl md:text-2xl font-bold text-brand-dark mb-4">{t('about.values')}</h3>
               <p className="text-brand-gray text-sm md:text-base">
-                Inovação, simplicidade, transparência e foco no cliente. 
-                Acreditamos que a tecnologia deve servir às pessoas, não o contrário.
+                {t('about.valuesText')}
               </p>
             </div>
           </div>
@@ -96,26 +92,20 @@ const Sobre = () => {
             </div>
             
             <h2 className="text-2xl md:text-3xl font-bold text-brand-dark text-center mb-8">
-              Nossa História
+              {t('about.story')}
             </h2>
             
             <div className="prose prose-lg max-w-none text-brand-gray space-y-6">
               <p className="text-sm md:text-base leading-relaxed">
-                A ZapAgent AI nasceu da necessidade real de pequenos e médios negócios que lutavam para 
-                oferecer atendimento de qualidade 24 horas por dia. Observamos que muitas empresas perdiam 
-                clientes simplesmente por não conseguirem responder rapidamente às mensagens no WhatsApp.
+                {t('about.storyText1')}
               </p>
               
               <p className="text-sm md:text-base leading-relaxed">
-                Em 2024, nossa equipe de desenvolvedores e especialistas em IA se uniu com o objetivo de 
-                criar uma solução simples, eficaz e acessível. Queríamos que qualquer pessoa, independente 
-                do conhecimento técnico, pudesse criar e gerenciar seu próprio agente de IA.
+                {t('about.storyText2')}
               </p>
               
               <p className="text-sm md:text-base leading-relaxed">
-                Hoje, ajudamos centenas de negócios a automatizar seu atendimento, aumentar vendas e 
-                melhorar a satisfação dos clientes. Nosso compromisso é continuar inovando para tornar 
-                a inteligência artificial cada vez mais acessível e útil para todos.
+                {t('about.storyText3')}
               </p>
             </div>
           </div>
@@ -124,32 +114,32 @@ const Sobre = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mb-12">
             <div className="text-center">
               <div className="text-2xl md:text-4xl font-bold text-brand-green mb-2">500+</div>
-              <div className="text-sm md:text-base text-brand-gray">Agentes Criados</div>
+              <div className="text-sm md:text-base text-brand-gray">{t('about.stats.agents')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl md:text-4xl font-bold text-brand-green mb-2">10k+</div>
-              <div className="text-sm md:text-base text-brand-gray">Mensagens Processadas</div>
+              <div className="text-sm md:text-base text-brand-gray">{t('about.stats.messages')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl md:text-4xl font-bold text-brand-green mb-2">98%</div>
-              <div className="text-sm md:text-base text-brand-gray">Satisfação</div>
+              <div className="text-sm md:text-base text-brand-gray">{t('about.stats.satisfaction')}</div>
             </div>
             <div className="text-center">
               <div className="text-2xl md:text-4xl font-bold text-brand-green mb-2">24/7</div>
-              <div className="text-sm md:text-base text-brand-gray">Suporte</div>
+              <div className="text-sm md:text-base text-brand-gray">{t('about.stats.support')}</div>
             </div>
           </div>
 
           {/* CTA */}
           <div className="text-center">
             <h2 className="text-2xl md:text-3xl font-bold text-brand-dark mb-6">
-              Pronto para revolucionar seu atendimento?
+              {t('about.ctaTitle')}
             </h2>
             <Button
               onClick={() => navigate('/dashboard')}
               className="bg-brand-green hover:bg-brand-green/90 text-white px-6 md:px-8 py-3 text-sm md:text-base"
             >
-              Criar meu agente grátis
+              {t('about.ctaButton')}
             </Button>
           </div>
         </div>

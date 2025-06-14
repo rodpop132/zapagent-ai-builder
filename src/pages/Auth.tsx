@@ -7,8 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import LanguageSelector from '@/components/LanguageSelector';
+import { useTranslation } from 'react-i18next';
 
 const Auth = () => {
+  const { t } = useTranslation();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -80,7 +82,7 @@ const Auth = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Carregando...</p>
+          <p className="text-gray-600">{t('auth.loading')}</p>
         </div>
       </div>
     );
@@ -106,18 +108,18 @@ const Auth = () => {
             <span className="text-2xl font-bold text-gray-900">ZapAgent AI</span>
           </div>
           <h2 className="text-3xl font-bold text-gray-900">
-            {isLogin ? 'Faça login' : 'Crie sua conta'}
+            {isLogin ? t('auth.loginTitle') : t('auth.signupTitle')}
           </h2>
           <p className="mt-2 text-gray-600">
-            {isLogin ? 'Acesse seu painel de agentes IA' : 'Comece a criar agentes IA gratuitamente'}
+            {isLogin ? t('auth.loginSubtitle') : t('auth.signupSubtitle')}
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>{isLogin ? 'Entrar' : 'Cadastrar'}</CardTitle>
+            <CardTitle>{isLogin ? t('auth.loginButton') : t('auth.signupButton')}</CardTitle>
             <CardDescription>
-              {isLogin ? 'Digite suas credenciais para acessar' : 'Preencha os dados para começar'}
+              {isLogin ? t('auth.loginDescription') : t('auth.signupDescription')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -125,7 +127,7 @@ const Auth = () => {
               {!isLogin && (
                 <div>
                   <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
-                    Nome completo
+                    {t('auth.fullName')}
                   </label>
                   <Input
                     id="fullName"
@@ -133,7 +135,7 @@ const Auth = () => {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     required={!isLogin}
-                    placeholder="Seu nome completo"
+                    placeholder={t('auth.fullNamePlaceholder')}
                     disabled={isSubmitting}
                   />
                 </div>
@@ -141,7 +143,7 @@ const Auth = () => {
               
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
+                  {t('auth.email')}
                 </label>
                 <Input
                   id="email"
@@ -149,14 +151,14 @@ const Auth = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  placeholder="seu@email.com"
+                  placeholder={t('auth.emailPlaceholder')}
                   disabled={isSubmitting}
                 />
               </div>
 
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Senha
+                  {t('auth.password')}
                 </label>
                 <Input
                   id="password"
@@ -164,7 +166,7 @@ const Auth = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  placeholder="Sua senha"
+                  placeholder={t('auth.passwordPlaceholder')}
                   minLength={6}
                   disabled={isSubmitting}
                 />
@@ -175,7 +177,7 @@ const Auth = () => {
                 className="w-full bg-green-600 hover:bg-green-700 text-white"
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Processando...' : (isLogin ? 'Entrar' : 'Criar conta')}
+                {isSubmitting ? t('auth.processing') : (isLogin ? t('auth.loginButton') : t('auth.createAccount'))}
               </Button>
             </form>
 
@@ -185,7 +187,7 @@ const Auth = () => {
                 className="text-green-600 hover:text-green-700 text-sm font-medium"
                 disabled={isSubmitting}
               >
-                {isLogin ? 'Não tem conta? Cadastre-se' : 'Já tem conta? Faça login'}
+                {isLogin ? t('auth.switchToSignup') : t('auth.switchToLogin')}
               </button>
             </div>
           </CardContent>
