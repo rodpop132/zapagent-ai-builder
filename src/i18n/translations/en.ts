@@ -1,4 +1,3 @@
-
 export const en = {
   translation: {
     hero: {
@@ -67,6 +66,8 @@ export const en = {
       promotion: "PROMOTION",
       mostPopular: "Most Popular",
       freeTrialNote: "* Only on first subscription",
+      guarantee: "30-day guarantee - Satisfaction guaranteed or your money back",
+      comingSoon: "Coming soon: Custom Enterprise plans for large companies",
       free: {
         title: "Free",
         price: "$ 0",
@@ -82,7 +83,7 @@ export const en = {
       },
       pro: {
         title: "Pro",
-        price: "$ 24",
+        price: "$ 15",
         originalPrice: "$ 49",
         period: "/month",
         discount: "-50%",
@@ -98,11 +99,11 @@ export const en = {
           "Priority support",
           "Advanced customizations"
         ],
-        cta: "Start Free Trial"
+        cta: "Subscribe to Pro"
       },
       ultra: {
         title: "Ultra",
-        price: "$ 49",
+        price: "$ 37",
         originalPrice: "$ 99",
         period: "/month",
         discount: "-50%",
@@ -118,7 +119,7 @@ export const en = {
           "Custom API",
           "Telegram support"
         ],
-        cta: "Start Free Trial"
+        cta: "Subscribe to Ultra"
       }
     },
     benefits: {
@@ -344,7 +345,7 @@ export const en = {
       valuesText: "Innovation, simplicity, transparency and customer focus. We believe technology should serve people, not the other way around.",
       story: "Our Story",
       storyText1: "ZapAgent AI was born from the real need of small and medium businesses that struggled to offer quality customer service 24 hours a day. We observed that many companies lost customers simply because they couldn't respond quickly to WhatsApp messages.",
-      storyText2: "In 2024, our team of developers and AI specialists came together with the goal of creating a simple, effective and accessible solution. We wanted anyone, regardless of technical knowledge, to be able to create and manage their own AI agent.",
+      storyText2: "In 2024, our team of developers and AI specialists came together with the goal of creating a simple, effective and accessible solution. We wanted anyone, regardless of technical knowledge, to be able to create an manage their own AI agent.",
       storyText3: "Today, we help hundreds of businesses automate their customer service, increase sales and improve customer satisfaction. Our commitment is to continue innovating to make artificial intelligence increasingly accessible and useful for everyone.",
       stats: {
         agents: "Agents Created",

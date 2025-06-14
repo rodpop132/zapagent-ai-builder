@@ -1,4 +1,3 @@
-
 export const es = {
   translation: {
     hero: {
@@ -74,7 +73,7 @@ export const es = {
       comingSoon: "Próximamente: Planes Enterprise personalizados para grandes empresas",
       free: {
         title: "Gratuito",
-        price: "$ 0",
+        price: "€ 0",
         period: "/mes",
         description: "Perfecto para probar nuestra plataforma",
         features: [
@@ -87,8 +86,8 @@ export const es = {
       },
       pro: {
         title: "Pro",
-        price: "$ 24",
-        originalPrice: "$ 49",
+        price: "€ 12",
+        originalPrice: "€ 49",
         period: "/mes",
         discount: "-50%",
         description: "Ideal para pequeñas y medianas empresas",
@@ -103,12 +102,12 @@ export const es = {
           "Soporte prioritario",
           "Personalizaciones avanzadas"
         ],
-        cta: "Iniciar Prueba Gratis"
+        cta: "Suscribirse a Pro"
       },
       ultra: {
         title: "Ultra",
-        price: "$ 49",
-        originalPrice: "$ 99",
+        price: "€ 28",
+        originalPrice: "€ 99",
         period: "/mes",
         discount: "-50%",
         description: "Para empresas que necesitan escala",
@@ -123,7 +122,7 @@ export const es = {
           "API personalizada",
           "Soporte para Telegram"
         ],
-        cta: "Iniciar Prueba Gratis"
+        cta: "Suscribirse a Ultra"
       }
     },
     benefits: {

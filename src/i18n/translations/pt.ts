@@ -1,4 +1,3 @@
-
 export const pt = {
   translation: {
     hero: {
@@ -70,7 +69,7 @@ export const pt = {
       promotion: "PROMOÇÃO",
       mostPopular: "Mais Popular",
       freeTrialNote: "* Apenas na primeira assinatura",
-      guarantee: "Garantia de 30 dias - Satisfação garantida ou seu dinheiro de volta",
+      guarantee: "Garantia de 30 dias - Satisfação garantizada ou seu dinheiro de volta",
       comingSoon: "Em breve: Planos Enterprise personalizados para grandes empresas",
       free: {
         title: "Gratuito",
@@ -87,7 +86,7 @@ export const pt = {
       },
       pro: {
         title: "Pro",
-        price: "R$ 97",
+        price: "R$ 79",
         originalPrice: "R$ 197",
         period: "/mês",
         discount: "-50%",
@@ -103,11 +102,11 @@ export const pt = {
           "Suporte prioritário",
           "Personalizações avançadas"
         ],
-        cta: "Iniciar Teste Grátis"
+        cta: "Assinar Plano Pro"
       },
       ultra: {
         title: "Ultra",
-        price: "R$ 197",
+        price: "R$ 179",
         originalPrice: "R$ 397",
         period: "/mês",
         discount: "-50%",
@@ -123,7 +122,7 @@ export const pt = {
           "API personalizada",
           "Suporte ao Telegram"
         ],
-        cta: "Iniciar Teste Grátis"
+        cta: "Assinar Plano Ultra"
       }
     },
     benefits: {
