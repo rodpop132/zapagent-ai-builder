@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Users, Target, Lightbulb, Heart } from 'lucide-react';
 import SupportWidget from '@/components/SupportWidget';
+import LanguageSelector from '@/components/LanguageSelector';
 
 const Sobre = () => {
   const { t } = useTranslation();
@@ -30,6 +31,9 @@ const Sobre = () => {
               <span className="text-lg md:text-xl font-bold text-gray-900">ZapAgent AI</span>
             </div>
           </div>
+          
+          {/* Language Selector */}
+          <LanguageSelector />
         </div>
       </header>
 
