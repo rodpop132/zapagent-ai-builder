@@ -79,7 +79,7 @@ export const pt = {
         description: "Perfeito para testar nossa plataforma",
         features: {
           agents: "1 agente de IA",
-          messages: "100 mensagens/mês",
+          messages: "30 mensagens/mês",
           simulator: "Simulador de conversas",
           support: "Suporte por email"
         },
@@ -96,7 +96,7 @@ export const pt = {
         promotion: "PROMOÇÃO",
         features: {
           agents: "5 agentes de IA",
-          messages: "5.000 mensagens/mês",
+          messages: "10.000 mensagens/mês",
           training: "Treinamento personalizado",
           whatsapp: "Integração WhatsApp",
           analytics: "Análises avançadas",
@@ -115,7 +115,7 @@ export const pt = {
         promotion: "PROMOÇÃO",
         features: {
           agents: "Agentes ilimitados",
-          messages: "50.000 mensagens/mês",
+          messages: "Mensagens ilimitadas",
           training: "Treinamento avançado",
           analytics: "Analytics completos",
           integrations: "Integrações completas",
@@ -129,6 +129,35 @@ export const pt = {
     benefits: {
       title: "Por que escolher ZapAgent AI?",
       subtitle: "Recursos poderosos que fazem a diferença no seu negócio",
+      available24h: {
+        title: "Atendimento 24/7",
+        description: "Seus clientes recebem respostas instantâneas a qualquer hora do dia"
+      },
+      smartLearning: {
+        title: "Aprendizado Inteligente",
+        description: "Nossos agentes aprendem continuamente para melhorar as respostas"
+      },
+      whatsappIntegration: {
+        title: "Integração WhatsApp",
+        description: "Conecta diretamente com WhatsApp Business API oficial"
+      },
+      analytics: {
+        title: "Análises Detalhadas",
+        description: "Acompanhe métricas importantes e otimize seu atendimento"
+      },
+      easySetup: {
+        title: "Fácil de Configurar",
+        description: "Configure seu agente em minutos, sem conhecimento técnico necessário"
+      },
+      free: {
+        title: "Comece Grátis",
+        description: "Teste nossa plataforma sem compromisso e veja os resultados"
+      },
+      cta: {
+        title: "Pronto para começar?",
+        subtitle: "Crie seu primeiro agente gratuitamente e transforme seu atendimento",
+        guarantee: "Garantia de satisfação"
+      },
       feature1: {
         title: "Atendimento 24/7",
         description: "Seus clientes recebem respostas instantâneas a qualquer hora do dia"
@@ -152,6 +181,42 @@ export const pt = {
       feature6: {
         title: "Segurança Garantida",
         description: "Seus dados e os de seus clientes estão sempre protegidos"
+      }
+    },
+    dashboard: {
+      title: "Painel de Controle em Tempo Real",
+      subtitle: "Acompanhe o desempenho dos seus agentes de IA em tempo real",
+      upgradePlan: "Fazer Upgrade do Plano",
+      messagesSent: "Mensagens Enviadas",
+      responseRate: "Taxa de Resposta",
+      clientsServed: "Clientes Atendidos",
+      recentConversations: "Conversas Recentes",
+      live: "Ao Vivo",
+      newMessages: "novas mensagens",
+      status: {
+        online: "Online",
+        typing: "Digitando",
+        read: "Lida",
+        delivered: "Entregue",
+        offline: "Offline"
+      },
+      conversations: {
+        joao: {
+          name: "João Silva",
+          message: "Preciso de informações sobre preços"
+        },
+        maria: {
+          name: "Maria Santos",
+          message: "Como funciona a entrega?"
+        },
+        pedro: {
+          name: "Pedro Costa",
+          message: "Vocês têm suporte técnico?"
+        },
+        ana: {
+          name: "Ana Lima",
+          message: "Quero fazer um pedido"
+        }
       }
     },
     faq: {
