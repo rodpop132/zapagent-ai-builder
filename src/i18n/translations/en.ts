@@ -1,3 +1,4 @@
+
 export const en = {
   translation: {
     hero: {
@@ -66,46 +67,56 @@ export const en = {
       promotion: "PROMOTION",
       mostPopular: "Most Popular",
       freeTrialNote: "* Only on first subscription",
-      starter: {
-        name: "Starter",
-        price: "Free",
+      free: {
+        title: "Free",
+        price: "$ 0",
+        period: "/month",
         description: "Perfect for testing our platform",
         features: [
           "1 AI agent",
-          "100 messages/month",
-          "Basic email support",
-          "WhatsApp integration"
+          "30 messages/month",
+          "Conversation simulator",
+          "Email support"
         ],
         cta: "Start Free"
       },
       pro: {
-        name: "Pro",
+        title: "Pro",
         price: "$ 24",
         originalPrice: "$ 49",
+        period: "/month",
+        discount: "-50%",
         description: "Ideal for small and medium businesses",
+        popular: "Most Popular",
+        promotion: "PROMOTION",
         features: [
           "5 AI agents",
-          "5,000 messages/month",
-          "Priority support",
+          "10,000 messages/month",
+          "Custom training",
+          "WhatsApp integration",
           "Advanced analytics",
-          "CRM integration",
-          "Advanced customization"
+          "Priority support",
+          "Advanced customizations"
         ],
         cta: "Start Free Trial"
       },
       ultra: {
-        name: "Ultra",
+        title: "Ultra",
         price: "$ 49",
         originalPrice: "$ 99",
+        period: "/month",
+        discount: "-50%",
         description: "For companies that need scale",
+        promotion: "PROMOTION",
         features: [
-          "Unlimited agents",  
-          "50,000 messages/month",
+          "Unlimited agents",
+          "Unlimited messages",
+          "Advanced training",
+          "Complete analytics",
+          "Complete integrations",
           "24/7 support",
           "Custom API",
-          "Complete integration",
-          "Dedicated account manager",
-          "Custom training"
+          "Telegram support"
         ],
         cta: "Start Free Trial"
       }
@@ -113,6 +124,35 @@ export const en = {
     benefits: {
       title: "Why choose ZapAgent AI?",
       subtitle: "Powerful features that make a difference in your business",
+      available24h: {
+        title: "24/7 Service",
+        description: "Your customers receive instant responses at any time of day"
+      },
+      smartLearning: {
+        title: "Smart Learning",
+        description: "Our agents continuously learn to improve responses"
+      },
+      whatsappIntegration: {
+        title: "WhatsApp Integration",
+        description: "Connects directly with official WhatsApp Business API"
+      },
+      analytics: {
+        title: "Detailed Analytics",
+        description: "Track important metrics and optimize your service"
+      },
+      easySetup: {
+        title: "Easy to Setup",
+        description: "Set up your agent in minutes, no technical knowledge required"
+      },
+      free: {
+        title: "Start Free",
+        description: "Test our platform without commitment and see the results"
+      },
+      cta: {
+        title: "Ready to get started?",
+        subtitle: "Create your first agent for free and transform your service",
+        guarantee: "Satisfaction guarantee"
+      },
       feature1: {
         title: "24/7 Service",
         description: "Your customers receive instant responses at any time of day"
@@ -136,6 +176,69 @@ export const en = {
       feature6: {
         title: "Guaranteed Security",
         description: "Your data and your customers' data are always protected"
+      }
+    },
+    dashboard: {
+      title: "Real-Time Control Panel",
+      subtitle: "Track the performance of your AI agents in real time",
+      upgradePlan: "Upgrade Plan",
+      messagesSent: "Messages Sent",
+      responseRate: "Response Rate",
+      clientsServed: "Clients Served",
+      recentConversations: "Recent Conversations",
+      live: "Live",
+      newMessages: "new messages",
+      status: {
+        online: "Online",
+        typing: "Typing",
+        read: "Read",
+        delivered: "Delivered",
+        offline: "Offline"
+      },
+      conversations: {
+        joao: {
+          name: "John Silva",
+          message: "I need information about prices"
+        },
+        maria: {
+          name: "Maria Santos",
+          message: "How does delivery work?"
+        },
+        pedro: {
+          name: "Peter Costa",
+          message: "Do you have technical support?"
+        },
+        ana: {
+          name: "Ana Lima",
+          message: "I want to place an order"
+        }
+      }
+    },
+    userDashboard: {
+      welcome: "Welcome",
+      logout: "Logout",
+      loading: "Loading...",
+      verifying: "Verifying...",
+      verifyPlan: "Verify Plan",
+      upgrade: "Upgrade",
+      agents: "Agents",
+      messages: "Messages",
+      plan: "Plan",
+      active: "Active",
+      myAgents: "My Agents",
+      createAgent: "Create Agent",
+      createFirstAgent: "Create First Agent",
+      noAgentsYet: "No agents yet",
+      noAgentsDescription: "Create your first AI agent to start automating your WhatsApp customer service.",
+      limitReached: "Limit reached",
+      limitWarning: "You are close to your plan's message limit.",
+      limitInfo: "On the {{planName}} plan you can create up to {{limit}} agent(s).",
+      planUpgrade: "Upgrade plan",
+      planNames: {
+        free: "Free",
+        pro: "Pro",
+        ultra: "Ultra",  
+        unlimited: "Unlimited"
       }
     },
     faq: {
@@ -208,7 +311,6 @@ export const en = {
       successMessage: "Message sent successfully! We'll contact you soon.",
       errorMessage: "Error sending message. Please try again."
     },
-    // Auth page translations
     auth: {
       welcome: "Welcome to ZapAgent AI",
       loginTitle: "Sign in",
@@ -231,7 +333,6 @@ export const en = {
       switchToLogin: "Already have an account? Sign in",
       loading: "Loading..."
     },
-    // About page translations
     about: {
       title: "About ZapAgent AI",
       subtitle: "We are a company dedicated to revolutionizing customer service through artificial intelligence, making it more efficient, personalized and accessible for businesses of all sizes.",

@@ -77,12 +77,12 @@ export const es = {
         price: "$ 0",
         period: "/mes",
         description: "Perfecto para probar nuestra plataforma",
-        features: {
-          agents: "1 agente de IA",
-          messages: "30 mensajes/mes",
-          simulator: "Simulador de conversaciones",
-          support: "Soporte por email"
-        },
+        features: [
+          "1 agente de IA",
+          "30 mensajes/mes",
+          "Simulador de conversaciones",
+          "Soporte por email"
+        ],
         cta: "Comenzar Gratis"
       },
       pro: {
@@ -94,15 +94,15 @@ export const es = {
         description: "Ideal para pequeñas y medianas empresas",
         popular: "Más Popular",
         promotion: "PROMOCIÓN",
-        features: {
-          agents: "5 agentes de IA",
-          messages: "10.000 mensajes/mes",
-          training: "Entrenamiento personalizado",
-          whatsapp: "Integración WhatsApp",
-          analytics: "Análisis avanzados",
-          support: "Soporte prioritario",
-          customizations: "Personalizaciones avanzadas"
-        },
+        features: [
+          "5 agentes de IA",
+          "10.000 mensajes/mes",
+          "Entrenamiento personalizado",
+          "Integración WhatsApp",
+          "Análisis avanzados",
+          "Soporte prioritario",
+          "Personalizaciones avanzadas"
+        ],
         cta: "Iniciar Prueba Gratis"
       },
       ultra: {
@@ -113,16 +113,16 @@ export const es = {
         discount: "-50%",
         description: "Para empresas que necesitan escala",
         promotion: "PROMOCIÓN",
-        features: {
-          agents: "Agentes ilimitados",
-          messages: "Mensajes ilimitados",
-          training: "Entrenamiento avanzado",
-          analytics: "Analytics completos",
-          integrations: "Integraciones completas",
-          support: "Soporte 24/7",
-          api: "API personalizada",
-          telegram: "Soporte para Telegram"
-        },
+        features: [
+          "Agentes ilimitados",
+          "Mensajes ilimitados",
+          "Entrenamiento avanzado",
+          "Analytics completos",
+          "Integraciones completas",
+          "Soporte 24/7",
+          "API personalizada",
+          "Soporte para Telegram"
+        ],
         cta: "Iniciar Prueba Gratis"
       }
     },
@@ -217,6 +217,33 @@ export const es = {
           name: "Ana Lima",
           message: "Quiero hacer un pedido"
         }
+      }
+    },
+    userDashboard: {
+      welcome: "Bienvenido",
+      logout: "Cerrar Sesión",
+      loading: "Cargando...",
+      verifying: "Verificando...",
+      verifyPlan: "Verificar Plan",
+      upgrade: "Actualizar",
+      agents: "Agentes",
+      messages: "Mensajes",
+      plan: "Plan",
+      active: "Activos",
+      myAgents: "Mis Agentes",
+      createAgent: "Crear Agente",
+      createFirstAgent: "Crear Primer Agente",
+      noAgentsYet: "Aún no hay agentes",
+      noAgentsDescription: "Crea tu primer agente de IA para comenzar a automatizar tu atención al cliente en WhatsApp.",
+      limitReached: "Límite alcanzado",
+      limitWarning: "Estás cerca del límite de mensajes de tu plan.",
+      limitInfo: "En el plan {{planName}} puedes crear hasta {{limit}} agente(s).",
+      planUpgrade: "Actualizar plan",
+      planNames: {
+        free: "Gratuito",
+        pro: "Pro",
+        ultra: "Ultra",
+        unlimited: "Ilimitado"
       }
     },
     faq: {
