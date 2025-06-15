@@ -1,5 +1,6 @@
+
 import { useState } from 'react';
-import { MessageCircle, X, whatsapp as Whatsapp } from 'lucide-react';
+import { MessageCircle, X, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -88,7 +89,7 @@ const SupportWidget = () => {
                 }}
                 aria-label="Suporte pelo WhatsApp"
               >
-                <Whatsapp className="w-5 h-5" />
+                <Phone className="w-5 h-5" />
                 WhatsApp
               </Button>
               <Button 
