@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { MessageCircle, X, Whatsapp } from 'lucide-react';
+import { MessageCircle, X, whatsapp as Whatsapp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -186,4 +185,3 @@ const SupportWidget = () => {
 };
 
 export default SupportWidget;
-
