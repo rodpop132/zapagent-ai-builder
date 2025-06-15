@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
+import { supabase } from '@/integrations/supabase/client';
 
 const WHATSAPP_SUPPORT_LINK = "https://wa.link/d3ebbb";
 
@@ -17,6 +18,7 @@ const SupportWidget = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  const [subject, setSubject] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,17 +32,36 @@ const SupportWidget = () => {
     setLoading(true);
 
     try {
-      // Simular envio de mensagem
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('📩 SUPPORT: Salvando ticket no banco...');
+      
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .insert({
+          name: name.trim(),
+          email: email.trim(),
+          subject: subject.trim() || 'Suporte Geral',
+          message: message.trim(),
+          status: 'open'
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ SUPPORT: Erro ao salvar ticket:', error);
+        throw error;
+      }
+
+      console.log('✅ SUPPORT: Ticket salvo com sucesso:', data?.id);
       
       toast.success(t('support.successMessage'));
       setName('');
       setEmail('');
       setMessage('');
+      setSubject('');
       setIsOpen(false);
       setShowOptions(false);
     } catch (error) {
-      console.error('Erro ao enviar mensagem:', error);
+      console.error('❌ SUPPORT: Erro ao enviar mensagem:', error);
       toast.error(t('support.errorMessage'));
     } finally {
       setLoading(false);
@@ -79,7 +100,7 @@ const SupportWidget = () => {
               <X className="w-5 h-5" />
             </button>
             <span className="font-bold text-lg md:text-xl mb-2 text-brand-dark">{t('support.title')}</span>
-            <p className="text-brand-gray text-sm mb-1 text-center max-w-xs">{t('support.chooseChannel') || 'Como deseja ser atendido?'}</p>
+            <p className="text-brand-gray text-sm mb-1 text-center max-w-xs">¿Cómo podemos ayudarte?</p>
             <div className="flex flex-col w-full gap-2 mt-2">
               <Button 
                 className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white text-base py-2 rounded-lg transition"
@@ -101,7 +122,7 @@ const SupportWidget = () => {
                 aria-label="Suporte pelo site"
               >
                 <MessageCircle className="w-5 h-5 text-brand-dark" />
-                {t('support.bySite') || 'Suporte pelo Site'}
+                Suporte pelo Site
               </Button>
             </div>
           </div>
@@ -150,6 +171,19 @@ const SupportWidget = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder={t('support.emailPlaceholder')}
                     required
+                    className="text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="subject" className="block text-sm font-medium mb-1">
+                    Assunto
+                  </label>
+                  <Input
+                    id="subject"
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder="Qual é o assunto do seu contato?"
                     className="text-sm"
                   />
                 </div>

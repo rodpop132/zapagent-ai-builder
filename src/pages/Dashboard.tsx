@@ -161,7 +161,7 @@ const Dashboard = () => {
   const getAgentLimitByPlan = (planType: string) => {
     switch (planType) {
       case 'free': return 1;
-      case 'pro': return 10; // Corrigido de 3 para 10
+      case 'pro': return 3; // Corrigido de 10 para 3
       case 'ultra': return 999999;
       case 'unlimited': return 999999;
       default: return 1;
@@ -171,7 +171,7 @@ const Dashboard = () => {
   const getMessagesLimitByPlan = (planType: string) => {
     switch (planType) {
       case 'free': return 30;
-      case 'pro': return 10000; // Corrigido de 1000 para 10000
+      case 'pro': return 1000; // Corrigido de 10000 para 1000
       case 'ultra': return 999999;
       case 'unlimited': return 999999;
       default: return 30;
