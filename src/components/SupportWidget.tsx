@@ -35,7 +35,7 @@ const SupportWidget = () => {
       console.log('📩 SUPPORT: Salvando ticket no banco...');
       
       const { data, error } = await supabase
-        .from('support_tickets' as any)
+        .from('support_tickets')
         .insert({
           name: name.trim(),
           email: email.trim(),
@@ -99,7 +99,7 @@ const SupportWidget = () => {
               <X className="w-5 h-5" />
             </button>
             <span className="font-bold text-lg md:text-xl mb-2 text-brand-dark">{t('support.title')}</span>
-            <p className="text-brand-gray text-sm mb-1 text-center max-w-xs">¿Cómo podemos ayudarte?</p>
+            <p className="text-brand-gray text-sm mb-1 text-center max-w-xs">Como podemos ajudar?</p>
             <div className="flex flex-col w-full gap-2 mt-2">
               <Button 
                 className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white text-base py-2 rounded-lg transition"

@@ -39,7 +39,7 @@ const TicketManagement = () => {
     try {
       console.log('📋 ADMIN: Buscando tickets...');
       const { data, error } = await supabase
-        .from('support_tickets' as any)
+        .from('support_tickets')
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -49,7 +49,7 @@ const TicketManagement = () => {
       }
 
       console.log('✅ ADMIN: Tickets carregados:', data?.length || 0);
-      setTickets(data || []);
+      setTickets((data as Ticket[]) || []);
     } catch (error) {
       console.error('❌ ADMIN: Erro ao carregar tickets:', error);
       toast.error('Não foi possível carregar os tickets');
@@ -61,7 +61,7 @@ const TicketManagement = () => {
   const updateTicketStatus = async (ticketId: string, newStatus: string) => {
     try {
       const { error } = await supabase
-        .from('support_tickets' as any)
+        .from('support_tickets')
         .update({ 
           status: newStatus,
           updated_at: new Date().toISOString()
