@@ -68,153 +68,148 @@ const Dashboard = () => {
   };
 
   return (
-    <section id="dashboard-demo" className="py-12 md:py-20 px-4 bg-gradient-to-br from-gray-50 to-white relative overflow-hidden">
+    <section id="dashboard-demo" className="py-6 md:py-20 px-1 md:px-4 bg-gradient-to-br from-gray-50 to-white relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute top-20 left-10 w-12 h-12 md:w-20 md:h-20 bg-brand-green/5 rounded-full animate-float"></div>
       <div className="absolute bottom-20 right-10 w-10 h-10 md:w-16 md:h-16 bg-blue-500/5 rounded-full animate-bounce"></div>
       <div className="absolute top-1/2 left-1/4 w-8 h-8 md:w-12 md:h-12 bg-purple-500/5 rounded-full animate-pulse"></div>
       
       <div className="container mx-auto max-w-6xl relative">
-        <div className="text-center mb-12 md:mb-16 animate-in fade-in-50 duration-700">
-          <h2 className="text-3xl md:text-4xl font-bold text-brand-dark mb-4 animate-in slide-in-from-top-6 duration-700">
+        <div className="text-center mb-8 md:mb-16 animate-in fade-in-50 duration-700">
+          <h2 className="text-2xl md:text-4xl font-bold text-brand-dark mb-2 md:mb-4 animate-in slide-in-from-top-6 duration-700">
             {t('dashboard.title')}
           </h2>
-          <p className="text-lg md:text-xl text-brand-gray max-w-2xl mx-auto animate-in slide-in-from-bottom-4 duration-700 delay-200 px-4">
+          <p className="text-sm md:text-xl text-brand-gray max-w-2xl mx-auto animate-in slide-in-from-bottom-4 duration-700 delay-200 px-2 md:px-4">
             {t('dashboard.subtitle')}
           </p>
-          
           {/* Upgrade Plan Button */}
-          <div className="mt-8 animate-in slide-in-from-bottom-4 duration-700 delay-400">
+          <div className="mt-4 md:mt-8 flex justify-center animate-in slide-in-from-bottom-4 duration-700 delay-400">
             <Button
               onClick={() => setShowUpgradeModal(true)}
-              className="bg-gradient-to-r from-brand-green to-green-600 hover:from-brand-green/90 hover:to-green-600/90 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              className="w-full max-w-xs bg-gradient-to-r from-brand-green to-green-600 hover:from-brand-green/90 hover:to-green-600/90 text-white px-5 py-3 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 md:px-8"
             >
               <Crown className="h-5 w-5 mr-2" />
               {t('dashboard.upgradePlan')}
             </Button>
           </div>
         </div>
-
-        <div className="bg-white rounded-2xl shadow-2xl p-4 md:p-8 max-w-4xl mx-auto hover:shadow-3xl transition-all duration-500 animate-in scale-in-95 duration-700 delay-300 group">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
-            <div className="bg-brand-green/10 rounded-lg p-4 md:p-6 text-center hover:bg-brand-green/15 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-left-6 duration-500 delay-500 group relative overflow-hidden">
-              <div className="text-2xl md:text-3xl font-bold text-brand-green mb-2 group-hover:scale-110 transition-transform duration-300 animate-glow">
-                {newMessageCount.toLocaleString()}
+        {/* Estatísticas */}
+        <div className="grid grid-cols-3 gap-2 md:grid-cols-3 md:gap-6 mb-4 md:mb-8">
+          <div className="bg-brand-green/10 rounded-md md:rounded-lg p-3 md:p-6 text-center hover:bg-brand-green/15 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-left-6 duration-500 delay-500 group">
+            <div className="text-lg md:text-3xl font-bold text-brand-green mb-1 md:mb-2 group-hover:scale-110 transition-transform duration-300 animate-glow">
+              {newMessageCount.toLocaleString()}
+            </div>
+            <div className="text-[10px] md:text-base text-brand-gray">{t('dashboard.messagesSent')}</div>
+          </div>
+          <div className="bg-blue-50 rounded-md md:rounded-lg p-3 md:p-6 text-center hover:bg-blue-100 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-bottom-6 duration-500 delay-700 group">
+            <div className="text-lg md:text-3xl font-bold text-blue-600 mb-1 md:mb-2 group-hover:scale-110 transition-transform duration-300">
+              {responseRate}%
+            </div>
+            <div className="text-[10px] md:text-base text-brand-gray">{t('dashboard.responseRate')}</div>
+          </div>
+          <div className="bg-purple-50 rounded-md md:rounded-lg p-3 md:p-6 text-center hover:bg-purple-100 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-right-6 duration-500 delay-900 group relative overflow-hidden">
+            <div className="text-lg md:text-3xl font-bold text-purple-600 mb-1 md:mb-2 group-hover:scale-110 transition-transform duration-300">{clientCount}</div>
+            <div className="text-[10px] md:text-base text-brand-gray">{t('dashboard.clientsServed')}</div>
+            {clientCount % 10 === 0 && (
+              <div className="absolute top-1 right-1 bg-purple-500 text-white text-xs px-2 py-1 rounded-full animate-bounce whitespace-nowrap">
+                +1
               </div>
-              <div className="text-brand-gray text-sm md:text-base">{t('dashboard.messagesSent')}</div>
-            </div>
-            <div className="bg-blue-50 rounded-lg p-4 md:p-6 text-center hover:bg-blue-100 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-bottom-6 duration-500 delay-700 group">
-              <div className="text-2xl md:text-3xl font-bold text-blue-600 mb-2 group-hover:scale-110 transition-transform duration-300">{responseRate}%</div>
-              <div className="text-brand-gray text-sm md:text-base">{t('dashboard.responseRate')}</div>
-            </div>
-            <div className="bg-purple-50 rounded-lg p-4 md:p-6 text-center hover:bg-purple-100 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-right-6 duration-500 delay-900 group relative overflow-hidden">
-              <div className="text-2xl md:text-3xl font-bold text-purple-600 mb-2 group-hover:scale-110 transition-transform duration-300">{clientCount}</div>
-              <div className="text-brand-gray text-sm md:text-base">{t('dashboard.clientsServed')}</div>
-              {/* New client indicator */}
-              {clientCount % 10 === 0 && (
-                <div className="absolute top-2 right-2 bg-purple-500 text-white text-xs px-2 py-1 rounded-full animate-bounce">
-                  +1
-                </div>
-              )}
+            )}
+          </div>
+        </div>
+        {/* Lista de conversas recente */}
+        <div className="bg-gray-50 rounded-lg md:rounded-2xl p-2 md:p-6 hover:bg-gray-100 transition-colors duration-300 animate-in fade-in-50 duration-700 delay-1100 mb-2 md:mb-0">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2 md:mb-4">
+            <h3 className="font-bold text-brand-dark text-base md:text-xl animate-in slide-in-from-left-4 duration-500 delay-1200">
+              {t('dashboard.recentConversations')}
+            </h3>
+            <div className="flex items-center space-x-2 mt-1 md:mt-0">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <span className="text-xs text-brand-gray">{t('dashboard.live')}</span>
             </div>
           </div>
 
-          <div className="bg-gray-50 rounded-lg p-4 md:p-6 hover:bg-gray-100 transition-colors duration-300 animate-in fade-in-50 duration-700 delay-1100">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-brand-dark animate-in slide-in-from-left-4 duration-500 delay-1200 text-lg md:text-xl">
-                {t('dashboard.recentConversations')}
-              </h3>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-xs text-brand-gray">{t('dashboard.live')}</span>
-              </div>
-            </div>
-            
-            <div className="space-y-3 max-h-80 overflow-hidden">
-              {conversations.slice(0, 4).map((conversation, index) => {
-                const isActive = index === currentConversationIndex % 4;
-                const isNewMessage = index === 0 && currentConversationIndex % conversations.length === 0;
-                return (
-                  <div 
-                    key={`${conversation.name}-${index}-${currentConversationIndex}`}
-                    className={`flex items-center justify-between bg-white p-3 rounded-lg transition-all duration-500 cursor-pointer group relative ${
-                      isActive ? 'ring-2 ring-brand-green shadow-lg scale-102' : 'hover:shadow-md hover:scale-102'
-                    } ${isNewMessage ? 'border-l-4 border-green-500' : ''}`}
-                  >
-                    <div className="flex items-center space-x-3">
-                      <div className={`relative w-8 h-8 md:w-10 md:h-10 bg-brand-green rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300 ${
-                        isActive ? 'animate-bounce' : ''
+          <div className="space-y-2 md:space-y-3 max-h-[350px] md:max-h-80 overflow-auto custom-scroll pr-1">
+            {conversations.slice(0, 4).map((conversation, index) => {
+              const isActive = index === currentConversationIndex % 4;
+              const isNewMessage = index === 0 && currentConversationIndex % conversations.length === 0;
+              return (
+                <div 
+                  key={`${conversation.name}-${index}-${currentConversationIndex}`}
+                  className={`flex items-center justify-between bg-white p-2 md:p-3 rounded-lg transition-all duration-500 cursor-pointer group relative ${
+                    isActive ? 'ring-2 ring-brand-green shadow-lg scale-[1.02]' : 'hover:shadow-md hover:scale-[1.01]'
+                  } ${isNewMessage ? 'border-l-4 border-green-500' : ''}`}
+                >
+                  <div className="flex items-center space-x-2 md:space-x-3 min-w-0">
+                    <div className={`relative w-7 h-7 md:w-10 md:h-10 bg-brand-green rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300 ${
+                      isActive ? 'animate-bounce' : ''
+                    }`}>
+                      <span className="text-white font-bold text-xs md:text-sm">
+                        {conversation.name.charAt(0)}
+                      </span>
+                      <div className={`absolute -bottom-1 -right-1 w-2.5 h-2.5 ${getStatusColor(conversation.status)} rounded-full border-2 border-white`}></div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`font-semibold text-brand-dark text-xs md:text-base group-hover:text-brand-green transition-colors duration-300 truncate ${
+                        isActive ? 'text-brand-green' : ''
                       }`}>
-                        <span className="text-white font-bold text-xs md:text-sm">
-                          {conversation.name.charAt(0)}
-                        </span>
-                        {/* Status indicator */}
-                        <div className={`absolute -bottom-1 -right-1 w-3 h-3 ${getStatusColor(conversation.status)} rounded-full border-2 border-white`}></div>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`font-semibold text-brand-dark text-sm md:text-base group-hover:text-brand-green transition-colors duration-300 truncate ${
-                          isActive ? 'text-brand-green' : ''
-                        }`}>
-                          {conversation.name}
+                        {conversation.name}
+                      </p>
+                      <div className="flex items-center space-x-1 md:space-x-2">
+                        <p className="text-brand-gray text-xs truncate max-w-[120px] md:max-w-full">
+                          {conversation.message}
                         </p>
-                        <div className="flex items-center space-x-2">
-                          <p className="text-brand-gray text-xs md:text-sm truncate">
-                            {conversation.message}
-                          </p>
-                          {conversation.status === 'typing' && (
-                            <div className="flex space-x-1">
-                              <div className="w-1 h-1 bg-brand-gray rounded-full animate-bounce"></div>
-                              <div className="w-1 h-1 bg-brand-gray rounded-full animate-bounce delay-75"></div>
-                              <div className="w-1 h-1 bg-brand-gray rounded-full animate-bounce delay-150"></div>
-                            </div>
-                          )}
-                        </div>
+                        {conversation.status === 'typing' && (
+                          <div className="flex space-x-0.5 md:space-x-1">
+                            <div className="w-1 h-1 bg-brand-gray rounded-full animate-bounce"></div>
+                            <div className="w-1 h-1 bg-brand-gray rounded-full animate-bounce delay-75"></div>
+                            <div className="w-1 h-1 bg-brand-gray rounded-full animate-bounce delay-150"></div>
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <div className="flex flex-col items-end space-y-1">
-                      <span className="text-xs text-brand-gray group-hover:text-brand-dark transition-colors duration-300 flex-shrink-0">
-                        {conversation.time}
-                      </span>
-                      <span className={`text-xs px-2 py-1 rounded-full text-white ${getStatusColor(conversation.status)}`}>
-                        {getStatusText(conversation.status)}
-                      </span>
-                    </div>
-                    {/* New message indicator */}
-                    {isNewMessage && (
-                      <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center animate-bounce">
-                        !
-                      </div>
-                    )}
                   </div>
-                );
-              })}
-            </div>
-
-            {/* Nova conversa chegando indicator - mais dinâmico */}
-            <div className="mt-4 p-3 bg-gradient-to-r from-brand-green/10 to-blue-500/10 rounded-lg border border-brand-green/20 animate-slide-in-bottom">
-              <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-brand-green rounded-full animate-pulse"></div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-brand-dark">
-                      {Math.floor(Math.random() * 3) + 1} {t('dashboard.newMessages')}
+                  <div className="flex flex-col items-end space-y-1 min-w-fit pl-2">
+                    <span className="text-[10px] md:text-xs text-brand-gray group-hover:text-brand-dark transition-colors duration-300 flex-shrink-0">
+                      {conversation.time}
                     </span>
-                    <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-brand-green rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-brand-green rounded-full animate-bounce delay-100"></div>
-                      <div className="w-2 h-2 bg-brand-green rounded-full animate-bounce delay-200"></div>
+                    <span className={`text-[10px] md:text-xs px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-white ${getStatusColor(conversation.status)}`}>
+                      {getStatusText(conversation.status)}
+                    </span>
+                  </div>
+                  {/* New message indicator */}
+                  {isNewMessage && (
+                    <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center animate-bounce">
+                      !
                     </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {/* Nova conversa chegando - mobile otimizado */}
+          <div className="mt-3 md:mt-4 p-2 md:p-3 bg-gradient-to-r from-brand-green/10 to-blue-500/10 rounded-lg border border-brand-green/20 animate-slide-in-bottom">
+            <div className="flex items-center space-x-2 md:space-x-3">
+              <div className="w-2 h-2 md:w-3 md:h-3 bg-brand-green rounded-full animate-pulse"></div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs md:text-sm font-medium text-brand-dark">
+                    {Math.floor(Math.random() * 3) + 1} {t('dashboard.newMessages')}
+                  </span>
+                  <div className="flex space-x-0.5 md:space-x-1">
+                    <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-brand-green rounded-full animate-bounce"></div>
+                    <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-brand-green rounded-full animate-bounce delay-100"></div>
+                    <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-brand-green rounded-full animate-bounce delay-200"></div>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                    <div className="bg-brand-green h-2 rounded-full animate-pulse" style={{width: `${Math.random() * 100}%`}}></div>
-                  </div>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-1.5 md:h-2 mt-1 md:mt-2">
+                  <div className="bg-brand-green h-1.5 md:h-2 rounded-full animate-pulse" style={{width: `${Math.random() * 100}%`}}></div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
       {/* Modal de Upgrade */}
       <PlanUpgradeModal
         isOpen={showUpgradeModal}
