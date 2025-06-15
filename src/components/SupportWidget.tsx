@@ -13,8 +13,8 @@ const WHATSAPP_SUPPORT_LINK = "https://wa.link/d3ebbb";
 
 const SupportWidget = () => {
   const { t } = useTranslation();
-  const [isOpen, setIsOpen] = useState(false); // shows modal form
-  const [showOptions, setShowOptions] = useState(false); // shows selection buttons
+  const [isOpen, setIsOpen] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -35,7 +35,7 @@ const SupportWidget = () => {
       console.log('📩 SUPPORT: Salvando ticket no banco...');
       
       const { data, error } = await supabase
-        .from('support_tickets')
+        .from('support_tickets' as any)
         .insert({
           name: name.trim(),
           email: email.trim(),
@@ -68,7 +68,6 @@ const SupportWidget = () => {
     }
   };
 
-  // Fecha tudo
   const closeAll = () => {
     setIsOpen(false);
     setShowOptions(false);

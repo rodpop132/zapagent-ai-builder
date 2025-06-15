@@ -9,11 +9,10 @@ import {
   Mail, 
   User, 
   Search, 
-  Filter,
   ExternalLink
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface Ticket {
   id: string;
@@ -31,7 +30,6 @@ const TicketManagement = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const { toast } = useToast();
 
   useEffect(() => {
     fetchTickets();
@@ -41,7 +39,7 @@ const TicketManagement = () => {
     try {
       console.log('📋 ADMIN: Buscando tickets...');
       const { data, error } = await supabase
-        .from('support_tickets')
+        .from('support_tickets' as any)
         .select('*')
         .order('created_at', { ascending: false });
 
@@ -54,11 +52,7 @@ const TicketManagement = () => {
       setTickets(data || []);
     } catch (error) {
       console.error('❌ ADMIN: Erro ao carregar tickets:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar os tickets",
-        variant: "destructive"
-      });
+      toast.error('Não foi possível carregar os tickets');
     } finally {
       setLoading(false);
     }
@@ -67,7 +61,7 @@ const TicketManagement = () => {
   const updateTicketStatus = async (ticketId: string, newStatus: string) => {
     try {
       const { error } = await supabase
-        .from('support_tickets')
+        .from('support_tickets' as any)
         .update({ 
           status: newStatus,
           updated_at: new Date().toISOString()
@@ -82,18 +76,10 @@ const TicketManagement = () => {
           : ticket
       ));
 
-      toast({
-        title: "Status atualizado",
-        description: `Ticket #${ticketId.slice(-6)} foi atualizado para ${newStatus}`,
-        variant: "default"
-      });
+      toast.success(`Ticket #${ticketId.slice(-6)} foi atualizado para ${getStatusLabel(newStatus)}`);
     } catch (error) {
       console.error('❌ ADMIN: Erro ao atualizar status:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar o status do ticket",
-        variant: "destructive"
-      });
+      toast.error('Não foi possível atualizar o status do ticket');
     }
   };
 
