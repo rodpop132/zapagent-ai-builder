@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -6,11 +5,13 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useFacebookTracking } from '@/hooks/useFacebookTracking';
 
 const PricingSection = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+  const { trackInitiateCheckout } = useFacebookTracking();
 
   // Detectar país baseado no idioma
   const getCountryFromLanguage = () => {
@@ -35,6 +36,17 @@ const PricingSection = () => {
     // Para planos pagos, usar Stripe
     try {
       const country = getCountryFromLanguage();
+      
+      // Track checkout initiation with Facebook
+      const planPrices = {
+        pro: country === 'brasil' ? 79 : country === 'spain' ? 12 : 15,
+        ultra: country === 'brasil' ? 179 : country === 'spain' ? 28 : 37,
+      };
+      
+      const currency = country === 'brasil' ? 'BRL' : country === 'spain' ? 'EUR' : 'USD';
+      const price = planPrices[planType as keyof typeof planPrices];
+      
+      await trackInitiateCheckout(price, currency, user?.email);
       
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { 

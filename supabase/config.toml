@@ -22,7 +22,7 @@ enable_manual_linking = false
 # Configuração correta do OTP
 otp_expiry = 3600
 otp_length = 6
-# Configuração correta da proteção de senhas vazadas
+# Configuração correta da proteção de senhas vazias
 enable_leaked_password_protection = false
 
 [edge_functions]
@@ -33,3 +33,6 @@ verify_jwt = false
 
 [functions.verify-subscription]
 verify_jwt = true
+
+[functions.facebook-conversions]
+verify_jwt = false

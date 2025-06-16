@@ -1,115 +1,38 @@
 
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, Loader2, ArrowRight } from 'lucide-react';
-import { toast } from 'sonner';
+import { CheckCircle, ArrowRight } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useFacebookTracking } from '@/hooks/useFacebookTracking';
+import { useAuth } from '@/hooks/useAuth';
 
 const Sucesso = () => {
-  const [loading, setLoading] = useState(true);
-  const [countdown, setCountdown] = useState(5);
-  const [verified, setVerified] = useState(false);
-  const [planInfo, setPlanInfo] = useState<string>('');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const sessionId = searchParams.get('session_id');
+  const { trackPurchase } = useFacebookTracking();
+  const { user } = useAuth();
 
   useEffect(() => {
-    const verifyAndUpdateSubscription = async () => {
-      console.log('💳 SUCESSO: Iniciando verificação e atualização de pagamento...');
-      console.log('💳 SUCESSO: Session ID:', sessionId);
-
-      try {
-        // Aguardar um pouco para o Stripe processar
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        console.log('💳 SUCESSO: Verificando assinatura no Stripe...');
-        const { data, error } = await supabase.functions.invoke('verify-subscription');
-        
-        if (error) {
-          console.error('❌ SUCESSO: Erro ao verificar assinatura:', error);
-          toast.error('Erro ao verificar pagamento');
-        } else {
-          console.log('✅ SUCESSO: Resposta da verificação:', data);
-          
-          if (data?.subscribed) {
-            const planName = data.plan_type === 'pro' ? 'Pro' : 
-                           data.plan_type === 'ultra' ? 'Ultra' : 'Premium';
-            setPlanInfo(planName);
-            setVerified(true);
-            toast.success(`Pagamento confirmado! Plano ${planName} ativado com sucesso.`);
-          } else {
-            console.log('⏳ SUCESSO: Pagamento ainda processando, tentando novamente...');
-            // Tentar novamente após alguns segundos
-            setTimeout(async () => {
-              console.log('🔄 SUCESSO: Verificando novamente...');
-              const { data: retryData } = await supabase.functions.invoke('verify-subscription');
-              if (retryData?.subscribed) {
-                const planName = retryData.plan_type === 'pro' ? 'Pro' : 
-                               retryData.plan_type === 'ultra' ? 'Ultra' : 'Premium';
-                setPlanInfo(planName);
-                setVerified(true);
-                toast.success(`Pagamento confirmado! Plano ${planName} ativado com sucesso.`);
-              } else {
-                console.log('⚠️ SUCESSO: Ainda processando, pode levar alguns minutos...');
-                toast.info('Pagamento sendo processado. Pode levar alguns minutos para aparecer.');
-              }
-            }, 5000);
-          }
-        }
-      } catch (error) {
-        console.error('💥 SUCESSO: Erro na verificação:', error);
-        toast.error('Erro ao verificar pagamento');
-      } finally {
-        setLoading(false);
+    // Track purchase completion with Facebook
+    const trackPurchaseEvent = async () => {
+      // Try to get purchase details from URL params or estimate based on common values
+      const sessionId = searchParams.get('session_id');
+      const planType = searchParams.get('plan') || 'pro';
+      
+      // Estimate values based on plan type (you may want to store this more precisely)
+      let value = 15; // Default USD price for pro
+      let currency = 'USD';
+      
+      if (planType === 'ultra') {
+        value = 37;
       }
+      
+      await trackPurchase(value, currency, user?.email);
     };
 
-    verifyAndUpdateSubscription();
-  }, [sessionId]);
-
-  // Countdown para redirecionamento automático
-  useEffect(() => {
-    if (!loading && verified) {
-      const timer = setInterval(() => {
-        setCountdown(prev => {
-          if (prev <= 1) {
-            navigate('/dashboard');
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
-  }, [loading, verified, navigate]);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-full max-w-md">
-          <CardContent className="p-8 text-center">
-            <Loader2 className="h-12 w-12 animate-spin text-green-600 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-900 mb-2">
-              Verificando Pagamento
-            </h2>
-            <p className="text-gray-600">
-              Aguarde enquanto confirmamos e ativamos sua assinatura...
-            </p>
-            {sessionId && (
-              <p className="text-xs text-gray-400 mt-2">
-                ID da sessão: {sessionId.substring(0, 20)}...
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+    trackPurchaseEvent();
+  }, [searchParams, trackPurchase, user?.email]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -119,7 +42,7 @@ const Sucesso = () => {
             <CheckCircle className="h-10 w-10 text-green-600" />
           </div>
           <CardTitle className="text-2xl font-bold text-gray-900">
-            ✅ Pagamento Confirmado!
+            Pagamento Confirmado!
           </CardTitle>
           <CardDescription className="text-lg">
             Sua assinatura foi ativada com sucesso
@@ -127,39 +50,21 @@ const Sucesso = () => {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="text-center space-y-2">
-            {planInfo && (
-              <div className="bg-green-50 p-4 rounded-lg mb-4">
-                <p className="text-green-700 font-semibold text-lg">
-                  🎉 Plano {planInfo} Ativado!
-                </p>
-                <p className="text-green-600 text-sm mt-1">
-                  Agora você tem acesso a todos os recursos premium
-                </p>
-              </div>
-            )}
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <p className="text-sm text-blue-700 font-medium">
-                Redirecionando para o dashboard em {countdown} segundos...
-              </p>
-            </div>
+            <p className="text-gray-600">
+              Parabéns! Você agora tem acesso completo a todas as funcionalidades do seu plano.
+            </p>
+            <p className="text-sm text-gray-500">
+              Um email de confirmação foi enviado para você com todos os detalhes.
+            </p>
           </div>
           
-          <div className="space-y-3">
-            <Button 
-              onClick={() => navigate('/dashboard')}
-              className="w-full bg-green-600 hover:bg-green-700"
-            >
-              Ir para Dashboard
-              <ArrowRight className="h-4 w-4 ml-2" />
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/')}
-              className="w-full"
-            >
-              Voltar ao Início
-            </Button>
-          </div>
+          <Button 
+            onClick={() => navigate('/dashboard')}
+            className="w-full bg-green-600 hover:bg-green-700"
+          >
+            Acessar Dashboard
+            <ArrowRight className="h-4 w-4 ml-2" />
+          </Button>
         </CardContent>
       </Card>
     </div>
