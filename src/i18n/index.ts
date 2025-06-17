@@ -32,13 +32,13 @@ const detectCountryAndSetLanguage = async () => {
       'nz': 'en'
     };
     
-    const detectedLanguage = countryToLanguage[country] || 'es';
+    const detectedLanguage = countryToLanguage[country] || 'pt';
     console.log('Idioma detectado:', detectedLanguage);
     
     return detectedLanguage;
   } catch (error) {
     console.error('Erro ao detectar país:', error);
-    return 'es'; // fallback para espanhol
+    return 'pt'; // fallback para português
   }
 };
 
@@ -51,7 +51,7 @@ i18n
       es, 
       en
     },
-    fallbackLng: 'es', // Mudança aqui: fallback para espanhol
+    fallbackLng: 'pt', // Mudança aqui: fallback para português
     debug: false,
     detection: {
       order: ['localStorage', 'navigator'],
@@ -62,11 +62,11 @@ i18n
     }
   });
 
-// Definir espanhol como idioma padrão se não houver preferência salva
+// Definir português como idioma padrão se não houver preferência salva
 const savedLanguage = localStorage.getItem('selectedLanguage');
 if (!savedLanguage) {
-  localStorage.setItem('selectedLanguage', 'es');
-  i18n.changeLanguage('es');
+  localStorage.setItem('selectedLanguage', 'pt');
+  i18n.changeLanguage('pt');
 } else {
   i18n.changeLanguage(savedLanguage);
 }

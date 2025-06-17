@@ -3,8 +3,8 @@ import { useEffect } from 'react';
 
 declare global {
   interface Window {
-    fbq: any;
-    _fbq: any;
+    fbq?: (...args: any[]) => void;
+    _fbq?: any;
   }
 }
 
@@ -12,12 +12,12 @@ const MetaPixel = () => {
   useEffect(() => {
     if (typeof window.fbq !== 'undefined') return;
 
-    !(function (f: any, b, e, v, n?, t?, s?) {
+    (function (f: any, b: any, e: any, v: any, n?: any, t?: any, s?: any) {
       if (f.fbq) return;
-      n = f.fbq = function () {
+      n = f.fbq = function (...args: any[]) {
         n.callMethod
-          ? n.callMethod.apply(n, arguments)
-          : n.queue.push(arguments);
+          ? n.callMethod.apply(n, args)
+          : n.queue.push(args);
       };
       if (!f._fbq) f._fbq = n;
       n.push = n;
@@ -31,8 +31,8 @@ const MetaPixel = () => {
       s.parentNode.insertBefore(t, s);
     })(window, document, 'script');
 
-    window.fbq('init', '709563458627541'); // Meta Pixel ID
-    window.fbq('track', 'PageView');
+    window.fbq?.('init', '709563458627541');
+    window.fbq?.('track', 'PageView');
   }, []);
 
   return (

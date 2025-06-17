@@ -13,6 +13,7 @@ import LanguageSelector from '@/components/LanguageSelector';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import SupportNotifications from '@/components/SupportNotifications';
 
 interface Agent {
   id: string;
@@ -613,6 +614,9 @@ const Dashboard = () => {
         onClose={() => setShowUpgradeModal(false)}
         currentPlan={subscription?.plan_type || 'free'}
       />
+
+      {/* Support Notifications */}
+      <SupportNotifications />
     </div>
   );
 };
