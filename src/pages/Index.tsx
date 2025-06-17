@@ -9,10 +9,12 @@ import Testimonials from "@/components/Testimonials";
 import FAQ from "@/components/FAQ";
 import Footer from "@/components/Footer";
 import SupportWidget from "@/components/SupportWidget";
+import MetaPixel from "@/components/MetaPixel";
 
 const Index = () => {
   return (
     <div className="min-h-screen">
+      <MetaPixel />
       <Header />
       <HeroSection />
       <HowItWorks />
