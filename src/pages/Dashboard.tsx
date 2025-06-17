@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import PlanUpgradeModal from '@/components/PlanUpgradeModal';
 import LanguageSelector from '@/components/LanguageSelector';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 interface Agent {
   id: string;
@@ -38,6 +38,7 @@ interface Subscription {
 const Dashboard = () => {
   const { user, signOut } = useAuth();
   const { t } = useTranslation();
+  const navigate = useNavigate();
   
   const [agents, setAgents] = useState<Agent[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -332,7 +333,22 @@ const Dashboard = () => {
 
   const handleSignOut = async () => {
     console.log('🚪 DASHBOARD: Fazendo logout...');
-    await signOut();
+    try {
+      await signOut();
+      navigate('/');
+      toast({
+        title: "Logout realizado",
+        description: "Você foi desconectado com sucesso",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error('Erro no logout:', error);
+      toast({
+        title: "Erro no logout",
+        description: "Não foi possível fazer logout. Tente novamente.",
+        variant: "destructive"
+      });
+    }
   };
 
   if (loading) {

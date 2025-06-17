@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { Link, useNavigate } from "react-router-dom";
@@ -18,17 +19,13 @@ const Header = () => {
   };
 
   const handleDashboardClick = () => {
-    if (user) {
-      navigate('/dashboard');
-    } else {
-      navigate('/auth');
-    }
+    navigate('/dashboard');
     setMobileMenuOpen(false);
   };
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/'); // Redirecionar para página inicial em vez de login
+    navigate('/');
     setMobileMenuOpen(false);
   };
 
@@ -106,7 +103,7 @@ const Header = () => {
               </Button>
               <Button 
                 className="bg-green-600 hover:bg-green-700 text-white text-sm"
-                onClick={handleDashboardClick}
+                onClick={handleAuthClick}
                 size="sm"
               >
                 {t('header.createAgent')}
@@ -182,7 +179,7 @@ const Header = () => {
                   </Button>
                   <Button 
                     className="w-full bg-green-600 hover:bg-green-700 text-white justify-center text-sm"
-                    onClick={handleDashboardClick}
+                    onClick={handleAuthClick}
                     size="sm"
                   >
                     {t('header.createAgent')}
