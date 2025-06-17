@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -527,15 +528,10 @@ const Dashboard = () => {
             <Button 
               onClick={handleCreateAgent}
               className="bg-brand-green hover:bg-brand-green/90 text-white transition-all duration-200 hover:scale-105 w-full sm:w-auto"
-              disabled={loading || !canCreateAgent()}
+              disabled={loading}
             >
               <Plus className="h-4 w-4 mr-2" />
               {loading ? t('userDashboard.loading') : t('userDashboard.createAgent')}
-              {!loading && !canCreateAgent() && (
-                <span className="ml-2 text-xs">
-                  {t('userDashboard.limitReached')}
-                </span>
-              )}
             </Button>
           </div>
 
@@ -567,7 +563,7 @@ const Dashboard = () => {
                 <Button 
                   onClick={handleCreateAgent}
                   className="bg-brand-green hover:bg-brand-green/90 text-white transition-all duration-200 hover:scale-105"
-                  disabled={loading || !canCreateAgent()}
+                  disabled={loading}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   {loading ? t('userDashboard.loading') : t('userDashboard.createFirstAgent')}
