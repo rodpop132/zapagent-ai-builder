@@ -11,6 +11,13 @@ const HeroSection = () => {
   const { t } = useTranslation();
   const [showSimulator, setShowSimulator] = useState(false);
 
+  const scrollToPlans = () => {
+    const element = document.getElementById('planos');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <>
       <section className="py-12 md:py-20 px-4 bg-gradient-to-br from-green-50 via-white to-blue-50">
@@ -30,7 +37,7 @@ const HeroSection = () => {
                 <Button 
                   size="lg" 
                   className="bg-green-600 hover:bg-green-700 text-white px-6 md:px-8 py-3 text-sm md:text-base"
-                  onClick={() => navigate('/dashboard')}
+                  onClick={scrollToPlans}
                 >
                   {t('hero.cta')}
                   <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
