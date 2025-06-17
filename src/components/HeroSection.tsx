@@ -1,95 +1,101 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, ArrowRight } from "lucide-react";
+import { ArrowRight, Play, MessageCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import ConversationSimulator from "./ConversationSimulator";
 
 const HeroSection = () => {
-  const { t } = useTranslation();
   const navigate = useNavigate();
-
-  const handleCreateAgent = () => {
-    navigate('/auth');
-  };
-
-  const scrollToSection = (sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
+  const { t } = useTranslation();
+  const [showSimulator, setShowSimulator] = useState(false);
 
   return (
-    <section className="relative bg-gradient-to-b from-green-50 to-white py-12 md:py-20 lg:py-32 px-4 overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-green-100 rounded-full opacity-50 animate-float"></div>
-        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-green-200 rounded-full opacity-30 animate-float" style={{animationDelay: '2s'}}></div>
-      </div>
-      
-      <div className="container mx-auto max-w-6xl relative z-10">
-        <div className="text-center space-y-6 md:space-y-8">
-          {/* Main headline */}
-          <div className="space-y-4 md:space-y-6">
-            <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-brand-dark leading-tight animate-fade-in">
-              {t('hero.title.part1')} <span className="text-brand-green gradient-text">{t('hero.title.highlight')}</span> {t('hero.title.part2')}
-            </h1>
-            <p className="text-lg md:text-xl lg:text-2xl text-brand-gray max-w-4xl mx-auto leading-relaxed animate-fade-in" style={{animationDelay: '0.2s'}}>
-              {t('hero.subtitle')}
-            </p>
-          </div>
+    <>
+      <section className="py-12 md:py-20 px-4 bg-gradient-to-br from-green-50 via-white to-blue-50">
+        <div className="container mx-auto max-w-6xl">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            <div className="space-y-6 md:space-y-8">
+              <div className="space-y-4">
+                <h1 className="text-3xl md:text-4xl lg:text-6xl font-bold text-brand-dark leading-tight">
+                  {t('hero.title')}
+                </h1>
+                <p className="text-lg md:text-xl text-brand-gray leading-relaxed">
+                  {t('hero.subtitle')}
+                </p>
+              </div>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4 md:pt-8 animate-fade-in" style={{animationDelay: '0.4s'}}>
-            <Button 
-              size="lg"
-              className="bg-brand-green hover:bg-brand-green/90 text-white px-6 md:px-8 py-3 md:py-4 text-base md:text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover-lift animate-glow group w-full sm:w-auto"
-              onClick={handleCreateAgent}
-            >
-              {t('hero.cta.primary')}
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            
-            <Button 
-              variant="outline"
-              size="lg"
-              className="border-2 border-brand-green text-brand-green hover:bg-brand-green hover:text-white px-6 md:px-8 py-3 md:py-4 text-base md:text-lg font-semibold rounded-xl transition-all duration-300 hover-lift group w-full sm:w-auto"
-              onClick={() => scrollToSection('como-funciona')}
-            >
-              <Play className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
-              {t('hero.cta.secondary')}
-            </Button>
-          </div>
+              <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
+                <Button 
+                  size="lg" 
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 md:px-8 py-3 text-sm md:text-base"
+                  onClick={() => navigate('/dashboard')}
+                >
+                  {t('hero.cta')}
+                  <ArrowRight className="ml-2 h-4 w-4 md:h-5 md:w-5" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg"
+                  className="px-6 md:px-8 py-3 text-sm md:text-base"
+                  onClick={() => setShowSimulator(true)}
+                >
+                  <Play className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                  Simular Conversa
+                </Button>
+              </div>
+            </div>
 
-          {/* Trust indicators */}
-          <div className="pt-8 md:pt-12 animate-fade-in" style={{animationDelay: '0.6s'}}>
-            <p className="text-sm md:text-base text-brand-gray mb-6">
-              {t('hero.trustIndicators.title')}
-            </p>
-            <div className="flex flex-wrap justify-center items-center gap-6 md:gap-8 opacity-60">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-brand-green font-bold text-sm">✓</span>
+            <div className="relative">
+              <div className="relative z-10 bg-white rounded-2xl shadow-xl p-4 md:p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-3 pb-3 border-b">
+                    <div className="w-8 h-8 md:w-10 md:h-10 bg-green-600 rounded-full flex items-center justify-center">
+                      <MessageCircle className="h-4 w-4 md:h-5 md:w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm md:text-base">ZapAgent</p>
+                      <p className="text-green-600 text-xs md:text-sm">● Online</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3 md:space-y-4">
+                    <div className="bg-gray-100 rounded-lg p-3 md:p-4 rounded-bl-none max-w-[80%]">
+                      <p className="text-xs md:text-sm">{t('hero.chatExample.bot1')}</p>
+                    </div>
+                    
+                    <div className="bg-green-600 text-white rounded-lg p-3 md:p-4 rounded-br-none max-w-[80%] ml-auto">
+                      <p className="text-xs md:text-sm">{t('hero.chatExample.user1')}</p>
+                    </div>
+                    
+                    <div className="bg-gray-100 rounded-lg p-3 md:p-4 rounded-bl-none max-w-[80%]">
+                      <p className="text-xs md:text-sm">{t('hero.chatExample.bot2')}</p>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2 text-brand-gray">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                      </div>
+                      <span className="text-xs md:text-sm">{t('hero.chatExample.typing')}</span>
+                    </div>
+                  </div>
                 </div>
-                <span className="text-sm md:text-base text-brand-gray">{t('hero.trustIndicators.feature1')}</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-brand-green font-bold text-sm">✓</span>
-                </div>
-                <span className="text-sm md:text-base text-brand-gray">{t('hero.trustIndicators.feature2')}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-brand-green font-bold text-sm">✓</span>
-                </div>
-                <span className="text-sm md:text-base text-brand-gray">{t('hero.trustIndicators.feature3')}</span>
-              </div>
+              
+              <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-blue-500 rounded-2xl transform rotate-1 scale-105 opacity-20"></div>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+
+      <ConversationSimulator 
+        isOpen={showSimulator}
+        onClose={() => setShowSimulator(false)}
+      />
+    </>
   );
 };
 
