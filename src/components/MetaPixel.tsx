@@ -10,7 +10,7 @@ declare global {
 
 const MetaPixel = () => {
   useEffect(() => {
-    if (window.fbq) return;
+    if (typeof window.fbq !== 'undefined') return;
 
     !(function (f: any, b, e, v, n?, t?, s?) {
       if (f.fbq) return;
