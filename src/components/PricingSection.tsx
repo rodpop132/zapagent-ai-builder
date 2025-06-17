@@ -28,6 +28,7 @@ const PricingSection = () => {
       if (user) {
         navigate('/dashboard');
       } else {
+        // Redirecionar para cadastro em vez de login para plano gratuito
         navigate('/auth');
       }
       return;
