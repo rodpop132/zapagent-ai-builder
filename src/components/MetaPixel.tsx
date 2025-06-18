@@ -3,7 +3,15 @@ import { useEffect } from 'react';
 
 declare global {
   interface Window {
-    fbq?: (action: string, ...args: any[]) => void;
+    fbq?: {
+      (action: 'init', pixelId: string): void;
+      (action: 'track', eventName: string): void;
+      callMethod?: any;
+      queue?: any[];
+      push?: any;
+      loaded?: boolean;
+      version?: string;
+    };
     _fbq?: any;
   }
 }
@@ -31,11 +39,10 @@ const MetaPixel = () => {
       s.parentNode.insertBefore(t, s);
     })(window, document, 'script', undefined);
 
-    // Use type assertion to ensure TypeScript knows fbq exists after initialization
-    const fbq = window.fbq;
-    if (fbq) {
-      fbq('init', '709563458627541');
-      fbq('track', 'PageView');
+    // Now fbq should be properly typed and callable
+    if (window.fbq) {
+      window.fbq('init', '709563458627541');
+      window.fbq('track', 'PageView');
     }
   }, []);
 
