@@ -1,15 +1,16 @@
 
 import { useEffect } from 'react';
 
-type FbqFunction = {
+interface FbqFunction {
   (action: 'init', pixelId: string): void;
   (action: 'track', eventName: string): void;
+  (...args: any[]): void;
   callMethod?: (...args: any[]) => void;
   queue?: any[];
   push?: (...args: any[]) => void;
   loaded?: boolean;
   version?: string;
-} & ((...args: any[]) => void);
+}
 
 declare global {
   interface Window {
