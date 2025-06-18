@@ -40,10 +40,11 @@ const MetaPixel = () => {
       s.parentNode.insertBefore(t, s);
     })(window, document, 'script', undefined);
 
-    // Now fbq should be properly typed and callable
-    if (window.fbq) {
-      window.fbq('init', '709563458627541');
-      window.fbq('track', 'PageView');
+    // Use type assertion to ensure TypeScript knows fbq is callable
+    const fbq = window.fbq as FbqFunction;
+    if (fbq) {
+      fbq('init', '709563458627541');
+      fbq('track', 'PageView');
     }
   }, []);
 
