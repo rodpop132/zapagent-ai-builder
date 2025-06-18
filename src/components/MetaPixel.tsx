@@ -2,8 +2,6 @@
 import { useEffect } from 'react';
 
 interface FbqFunction {
-  (action: 'init', pixelId: string): void;
-  (action: 'track', eventName: string): void;
   (...args: any[]): void;
   callMethod?: (...args: any[]) => void;
   queue?: any[];
