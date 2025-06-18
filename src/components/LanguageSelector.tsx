@@ -25,12 +25,16 @@ const languages: Language[] = [
 const LanguageSelector = () => {
   const { i18n } = useTranslation();
   const [currentLanguage, setCurrentLanguage] = useState(() => {
-    // Se não há idioma salvo ou detectado, usar português como padrão
+    // Sempre inicializar com português brasileiro como padrão
     const savedLanguage = localStorage.getItem('selectedLanguage');
-    if (!savedLanguage) {
-      return languages.find(lang => lang.code === 'pt') || languages[0]; // Português por padrão
+    const languageCode = savedLanguage || 'pt';
+    
+    // Garantir que o i18n está sincronizado
+    if (i18n.language !== languageCode) {
+      i18n.changeLanguage(languageCode);
     }
-    return languages.find(lang => lang.code === i18n.language) || languages.find(lang => lang.code === 'pt') || languages[0];
+    
+    return languages.find(lang => lang.code === languageCode) || languages[0];
   });
 
   const handleLanguageChange = (language: Language) => {

@@ -51,7 +51,8 @@ i18n
       es, 
       en
     },
-    fallbackLng: 'pt', // Mudança aqui: fallback para português
+    fallbackLng: 'pt',
+    lng: 'pt', // Definir português como idioma padrão sempre
     debug: false,
     detection: {
       order: ['localStorage', 'navigator'],
@@ -62,13 +63,21 @@ i18n
     }
   });
 
-// Definir português como idioma padrão se não houver preferência salva
-const savedLanguage = localStorage.getItem('selectedLanguage');
-if (!savedLanguage) {
-  localStorage.setItem('selectedLanguage', 'pt');
-  i18n.changeLanguage('pt');
-} else {
-  i18n.changeLanguage(savedLanguage);
-}
+// Sempre inicializar em português brasileiro
+const initializeLanguage = () => {
+  const savedLanguage = localStorage.getItem('selectedLanguage');
+  
+  // Se não há idioma salvo, definir português como padrão
+  if (!savedLanguage) {
+    localStorage.setItem('selectedLanguage', 'pt');
+    i18n.changeLanguage('pt');
+  } else {
+    // Se há idioma salvo, usar o idioma salvo
+    i18n.changeLanguage(savedLanguage);
+  }
+};
+
+// Inicializar idioma
+initializeLanguage();
 
 export default i18n;
