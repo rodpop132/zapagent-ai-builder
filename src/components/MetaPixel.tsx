@@ -31,9 +31,11 @@ const MetaPixel = () => {
       s.parentNode.insertBefore(t, s);
     })(window, document, 'script', undefined);
 
-    if (window.fbq) {
-      window.fbq('init', '709563458627541');
-      window.fbq('track', 'PageView');
+    // Use type assertion to ensure TypeScript knows fbq exists after initialization
+    const fbq = window.fbq;
+    if (fbq) {
+      fbq('init', '709563458627541');
+      fbq('track', 'PageView');
     }
   }, []);
 
