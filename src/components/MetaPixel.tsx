@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 
 declare global {
   interface Window {
-    fbq?: (...args: any[]) => void;
+    fbq?: (action: string, ...args: any[]) => void;
     _fbq?: any;
   }
 }
