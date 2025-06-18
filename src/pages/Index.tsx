@@ -10,11 +10,13 @@ import FAQ from "@/components/FAQ";
 import Footer from "@/components/Footer";
 import SupportWidget from "@/components/SupportWidget";
 import MetaPixel from "@/components/MetaPixel";
+import AffiliateTracker from "@/components/AffiliateTracker";
 
 const Index = () => {
   return (
     <div className="min-h-screen">
       <MetaPixel />
+      <AffiliateTracker />
       <Header />
       <HeroSection />
       <HowItWorks />

@@ -87,6 +87,152 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_clicks: {
+        Row: {
+          affiliate_id: string
+          clicked_at: string
+          id: string
+          ip_address: string | null
+          referrer: string | null
+          user_agent: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          affiliate_id: string
+          clicked_at?: string
+          id?: string
+          ip_address?: string | null
+          referrer?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          affiliate_id?: string
+          clicked_at?: string
+          id?: string
+          ip_address?: string | null
+          referrer?: string | null
+          user_agent?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_clicks_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliate_conversions: {
+        Row: {
+          affiliate_id: string
+          click_id: string | null
+          commission_amount: number | null
+          conversion_type: string
+          converted_at: string
+          id: string
+          order_value: number | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          affiliate_id: string
+          click_id?: string | null
+          commission_amount?: number | null
+          conversion_type: string
+          converted_at?: string
+          id?: string
+          order_value?: number | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          affiliate_id?: string
+          click_id?: string | null
+          commission_amount?: number | null
+          conversion_type?: string
+          converted_at?: string
+          id?: string
+          order_value?: number | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_conversions_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_conversions_click_id_fkey"
+            columns: ["click_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_clicks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliates: {
+        Row: {
+          affiliate_code: string
+          commission_rate: number | null
+          created_at: string
+          email: string
+          id: string
+          instagram_handle: string | null
+          name: string
+          other_social: string | null
+          phone: string | null
+          status: string | null
+          total_earnings: number | null
+          updated_at: string
+          user_id: string
+          youtube_channel: string | null
+        }
+        Insert: {
+          affiliate_code: string
+          commission_rate?: number | null
+          created_at?: string
+          email: string
+          id?: string
+          instagram_handle?: string | null
+          name: string
+          other_social?: string | null
+          phone?: string | null
+          status?: string | null
+          total_earnings?: number | null
+          updated_at?: string
+          user_id: string
+          youtube_channel?: string | null
+        }
+        Update: {
+          affiliate_code?: string
+          commission_rate?: number | null
+          created_at?: string
+          email?: string
+          id?: string
+          instagram_handle?: string | null
+          name?: string
+          other_social?: string | null
+          phone?: string | null
+          status?: string | null
+          total_earnings?: number | null
+          updated_at?: string
+          user_id?: string
+          youtube_channel?: string | null
+        }
+        Relationships: []
+      }
       agents: {
         Row: {
           business_type: string
@@ -400,6 +546,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_affiliate_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean

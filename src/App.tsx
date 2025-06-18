@@ -13,6 +13,7 @@ import Cancelado from "./pages/Cancelado";
 import Sobre from "./pages/Sobre";
 import AdminPanel from "./pages/AdminPanel";
 import Staff from "./pages/Staff";
+import Afiliados from "./pages/Afiliados";
 import "./i18n";
 import FacebookTracker from "./components/FacebookTracker";
 
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/sobre" element={<Sobre />} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/staff" element={<Staff />} />
+            <Route path="/afiliados" element={<Afiliados />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
