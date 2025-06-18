@@ -29,10 +29,12 @@ const MetaPixel = () => {
       t.src = 'https://connect.facebook.net/en_US/fbevents.js';
       s = b.getElementsByTagName(e)[0];
       s.parentNode.insertBefore(t, s);
-    })(window, document, 'script');
+    })(window, document, 'script', undefined);
 
-    window.fbq?.('init', '709563458627541');
-    window.fbq?.('track', 'PageView');
+    if (window.fbq) {
+      window.fbq('init', '709563458627541');
+      window.fbq('track', 'PageView');
+    }
   }, []);
 
   return (
