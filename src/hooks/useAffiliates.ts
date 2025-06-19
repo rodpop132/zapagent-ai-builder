@@ -133,6 +133,7 @@ export const useAffiliates = () => {
           status: newAffiliate.status as 'pending' | 'active' | 'suspended'
         };
         setAffiliate(affiliateData);
+        setLoading(false); // Ensure loading is set to false
         return affiliateData;
       }
     } catch (error) {

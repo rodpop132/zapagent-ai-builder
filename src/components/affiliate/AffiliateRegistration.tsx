@@ -32,6 +32,8 @@ const AffiliateRegistration = ({ onBack }: AffiliateRegistrationProps) => {
     try {
       await createAffiliate(formData);
       toast.success('Perfil de afiliado criado com sucesso!');
+      // Não precisamos fazer nada mais aqui - o hook já atualizará o estado
+      // e o componente pai irá automaticamente renderizar o dashboard
     } catch (error) {
       toast.error('Erro ao criar perfil de afiliado');
       console.error(error);
