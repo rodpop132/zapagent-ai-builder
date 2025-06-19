@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useAffiliates } from '@/hooks/useAffiliates';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { toast } from 'sonner';
 const AffiliateRegistrationForm = () => {
   const { user, signUp } = useAuth();
   const { createAffiliate } = useAffiliates();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -66,6 +68,9 @@ const AffiliateRegistrationForm = () => {
       });
 
       toast.success('Perfil de afiliado criado com sucesso!');
+      
+      // Redirecionar para a dashboard
+      navigate('/afiliados/dashboard');
     } catch (error) {
       toast.error('Erro ao criar perfil');
       console.error(error);

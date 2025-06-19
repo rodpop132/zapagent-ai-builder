@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +9,7 @@ import { toast } from 'sonner';
 
 const AffiliateLoginForm = () => {
   const { signIn } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -25,6 +27,8 @@ const AffiliateLoginForm = () => {
         toast.error('Erro ao fazer login: ' + error.message);
       } else {
         toast.success('Login realizado com sucesso!');
+        // Redirecionar para a dashboard
+        navigate('/afiliados/dashboard');
       }
     } catch (error) {
       toast.error('Erro inesperado ao fazer login');
