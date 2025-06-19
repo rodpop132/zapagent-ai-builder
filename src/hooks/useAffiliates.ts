@@ -48,7 +48,14 @@ export const useAffiliates = () => {
         return;
       }
 
-      setAffiliate(data);
+      if (data) {
+        // Type assertion to ensure status is properly typed
+        const affiliateData = {
+          ...data,
+          status: data.status as 'pending' | 'active' | 'suspended'
+        };
+        setAffiliate(affiliateData);
+      }
     } catch (error) {
       console.error('Erro ao buscar afiliado:', error);
     } finally {
@@ -116,8 +123,15 @@ export const useAffiliates = () => {
 
       if (error) throw error;
 
-      setAffiliate(newAffiliate);
-      return newAffiliate;
+      if (newAffiliate) {
+        // Type assertion to ensure status is properly typed
+        const affiliateData = {
+          ...newAffiliate,
+          status: newAffiliate.status as 'pending' | 'active' | 'suspended'
+        };
+        setAffiliate(affiliateData);
+        return affiliateData;
+      }
     } catch (error) {
       console.error('Erro ao criar afiliado:', error);
       throw error;
