@@ -2,16 +2,18 @@
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAffiliates } from '@/hooks/useAffiliates';
-import AffiliateAuth from '@/components/affiliate/AffiliateAuth';
 import AffiliateDashboard from '@/components/affiliate/AffiliateDashboard';
-import AffiliateRegistration from '@/components/affiliate/AffiliateRegistration';
+import AffiliateLoginForm from '@/components/affiliate/AffiliateLoginForm';
+import AffiliateRegistrationForm from '@/components/affiliate/AffiliateRegistrationForm';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Afiliados = () => {
   const { user } = useAuth();
   const { affiliate, loading } = useAffiliates();
-  const [showRegistration, setShowRegistration] = useState(false);
+  const [activeTab, setActiveTab] = useState('login');
 
   if (loading) {
     return (
@@ -27,26 +29,46 @@ const Afiliados = () => {
       
       <div className="container mx-auto px-4 py-8">
         {!user ? (
-          <AffiliateAuth />
+          <div className="max-w-md mx-auto">
+            <Card>
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl">Área do Afiliado</CardTitle>
+                <CardDescription>
+                  Faça login ou crie sua conta para acessar o programa de afiliados
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="login">Login</TabsTrigger>
+                    <TabsTrigger value="register">Criar Conta</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="login">
+                    <AffiliateLoginForm />
+                  </TabsContent>
+                  
+                  <TabsContent value="register">
+                    <AffiliateRegistrationForm />
+                  </TabsContent>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </div>
         ) : !affiliate ? (
-          showRegistration ? (
-            <AffiliateRegistration onBack={() => setShowRegistration(false)} />
-          ) : (
-            <div className="max-w-2xl mx-auto text-center">
-              <h1 className="text-4xl font-bold text-gray-900 mb-6">
-                Programa de Afiliados
-              </h1>
-              <p className="text-xl text-gray-600 mb-8">
-                Você ainda não possui um perfil de afiliado. Crie agora e comece a ganhar comissões!
-              </p>
-              <button
-                onClick={() => setShowRegistration(true)}
-                className="bg-primary text-white px-8 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors"
-              >
-                Criar Perfil de Afiliado
-              </button>
-            </div>
-          )
+          <div className="max-w-2xl mx-auto">
+            <Card>
+              <CardHeader className="text-center">
+                <CardTitle className="text-2xl">Criar Perfil de Afiliado</CardTitle>
+                <CardDescription>
+                  Complete seu perfil para começar a ganhar comissões
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <AffiliateRegistrationForm />
+              </CardContent>
+            </Card>
+          </div>
         ) : (
           <AffiliateDashboard />
         )}
