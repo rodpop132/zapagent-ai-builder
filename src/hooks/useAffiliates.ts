@@ -27,14 +27,17 @@ export interface AffiliateStats {
 }
 
 export const useAffiliates = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [affiliate, setAffiliate] = useState<Affiliate | null>(null);
   const [stats, setStats] = useState<AffiliateStats>({ clicks: 0, conversions: 0, earnings: 0 });
   const [loading, setLoading] = useState(true);
 
   // Buscar dados do afiliado
   const fetchAffiliate = async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
 
     try {
       const { data, error } = await supabase
@@ -166,8 +169,10 @@ export const useAffiliates = () => {
   };
 
   useEffect(() => {
-    fetchAffiliate();
-  }, [user]);
+    if (!authLoading) {
+      fetchAffiliate();
+    }
+  }, [user, authLoading]);
 
   useEffect(() => {
     if (affiliate) {
@@ -178,7 +183,7 @@ export const useAffiliates = () => {
   return {
     affiliate,
     stats,
-    loading,
+    loading: loading || authLoading,
     createAffiliate,
     trackClick,
     refetch: fetchAffiliate
