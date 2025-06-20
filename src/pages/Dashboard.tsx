@@ -347,7 +347,7 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
-      {/* Enhanced Header */}
+      {/* Enhanced Header with Plan Buttons */}
       <header className="bg-white shadow-lg border-b border-gray-100 backdrop-blur-sm bg-white/95">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
@@ -400,8 +400,30 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Header Content */}
             <div className="md:hidden flex items-center space-x-3">
+              <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-semibold px-2 py-1 text-xs shadow-sm`}>
+                {getPlanDisplayName(subscription?.plan_type || 'free')}
+              </Badge>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={verifySubscription}
+                disabled={verifyingSubscription}
+                className="text-blue-600 border-blue-200 hover:bg-blue-50 text-xs px-2"
+              >
+                <RefreshCw className={`h-3 w-3 ${verifyingSubscription ? 'animate-spin' : ''}`} />
+              </Button>
+              {shouldShowUpgradeButton() && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowUpgradeModal(true)}
+                  className="text-brand-green border-brand-green/30 hover:bg-brand-green hover:text-white text-xs px-2"
+                >
+                  <Crown className="h-3 w-3" />
+                </Button>
+              )}
               <ProfileMenu />
             </div>
           </div>

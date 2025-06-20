@@ -43,6 +43,38 @@ const ProfileMenu = () => {
     }
   };
 
+  const handleSettingsClick = () => {
+    toast({
+      title: "Configurações",
+      description: "Funcionalidade em desenvolvimento",
+      variant: "default"
+    });
+  };
+
+  const handleBillingClick = () => {
+    toast({
+      title: "Billing",
+      description: "Funcionalidade em desenvolvimento",
+      variant: "default"
+    });
+  };
+
+  const handleSecurityClick = () => {
+    toast({
+      title: "Segurança",
+      description: "Funcionalidade em desenvolvimento",
+      variant: "default"
+    });
+  };
+
+  const handleHelpClick = () => {
+    toast({
+      title: "Ajuda & Suporte",
+      description: "Funcionalidade em desenvolvimento",
+      variant: "default"
+    });
+  };
+
   const getUserInitials = () => {
     if (user?.email) {
       return user.email.substring(0, 2).toUpperCase();
@@ -111,7 +143,10 @@ const ProfileMenu = () => {
             </div>
           </DropdownMenuItem>
           
-          <DropdownMenuItem className="cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors">
+          <DropdownMenuItem 
+            onClick={handleSettingsClick}
+            className="cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors"
+          >
             <Settings className="mr-3 h-4 w-4" />
             <div className="flex-1">
               <span className="font-medium">Configurações</span>
@@ -119,7 +154,10 @@ const ProfileMenu = () => {
             </div>
           </DropdownMenuItem>
           
-          <DropdownMenuItem className="cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors">
+          <DropdownMenuItem 
+            onClick={handleBillingClick}
+            className="cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors"
+          >
             <CreditCard className="mr-3 h-4 w-4" />
             <div className="flex-1">
               <span className="font-medium">Billing</span>
@@ -127,7 +165,10 @@ const ProfileMenu = () => {
             </div>
           </DropdownMenuItem>
           
-          <DropdownMenuItem className="cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors">
+          <DropdownMenuItem 
+            onClick={handleSecurityClick}
+            className="cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors"
+          >
             <Shield className="mr-3 h-4 w-4" />
             <div className="flex-1">
               <span className="font-medium">Segurança</span>
@@ -135,7 +176,10 @@ const ProfileMenu = () => {
             </div>
           </DropdownMenuItem>
           
-          <DropdownMenuItem className="cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors">
+          <DropdownMenuItem 
+            onClick={handleHelpClick}
+            className="cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors"
+          >
             <HelpCircle className="mr-3 h-4 w-4" />
             <div className="flex-1">
               <span className="font-medium">Ajuda & Suporte</span>
