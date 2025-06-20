@@ -3,13 +3,14 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Bot, MessageCircle, Settings, BarChart3, Crown, LogOut, Menu, RefreshCw, TrendingUp, Users, Activity } from 'lucide-react';
+import { Plus, Bot, MessageCircle, BarChart3, Crown, RefreshCw, TrendingUp, Activity } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import AgentCard from '@/components/AgentCard';
 import CreateAgentModal from '@/components/CreateAgentModal';
 import PlanUpgradeModal from '@/components/PlanUpgradeModal';
 import LanguageSelector from '@/components/LanguageSelector';
+import ProfileMenu from '@/components/ProfileMenu';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -37,7 +38,7 @@ interface Subscription {
 }
 
 const Dashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
   
@@ -46,7 +47,6 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [verifyingSubscription, setVerifyingSubscription] = useState(false);
   const { toast } = useToast();
 
@@ -164,7 +164,7 @@ const Dashboard = () => {
   const getAgentLimitByPlan = (planType: string) => {
     switch (planType) {
       case 'free': return 1;
-      case 'pro': return 3; // Corrigido de 5 para 3
+      case 'pro': return 3;
       case 'ultra': return 999999;
       case 'unlimited': return 999999;
       default: return 1;
@@ -174,7 +174,7 @@ const Dashboard = () => {
   const getMessagesLimitByPlan = (planType: string) => {
     switch (planType) {
       case 'free': return 30;
-      case 'pro': return 1000; // Corrigido de 10000 para 1000
+      case 'pro': return 1000;
       case 'ultra': return 999999;
       case 'unlimited': return 999999;
       default: return 30;
@@ -204,7 +204,6 @@ const Dashboard = () => {
           variant: "default"
         });
         
-        // Recarregar dados
         await fetchSubscription();
       } else {
         throw new Error('Erro na verificação');
@@ -332,26 +331,6 @@ const Dashboard = () => {
     return 'Atualizar Plano';
   };
 
-  const handleSignOut = async () => {
-    console.log('🚪 DASHBOARD: Fazendo logout...');
-    try {
-      await signOut();
-      navigate('/');
-      toast({
-        title: "Logout realizado",
-        description: "Você foi desconectado com sucesso",
-        variant: "default"
-      });
-    } catch (error) {
-      console.error('Erro no logout:', error);
-      toast({
-        title: "Erro no logout",
-        description: "Não foi possível fazer logout. Tente novamente.",
-        variant: "destructive"
-      });
-    }
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
@@ -417,79 +396,15 @@ const Dashboard = () => {
                   <p className="text-sm font-medium text-gray-900">{t('userDashboard.welcome')}</p>
                   <p className="text-sm text-gray-500">{user?.email}</p>
                 </div>
-                <Button 
-                  variant="outline" 
-                  onClick={handleSignOut}
-                  className="hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all duration-200 shadow-sm"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  {t('userDashboard.logout')}
-                </Button>
+                <ProfileMenu />
               </div>
             </div>
 
             {/* Mobile Menu Button */}
-            <button
-              className="md:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              <Menu className="h-6 w-6" />
-            </button>
-          </div>
-
-          {/* Mobile Menu */}
-          {mobileMenuOpen && (
-            <div className="md:hidden border-t border-gray-100 py-4 bg-gray-50/50 rounded-b-lg">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <LanguageSelector />
-                  <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-medium`}>
-                    {getPlanDisplayName(subscription?.plan_type || 'free')}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={verifySubscription}
-                      disabled={verifyingSubscription}
-                      className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                    >
-                      <RefreshCw className={`h-4 w-4 mr-1 ${verifyingSubscription ? 'animate-spin' : ''}`} />
-                      {t('userDashboard.verifyPlan')}
-                    </Button>
-                    {shouldShowUpgradeButton() && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setShowUpgradeModal(true);
-                          setMobileMenuOpen(false);
-                        }}
-                        className="text-brand-green border-brand-green hover:bg-brand-green hover:text-white"
-                      >
-                        <Crown className="h-4 w-4 mr-1" />
-                        {t('userDashboard.upgrade')}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-                <div className="text-center py-2">
-                  <p className="text-sm font-medium text-gray-900">{t('userDashboard.welcome')}</p>
-                  <p className="text-sm text-gray-600">{user?.email}</p>
-                </div>
-                <Button 
-                  variant="outline" 
-                  onClick={handleSignOut}
-                  className="w-full justify-center hover:bg-red-50 hover:text-red-600 hover:border-red-200"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  {t('userDashboard.logout')}
-                </Button>
-              </div>
+            <div className="md:hidden flex items-center space-x-3">
+              <ProfileMenu />
             </div>
-          )}
+          </div>
         </div>
       </header>
 
