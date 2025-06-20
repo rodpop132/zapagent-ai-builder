@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +10,6 @@ import { supabase } from '@/integrations/supabase/client';
 import WhatsAppStatus from './WhatsAppStatus';
 import EditAgentModal from './EditAgentModal';
 import AgentHistory from './AgentHistory';
-import { ZapAgentService } from '@/services/zapAgentService';
 
 interface Agent {
   id: string;
@@ -43,25 +43,34 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [whatsappStatus, setWhatsappStatus] = useState<'connected' | 'pending'>('pending');
-  const [agentStats, setAgentStats] = useState<any>(null);
+  const [totalMessages, setTotalMessages] = useState(0);
   const { toast } = useToast();
 
   const getMessagesLimitByPlan = (planType: string) => {
     switch (planType) {
       case 'free': return 30;
-      case 'pro': return 10000; // Corrigido para 10.000
+      case 'pro': return 10000;
       case 'ultra': return 999999;
       case 'unlimited': return 999999;
       default: return 30;
     }
   };
 
-  const loadAgentStats = async () => {
+  const loadMessageCount = async () => {
     try {
-      const statusData = await ZapAgentService.getAgentStatus(agent.phone_number);
-      setAgentStats(statusData);
+      const { count, error } = await supabase
+        .from('agent_messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('agent_id', agent.id);
+
+      if (error) {
+        console.error('❌ Erro ao contar mensagens:', error);
+        return;
+      }
+
+      setTotalMessages(count || 0);
     } catch (error) {
-      console.error('❌ Erro ao carregar estatísticas do agente:', error);
+      console.error('❌ Erro ao carregar contagem de mensagens:', error);
     }
   };
 
@@ -127,67 +136,6 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
     }
   };
 
-  const handleSendTestMessage = async () => {
-    if (whatsappStatus !== 'connected') {
-      toast({
-        title: "WhatsApp não conectado",
-        description: "Conecte o WhatsApp primeiro para testar mensagens",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    // Verificar limite de mensagens
-    const planType = subscription?.plan_type || 'free';
-    const limit = getMessagesLimitByPlan(planType);
-    const used = agentStats?.mensagens_enviadas || 0;
-
-    if (!subscription?.is_unlimited && used >= limit) {
-      toast({
-        title: "Limite de mensagens atingido",
-        description: `Você atingiu o limite de ${limit} mensagens do plano ${planType}. Faça upgrade para continuar.`,
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      console.log('🧪 Enviando mensagem de teste para agente:', agent.phone_number);
-      
-      const prompt = agent.personality_prompt || `Você é um assistente virtual para ${agent.business_type}. Seja prestativo e educado.`;
-      const testMessage = 'Olá! Esta é uma mensagem de teste do sistema.';
-      
-      const response = await ZapAgentService.sendMessage(
-        agent.phone_number,
-        testMessage,
-        prompt
-      );
-
-      console.log('✅ Resposta da IA:', response);
-
-      toast({
-        title: "✅ Teste enviado",
-        description: "Mensagem de teste enviada com sucesso!",
-        variant: "default"
-      });
-
-      // Recarregar estatísticas e dados do agente
-      await loadAgentStats();
-      onUpdate();
-
-    } catch (error) {
-      console.error('❌ Erro no teste:', error);
-      toast({
-        title: "Erro no teste",
-        description: "Não foi possível enviar a mensagem de teste",
-        variant: "destructive"
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const formatPhoneNumber = (phone: string) => {
     return phone.replace(/(\d{3})(\d{3})(\d{3})(\d{3})/, '+$1 $2 $3 $4');
   };
@@ -206,10 +154,14 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
     return icons[type] || '📋';
   };
 
-  const messagesUsed = agentStats?.mensagens_enviadas || 0;
   const planType = subscription?.plan_type || 'free';
   const messagesLimit = subscription?.is_unlimited ? '∞' : getMessagesLimitByPlan(planType);
-  const isLimitReached = !subscription?.is_unlimited && messagesUsed >= getMessagesLimitByPlan(planType);
+  const isLimitReached = !subscription?.is_unlimited && totalMessages >= getMessagesLimitByPlan(planType);
+
+  // Carregar contagem de mensagens quando o componente for montado
+  React.useEffect(() => {
+    loadMessageCount();
+  }, [agent.id]);
 
   return (
     <>
@@ -260,7 +212,7 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
                   <DropdownMenuItem 
                     onClick={() => {
                       setShowHistory(!showHistory);
-                      if (!showHistory) loadAgentStats();
+                      if (!showHistory) loadMessageCount();
                     }}
                     className="cursor-pointer hover:bg-gray-50"
                   >
@@ -312,17 +264,17 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
             }`}>
               <div className={`flex items-center ${isLimitReached ? 'text-red-700' : 'text-blue-700'}`}>
                 <MessageCircle className="h-4 w-4 mr-2" />
-                <span>Mensagens</span>
+                <span>Mensagens Recebidas</span>
               </div>
               <span className={`font-semibold ${isLimitReached ? 'text-red-800' : 'text-blue-800'}`}>
-                {messagesUsed}/{messagesLimit}
+                {totalMessages}/{messagesLimit}
               </span>
             </div>
 
             {isLimitReached && (
               <div className="p-2 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-xs text-red-700">
-                  ⚠️ Limite de mensagens atingido. O agente não pode enviar mais respostas.
+                  ⚠️ Limite de mensagens atingido. O agente não pode processar mais mensagens.
                 </p>
               </div>
             )}
@@ -332,22 +284,24 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
             <Button
               size="sm"
               variant="outline"
-              onClick={handleSendTestMessage}
-              disabled={isLoading || whatsappStatus !== 'connected' || isLimitReached}
-              className="flex-1 hover:bg-brand-green hover:text-white hover:border-brand-green transition-all duration-200"
-            >
-              <MessageCircle className="h-4 w-4 mr-2" />
-              {isLoading ? 'Enviando...' : 'Testar'}
-            </Button>
-            
-            <Button
-              size="sm"
-              variant="outline"
               onClick={() => setShowEditModal(true)}
               className="flex-1 hover:bg-blue-500 hover:text-white hover:border-blue-500 transition-all duration-200"
             >
               <Settings className="h-4 w-4 mr-2" />
               Configurar
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setShowHistory(!showHistory);
+                if (!showHistory) loadMessageCount();
+              }}
+              className="flex-1 hover:bg-brand-green hover:text-white hover:border-brand-green transition-all duration-200"
+            >
+              <History className="h-4 w-4 mr-2" />
+              {showHistory ? 'Ocultar' : 'Histórico'}
             </Button>
           </div>
         </CardContent>

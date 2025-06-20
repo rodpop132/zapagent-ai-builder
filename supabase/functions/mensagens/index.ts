@@ -9,14 +9,9 @@ const corsHeaders = {
 }
 
 interface WebhookMessage {
-  user_id: string;
   numero: string;
-  mensagem_usuario?: string;
-  resposta_bot?: string;
-  timestamp?: string;
-  tipo?: 'recebida' | 'enviada';
-  contato?: string;
-  nome_contato?: string;
+  pergunta?: string;
+  resposta?: string;
 }
 
 serve(async (req) => {
@@ -47,10 +42,10 @@ serve(async (req) => {
     console.log('📦 Dados recebidos:', webhookData);
 
     // Validar dados obrigatórios
-    if (!webhookData.user_id || !webhookData.numero) {
-      console.error('❌ Dados obrigatórios ausentes:', { user_id: webhookData.user_id, numero: webhookData.numero });
+    if (!webhookData.numero) {
+      console.error('❌ Número obrigatório ausente:', webhookData);
       return new Response(
-        JSON.stringify({ error: 'user_id e numero são obrigatórios' }),
+        JSON.stringify({ error: 'numero é obrigatório' }),
         { 
           status: 400, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -58,18 +53,18 @@ serve(async (req) => {
       );
     }
 
-    // Verificar se o agente existe
+    // Buscar agente pelo número de telefone
+    const cleanNumber = webhookData.numero.replace(/\D/g, '');
     const { data: agent, error: agentError } = await supabase
       .from('agents')
-      .select('id, name, messages_used')
-      .eq('user_id', webhookData.user_id)
-      .eq('phone_number', webhookData.numero.includes('+') ? webhookData.numero : `+${webhookData.numero}`)
+      .select('id, name')
+      .eq('phone_number', cleanNumber)
       .single();
 
     if (agentError || !agent) {
-      console.error('❌ Agente não encontrado:', agentError);
+      console.error('❌ Agente não encontrado para número:', cleanNumber, agentError);
       return new Response(
-        JSON.stringify({ error: 'Agente não encontrado' }),
+        JSON.stringify({ error: 'Agente não encontrado para este número' }),
         { 
           status: 404, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -82,12 +77,9 @@ serve(async (req) => {
     // Criar registro da mensagem
     const messageData = {
       agent_id: agent.id,
-      user_message: webhookData.mensagem_usuario || '',
-      bot_response: webhookData.resposta_bot || '',
-      contact_number: webhookData.contato || '',
-      contact_name: webhookData.nome_contato || 'Usuário',
-      message_type: webhookData.tipo || 'recebida',
-      timestamp: webhookData.timestamp || new Date().toISOString(),
+      numero: webhookData.numero,
+      pergunta: webhookData.pergunta || '',
+      resposta: webhookData.resposta || '',
       created_at: new Date().toISOString()
     };
 
@@ -107,28 +99,13 @@ serve(async (req) => {
       );
     }
 
-    // Atualizar contador de mensagens do agente
-    const newMessageCount = (agent.messages_used || 0) + 1;
-    const { error: updateError } = await supabase
-      .from('agents')
-      .update({ 
-        messages_used: newMessageCount,
-        last_message_at: new Date().toISOString()
-      })
-      .eq('id', agent.id);
-
-    if (updateError) {
-      console.warn('⚠️ Erro ao atualizar contador de mensagens:', updateError);
-    }
-
     console.log('✅ Mensagem processada com sucesso');
     
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: 'Mensagem recebida e processada com sucesso',
-        agent_id: agent.id,
-        message_count: newMessageCount
+        agent_id: agent.id
       }),
       { 
         status: 200, 

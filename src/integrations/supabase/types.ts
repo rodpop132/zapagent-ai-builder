@@ -233,6 +233,41 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_messages: {
+        Row: {
+          agent_id: string | null
+          created_at: string
+          id: string
+          numero: string
+          pergunta: string | null
+          resposta: string | null
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string
+          id?: string
+          numero: string
+          pergunta?: string | null
+          resposta?: string | null
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string
+          id?: string
+          numero?: string
+          pergunta?: string | null
+          resposta?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agent_messages_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agents: {
         Row: {
           business_type: string
