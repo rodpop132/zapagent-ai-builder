@@ -18,7 +18,7 @@ interface DashboardSidebarProps {
 
 const DashboardSidebar = ({ activeSection, onSectionChange }: DashboardSidebarProps) => {
   // Simulando um usuário não-PRO por padrão
-  const userPlan = 'free'; // Em produção, isso viria do contexto do usuário
+  const userPlan: 'free' | 'pro' = 'free'; // Em produção, isso viria do contexto do usuário
 
   const menuItems: SidebarItem[] = [
     {
@@ -37,7 +37,7 @@ const DashboardSidebar = ({ activeSection, onSectionChange }: DashboardSidebarPr
       title: 'WhatsApp Integrado',
       icon: Zap,
       active: activeSection === 'whatsapp',
-      disabled: userPlan !== 'pro',
+      disabled: userPlan === 'free',
       onClick: () => onSectionChange('whatsapp')
     },
     {
