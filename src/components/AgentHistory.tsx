@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ interface AgentHistoryProps {
   phoneNumber: string;
   agentName: string;
   subscription: any;
+  onMessageUpdate?: () => void;
 }
 
 interface AgentMessage {
@@ -21,7 +21,7 @@ interface AgentMessage {
   created_at: string;
 }
 
-const AgentHistory = ({ phoneNumber, agentName, subscription }: AgentHistoryProps) => {
+const AgentHistory = ({ phoneNumber, agentName, subscription, onMessageUpdate }: AgentHistoryProps) => {
   const [messages, setMessages] = useState<AgentMessage[]>([]);
   const [totalMessages, setTotalMessages] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -75,6 +75,11 @@ const AgentHistory = ({ phoneNumber, agentName, subscription }: AgentHistoryProp
 
       setMessages(messagesData || []);
       setTotalMessages(count || 0);
+      
+      // Notificar componente pai sobre atualização
+      if (onMessageUpdate) {
+        onMessageUpdate();
+      }
       
       console.log(`✅ ${messagesData?.length || 0} mensagens carregadas, total: ${count || 0}`);
     } catch (error) {

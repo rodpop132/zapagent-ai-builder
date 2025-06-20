@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -57,6 +57,7 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
 
   const loadMessageCount = async () => {
     try {
+      console.log('🔄 Carregando contagem de mensagens para agente:', agent.id);
       const { count, error } = await supabase
         .from('agent_messages')
         .select('*', { count: 'exact', head: true })
@@ -67,11 +68,54 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
         return;
       }
 
+      console.log('✅ Contagem de mensagens carregada:', count);
       setTotalMessages(count || 0);
     } catch (error) {
       console.error('❌ Erro ao carregar contagem de mensagens:', error);
     }
   };
+
+  // Carregar contagem de mensagens quando o componente for montado
+  useEffect(() => {
+    loadMessageCount();
+  }, [agent.id]);
+
+  // Configurar listener para atualizações em tempo real
+  useEffect(() => {
+    console.log('🔄 Configurando listener para mensagens do agente:', agent.id);
+    
+    const channel = supabase
+      .channel(`agent-messages-${agent.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'agent_messages',
+          filter: `agent_id=eq.${agent.id}`
+        },
+        (payload) => {
+          console.log('✅ Nova mensagem recebida via realtime:', payload);
+          loadMessageCount(); // Recarregar contagem
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('🔄 Removendo listener para agente:', agent.id);
+      supabase.removeChannel(channel);
+    };
+  }, [agent.id]);
+
+  // Atualizar contagem a cada 30 segundos como fallback
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log('🔄 Atualizando contagem de mensagens (fallback)...');
+      loadMessageCount();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [agent.id]);
 
   const handleToggleActive = async () => {
     setIsLoading(true);
@@ -156,11 +200,6 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
   const planType = subscription?.plan_type || 'free';
   const messagesLimit = subscription?.is_unlimited ? '∞' : getMessagesLimitByPlan(planType);
   const isLimitReached = !subscription?.is_unlimited && totalMessages >= getMessagesLimitByPlan(planType);
-
-  // Carregar contagem de mensagens quando o componente for montado
-  React.useEffect(() => {
-    loadMessageCount();
-  }, [agent.id]);
 
   return (
     <>
@@ -312,6 +351,7 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
               phoneNumber={agent.phone_number}
               agentName={agent.name}
               subscription={subscription}
+              onMessageUpdate={loadMessageCount}
             />
           </CardContent>
         )}
