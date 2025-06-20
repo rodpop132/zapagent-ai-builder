@@ -15,7 +15,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import SupportNotifications from '@/components/SupportNotifications';
-import SocialProofNotifications from '@/components/SocialProofNotifications';
 
 interface Agent {
   id: string;
@@ -633,9 +632,8 @@ const Dashboard = () => {
         currentPlan={subscription?.plan_type || 'free'}
       />
 
-      {/* Support Notifications */}
+      {/* Support Notifications only - removed SocialProofNotifications */}
       <SupportNotifications />
-      <SocialProofNotifications />
     </div>
   );
 };
