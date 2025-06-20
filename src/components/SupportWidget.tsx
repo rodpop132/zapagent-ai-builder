@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { MessageCircle, X, Phone } from 'lucide-react';
+import { MessageCircle, X, Phone, Send, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -75,52 +75,85 @@ const SupportWidget = () => {
 
   return (
     <>
-      {/* Botão flutuante */}
-      <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50">
-        <Button
-          onClick={() => setShowOptions(true)}
-          size="lg"
-          className="rounded-full w-12 h-12 md:w-14 md:h-14 bg-green-600 hover:bg-green-700 shadow-lg"
-          aria-label="Abrir suporte"
-        >
-          <MessageCircle className="w-5 h-5 md:w-6 md:h-6" />
-        </Button>
+      {/* Botão flutuante com gradiente e animações */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <div className="relative">
+          {/* Efeito de pulso animado */}
+          <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-600 rounded-full animate-ping opacity-30"></div>
+          
+          <Button
+            onClick={() => setShowOptions(true)}
+            size="lg"
+            className="relative w-16 h-16 rounded-full bg-gradient-to-r from-green-500 via-green-600 to-green-700 hover:from-green-600 hover:via-green-700 hover:to-green-800 shadow-2xl hover:shadow-green-500/50 transition-all duration-300 transform hover:scale-110 group"
+            aria-label="Abrir suporte"
+          >
+            <MessageCircle className="w-7 h-7 text-white group-hover:scale-110 transition-transform duration-300" />
+            
+            {/* Efeito de brilho */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          </Button>
+        </div>
       </div>
 
-      {/* Popover de opções de suporte */}
+      {/* Popover de opções de suporte redesenhado */}
       {showOptions && (
-        <div className="fixed inset-0 bg-black/30 z-50 flex items-end md:items-center justify-center p-2 md:p-4">
-          <div className="w-full max-w-xs md:max-w-sm bg-white rounded-t-2xl md:rounded-xl shadow-lg mx-auto flex flex-col items-center gap-3 p-5 animate-in fade-in-0 slide-in-from-bottom-6 md:slide-in-from-top-6">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-4">
+          <div 
+            className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-3xl shadow-2xl mx-auto flex flex-col items-center gap-4 p-8 relative overflow-hidden
+                     animate-in fade-in-0 slide-in-from-bottom-6 md:slide-in-from-scale-95 duration-300"
+          >
+            {/* Gradiente de fundo decorativo */}
+            <div className="absolute inset-0 bg-gradient-to-br from-green-50/50 via-transparent to-blue-50/50 dark:from-green-900/20 dark:to-blue-900/20"></div>
+            
+            {/* Botão de fechar elegante */}
             <button
               aria-label="Fechar"
               onClick={closeAll}
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 bg-white rounded-full p-2"
+              className="absolute top-4 right-4 p-2 rounded-full bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 hover:scale-110"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
             </button>
-            <span className="font-bold text-lg md:text-xl mb-2 text-brand-dark">{t('support.title')}</span>
-            <p className="text-brand-gray text-sm mb-1 text-center max-w-xs">Como podemos ajudar?</p>
-            <div className="flex flex-col w-full gap-2 mt-2">
+
+            {/* Ícone decorativo */}
+            <div className="relative">
+              <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg">
+                <Sparkles className="w-8 h-8 text-white" />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-600 rounded-full animate-pulse opacity-30"></div>
+            </div>
+
+            <div className="text-center relative z-10">
+              <h3 className="font-bold text-2xl mb-2 bg-gradient-to-r from-gray-800 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+                {t('support.title')}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+                Como podemos ajudar você hoje?
+              </p>
+            </div>
+
+            <div className="flex flex-col w-full gap-3 mt-2 relative z-10">
               <Button 
-                className="w-full flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white text-base py-2 rounded-lg transition"
+                className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-base py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-green-500/30 group"
                 onClick={() => {
                   window.open(WHATSAPP_SUPPORT_LINK, '_blank', 'noopener,noreferrer');
                   setShowOptions(false);
                 }}
                 aria-label="Suporte pelo WhatsApp"
               >
-                <Phone className="w-5 h-5" />
+                <Phone className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
                 WhatsApp
+                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
               </Button>
+              
               <Button 
-                className="w-full flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-brand-dark text-base py-2 rounded-lg transition"
+                className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 hover:from-gray-100 hover:to-gray-200 dark:hover:from-gray-700 dark:hover:to-gray-800 text-gray-800 dark:text-gray-200 text-base py-3 rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg border border-gray-200 dark:border-gray-700 group"
                 onClick={() => {
                   setShowOptions(false);
                   setIsOpen(true);
                 }}
                 aria-label="Suporte pelo site"
               >
-                <MessageCircle className="w-5 h-5 text-brand-dark" />
+                <Send className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
                 Suporte pelo Site
               </Button>
             </div>
@@ -128,25 +161,31 @@ const SupportWidget = () => {
         </div>
       )}
 
-      {/* Modal de suporte por formulário */}
+      {/* Modal de suporte por formulário redesenhado */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto relative">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-base md:text-lg">{t('support.title')}</CardTitle>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <Card className="w-full max-w-md max-h-[90vh] overflow-y-auto relative bg-white dark:bg-gray-900 shadow-2xl border-0 animate-in fade-in-0 scale-in-95 duration-300">
+            {/* Gradiente de cabeçalho */}
+            <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-green-500 to-green-600 rounded-t-lg"></div>
+            
+            <CardHeader className="relative z-10 flex flex-row items-center justify-between space-y-0 pb-2 pt-6">
+              <CardTitle className="text-xl text-white font-semibold">
+                {t('support.title')}
+              </CardTitle>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={closeAll}
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 text-white hover:bg-white/20 rounded-full"
               >
                 <X className="w-4 h-4" />
               </Button>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
+            
+            <CardContent className="relative z-10 bg-white dark:bg-gray-900 rounded-t-3xl -mt-4 pt-6">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label htmlFor="name" className="block text-sm font-medium mb-1">
+                  <label htmlFor="name" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                     {t('support.name')}
                   </label>
                   <Input
@@ -155,12 +194,12 @@ const SupportWidget = () => {
                     onChange={(e) => setName(e.target.value)}
                     placeholder={t('support.namePlaceholder')}
                     required
-                    className="text-sm"
+                    className="text-sm border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 transition-all duration-200"
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium mb-1">
+                  <label htmlFor="email" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                     {t('support.email')}
                   </label>
                   <Input
@@ -170,12 +209,12 @@ const SupportWidget = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder={t('support.emailPlaceholder')}
                     required
-                    className="text-sm"
+                    className="text-sm border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 transition-all duration-200"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="subject" className="block text-sm font-medium mb-1">
+                  <label htmlFor="subject" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                     Assunto
                   </label>
                   <Input
@@ -183,12 +222,12 @@ const SupportWidget = () => {
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
                     placeholder="Qual é o assunto do seu contato?"
-                    className="text-sm"
+                    className="text-sm border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 transition-all duration-200"
                   />
                 </div>
                 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium mb-1">
+                  <label htmlFor="message" className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                     {t('support.message')}
                   </label>
                   <Textarea
@@ -198,16 +237,26 @@ const SupportWidget = () => {
                     placeholder={t('support.messagePlaceholder')}
                     rows={4}
                     required
-                    className="text-sm resize-none"
+                    className="text-sm resize-none border-gray-200 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 transition-all duration-200"
                   />
                 </div>
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-green-600 hover:bg-green-700 text-sm"
+                  className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-sm py-3 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:opacity-50 disabled:transform-none"
                   disabled={loading}
                 >
-                  {loading ? t('support.sending') : t('support.sendButton')}
+                  {loading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      {t('support.sending')}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Send className="w-4 h-4" />
+                      {t('support.sendButton')}
+                    </div>
+                  )}
                 </Button>
               </form>
             </CardContent>
