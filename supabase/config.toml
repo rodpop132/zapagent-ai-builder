@@ -1,1 +1,24 @@
-project_id = "hagweqrpbrjbtsbbscbn"
+
+project_id = "rrbgsmaxzostwbcqntnz"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://rrbgsmaxzostwbcqntnz.supabase.co"]
+jwt_expiry = 3600
+enable_signup = true
+enable_confirmations = true
+
+[functions.mensagens]
+verify_jwt = false
+
+[edge_runtime]
+policy = "per_worker"
+inspector_port = 8083

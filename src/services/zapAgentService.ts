@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 const API_URL = 'https://zapagent-bot-9jkk.onrender.com';
+const WEBHOOK_URL = 'https://rrbgsmaxzostwbcqntnz.supabase.co/functions/v1/mensagens';
 
 export interface CreateAgentPayload {
   user_id: string;
@@ -80,9 +81,10 @@ export const ZapAgentService = {
       const cleanedPayload = {
         ...payload,
         numero: payload.numero.replace(/\D/g, ''),
+        webhook: WEBHOOK_URL // Adicionar webhook automaticamente
       };
       
-      console.log('📦 Payload limpo:', cleanedPayload);
+      console.log('📦 Payload limpo com webhook:', cleanedPayload);
       
       const response = await fetch(`${API_URL}/zapagent`, {
         method: 'POST',
