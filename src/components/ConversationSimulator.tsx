@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -54,7 +53,7 @@ const ConversationSimulator = ({ isOpen, onClose }: ConversationSimulatorProps) 
           ]
         },
         {
-          bot: "📱 Nossos eletrônicos estão com 20% de desconto! Smartphones, notebooks e mais. Gostaria de ver algum específico?",
+          bot: "📱 Nossos eletrônicos estão com 20% de descuento! Smartphones, notebooks e mais. Gostaria de ver algum específico?",
           options: [
             { text: "Ver smartphones", next: 7 },
             { text: "Falar com vendedor", next: 8 }
@@ -471,8 +470,8 @@ const ConversationSimulator = ({ isOpen, onClose }: ConversationSimulatorProps) 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md h-[600px] flex flex-col">
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fade-in">
+      <Card className="w-full max-w-md h-[600px] flex flex-col animate-scale-in">
         <div className="flex items-center justify-between p-4 border-b bg-green-600 text-white rounded-t-lg">
           <div className="flex items-center space-x-2">
             <MessageCircle className="h-5 w-5" />
