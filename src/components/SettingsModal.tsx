@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 import { Settings, Palette, Bell, Globe, Shield } from 'lucide-react';
 
@@ -19,22 +20,71 @@ interface SettingsModalProps {
 const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { i18n } = useTranslation();
   
   const [settings, setSettings] = useState({
     displayName: user?.user_metadata?.full_name || '',
     emailNotifications: true,
     pushNotifications: false,
-    language: 'pt',
-    theme: 'light',
+    language: i18n.language || 'pt',
+    theme: localStorage.getItem('theme') || 'light',
     autoSave: true,
     showOnlineStatus: true
   });
   
   const [loading, setLoading] = useState(false);
 
+  // Carregar configurações salvas quando o modal abrir
+  useEffect(() => {
+    if (isOpen && user) {
+      const savedSettings = user.user_metadata?.settings || {};
+      setSettings({
+        displayName: user.user_metadata?.full_name || '',
+        emailNotifications: savedSettings.emailNotifications ?? true,
+        pushNotifications: savedSettings.pushNotifications ?? false,
+        language: localStorage.getItem('selectedLanguage') || i18n.language || 'pt',
+        theme: localStorage.getItem('theme') || 'light',
+        autoSave: savedSettings.autoSave ?? true,
+        showOnlineStatus: savedSettings.showOnlineStatus ?? true
+      });
+    }
+  }, [isOpen, user, i18n.language]);
+
+  const applyTheme = (theme: string) => {
+    const root = document.documentElement;
+    
+    if (theme === 'dark') {
+      root.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else if (theme === 'light') {
+      root.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    } else if (theme === 'system') {
+      localStorage.setItem('theme', 'system');
+      const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (systemDark) {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+    }
+  };
+
+  const applyLanguage = (language: string) => {
+    i18n.changeLanguage(language);
+    localStorage.setItem('selectedLanguage', language);
+    console.log('Idioma alterado para:', language);
+  };
+
   const handleSaveSettings = async () => {
     setLoading(true);
     try {
+      // Aplicar tema imediatamente
+      applyTheme(settings.theme);
+      
+      // Aplicar idioma imediatamente
+      applyLanguage(settings.language);
+
       // Atualizar metadados do usuário
       const { error } = await supabase.auth.updateUser({
         data: {
@@ -69,6 +119,18 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleThemeChange = (theme: string) => {
+    setSettings({ ...settings, theme });
+    // Aplicar tema imediatamente para preview
+    applyTheme(theme);
+  };
+
+  const handleLanguageChange = (language: string) => {
+    setSettings({ ...settings, language });
+    // Aplicar idioma imediatamente para preview
+    applyLanguage(language);
   };
 
   return (
@@ -110,7 +172,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="theme">Tema</Label>
-              <Select value={settings.theme} onValueChange={(value) => setSettings({ ...settings, theme: value })}>
+              <Select value={settings.theme} onValueChange={handleThemeChange}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -131,14 +193,14 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="language">Idioma preferido</Label>
-              <Select value={settings.language} onValueChange={(value) => setSettings({ ...settings, language: value })}>
+              <Select value={settings.language} onValueChange={handleLanguageChange}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pt">Português</SelectItem>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="es">Español</SelectItem>
+                  <SelectItem value="pt">🇧🇷 Português</SelectItem>
+                  <SelectItem value="en">🇺🇸 English</SelectItem>
+                  <SelectItem value="es">🇪🇸 Español</SelectItem>
                 </SelectContent>
               </Select>
             </div>
