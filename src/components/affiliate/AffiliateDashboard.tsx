@@ -50,8 +50,8 @@ const AffiliateDashboard = () => {
       {/* Header */}
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard do Afiliado</h1>
-          <p className="text-gray-600 mt-2">Bem-vindo de volta, {affiliate.name}!</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Dashboard do Afiliado</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">Bem-vindo de volta, {affiliate.name}!</p>
         </div>
         <Badge className={getStatusColor(affiliate.status)}>
           {getStatusText(affiliate.status)}
@@ -110,7 +110,7 @@ const AffiliateDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
-            <div className="flex-1 p-3 bg-gray-50 rounded-lg border">
+            <div className="flex-1 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border">
               <code className="text-sm break-all">{affiliateLink}</code>
             </div>
             <Button onClick={copyLink} size="sm">
@@ -118,9 +118,9 @@ const AffiliateDashboard = () => {
             </Button>
           </div>
           
-          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-            <h4 className="font-semibold text-blue-900 mb-2">Como usar seu link:</h4>
-            <ul className="text-blue-800 space-y-1 text-sm">
+          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+            <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Como usar seu link:</h4>
+            <ul className="text-blue-800 dark:text-blue-200 space-y-1 text-sm">
               <li>• Compartilhe nas suas redes sociais</li>
               <li>• Inclua em bio do Instagram/TikTok</li>
               <li>• Use em vídeos do YouTube</li>
@@ -138,31 +138,23 @@ const AffiliateDashboard = () => {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-gray-500">Código do Afiliado</label>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Código do Afiliado</label>
               <p className="font-mono text-lg">{affiliate.affiliate_code}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Taxa de Comissão</label>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400">Taxa de Comissão</label>
               <p className="text-lg">{affiliate.commission_rate}%</p>
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-gray-500">E-mail</label>
-              <p>{affiliate.email}</p>
-            </div>
-            {affiliate.phone && (
-              <div>
-                <label className="text-sm font-medium text-gray-500">Telefone</label>
-                <p>{affiliate.phone}</p>
-              </div>
-            )}
+          <div>
+            <label className="text-sm font-medium text-gray-500 dark:text-gray-400">E-mail</label>
+            <p>{affiliate.email}</p>
           </div>
 
           {(affiliate.instagram_handle || affiliate.youtube_channel || affiliate.other_social) && (
             <div>
-              <label className="text-sm font-medium text-gray-500 block mb-2">Redes Sociais</label>
+              <label className="text-sm font-medium text-gray-500 dark:text-gray-400 block mb-2">Redes Sociais</label>
               <div className="space-y-1">
                 {affiliate.instagram_handle && (
                   <p><span className="font-medium">Instagram:</span> {affiliate.instagram_handle}</p>
