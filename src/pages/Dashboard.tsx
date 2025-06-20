@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -346,9 +347,9 @@ const Dashboard = () => {
   const agentLimit = getAgentLimitByPlan(planType);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Enhanced Header with Plan Buttons */}
-      <header className="bg-white shadow-lg border-b border-gray-100 backdrop-blur-sm bg-white/95">
+      <header className="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-100 dark:border-gray-700 backdrop-blur-sm bg-white/95 dark:bg-gray-800/95">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
           <div className="flex justify-between items-center py-4 md:py-6">
             <div className="flex items-center space-x-3 md:space-x-4 min-w-0 flex-1">
@@ -356,8 +357,8 @@ const Dashboard = () => {
                 <span className="text-white font-bold text-sm md:text-lg">ZA</span>
               </div>
               <div className="min-w-0 flex-1">
-                <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 truncate">ZapAgent AI</h1>
-                <p className="text-xs md:text-sm text-gray-500 hidden sm:block">Dashboard Profissional</p>
+                <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white truncate">ZapAgent AI</h1>
+                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Dashboard</p>
               </div>
             </div>
             
@@ -373,7 +374,7 @@ const Dashboard = () => {
                   size="sm"
                   onClick={verifySubscription}
                   disabled={verifyingSubscription}
-                  className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 shadow-sm"
+                  className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 shadow-sm"
                 >
                   <RefreshCw className={`h-4 w-4 mr-2 ${verifyingSubscription ? 'animate-spin' : ''}`} />
                   {verifyingSubscription ? t('userDashboard.verifying') : t('userDashboard.verifyPlan')}
@@ -393,8 +394,8 @@ const Dashboard = () => {
               
               <div className="flex items-center space-x-3">
                 <div className="text-right hidden xl:block">
-                  <p className="text-sm font-medium text-gray-900">{t('userDashboard.welcome')}</p>
-                  <p className="text-sm text-gray-500">{user?.email}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{t('userDashboard.welcome')}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{user?.email}</p>
                 </div>
                 <ProfileMenu />
               </div>
@@ -411,7 +412,7 @@ const Dashboard = () => {
                 size="sm"
                 onClick={verifySubscription}
                 disabled={verifyingSubscription}
-                className="text-blue-600 border-blue-200 hover:bg-blue-50 text-xs px-2"
+                className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-xs px-2"
               >
                 <RefreshCw className={`h-3 w-3 ${verifyingSubscription ? 'animate-spin' : ''}`} />
               </Button>
@@ -438,7 +439,7 @@ const Dashboard = () => {
                 size="sm"
                 onClick={verifySubscription}
                 disabled={verifyingSubscription}
-                className="text-blue-600 border-blue-200 hover:bg-blue-50 text-xs p-1.5"
+                className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-xs p-1.5"
               >
                 <RefreshCw className={`h-3 w-3 ${verifyingSubscription ? 'animate-spin' : ''}`} />
               </Button>
@@ -459,7 +460,7 @@ const Dashboard = () => {
       </header>
 
       {/* Mobile Controls Bar */}
-      <div className="md:hidden bg-white border-b border-gray-200 px-3 py-2">
+      <div className="md:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 py-2">
         <div className="flex items-center justify-center space-x-2">
           <LanguageSelector />
         </div>
@@ -468,9 +469,9 @@ const Dashboard = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Enhanced Limit Warning */}
         {shouldShowLimitWarning() && (
-          <Alert className="mb-8 border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 shadow-sm">
+          <Alert className="mb-8 border-amber-200 dark:border-amber-700 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 shadow-sm">
             <Activity className="h-4 w-4" />
-            <AlertDescription className="text-amber-800 font-medium">
+            <AlertDescription className="text-amber-800 dark:text-amber-200 font-medium">
               {t('userDashboard.limitWarning')}
               <button 
                 onClick={() => setShowUpgradeModal(true)}
@@ -490,37 +491,37 @@ const Dashboard = () => {
               label: t('userDashboard.agents'), 
               value: `${agents.length}/${agentLimit === 999999 ? '∞' : agentLimit}`, 
               color: 'from-brand-green to-green-600',
-              bgColor: 'bg-green-50',
-              iconColor: 'text-green-600'
+              bgColor: 'bg-green-50 dark:bg-green-900/20',
+              iconColor: 'text-green-600 dark:text-green-400'
             },
             { 
               icon: MessageCircle, 
               label: t('userDashboard.messages'), 
               value: getMessagesDisplay(), 
               color: 'from-blue-500 to-blue-600',
-              bgColor: 'bg-blue-50',
-              iconColor: 'text-blue-600'
+              bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+              iconColor: 'text-blue-600 dark:text-blue-400'
             },
             { 
               icon: BarChart3, 
               label: t('userDashboard.plan'), 
               value: getPlanDisplayName(subscription?.plan_type || 'free'), 
               color: 'from-purple-500 to-purple-600',
-              bgColor: 'bg-purple-50',
-              iconColor: 'text-purple-600'
+              bgColor: 'bg-purple-50 dark:bg-purple-900/20',
+              iconColor: 'text-purple-600 dark:text-purple-400'
             },
             { 
               icon: TrendingUp, 
               label: t('userDashboard.active'), 
               value: agents.filter(agent => agent.is_active).length, 
               color: 'from-orange-500 to-orange-600',
-              bgColor: 'bg-orange-50',
-              iconColor: 'text-orange-600'
+              bgColor: 'bg-orange-50 dark:bg-orange-900/20',
+              iconColor: 'text-orange-600 dark:text-orange-400'
             }
           ].map((stat, index) => (
             <Card 
               key={index} 
-              className="hover:shadow-xl transition-all duration-300 hover:scale-105 border-0 shadow-lg bg-white/80 backdrop-blur-sm group"
+              className="hover:shadow-xl transition-all duration-300 hover:scale-105 border-0 shadow-lg bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm group"
             >
               <CardContent className="p-4 md:p-6">
                 <div className="flex items-center justify-between">
@@ -528,8 +529,8 @@ const Dashboard = () => {
                     <stat.icon className={`h-6 w-6 md:h-7 md:w-7 ${stat.iconColor}`} />
                   </div>
                   <div className="text-right min-w-0 flex-1 ml-3">
-                    <p className="text-xs md:text-sm font-medium text-gray-600 mb-1">{stat.label}</p>
-                    <p className="text-lg md:text-2xl font-bold text-gray-900 group-hover:scale-105 transition-transform duration-300">
+                    <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">{stat.label}</p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white group-hover:scale-105 transition-transform duration-300">
                       {stat.value}
                     </p>
                   </div>
@@ -544,8 +545,8 @@ const Dashboard = () => {
         <div className="mb-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
             <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{t('userDashboard.myAgents')}</h2>
-              <p className="text-gray-600">Gerencie seus assistentes virtuais</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">{t('userDashboard.myAgents')}</h2>
+              <p className="text-gray-600 dark:text-gray-400">Gerencie seus assistentes virtuais</p>
             </div>
             <Button 
               onClick={handleCreateAgent}
@@ -560,14 +561,14 @@ const Dashboard = () => {
 
           {/* Enhanced Plan info message */}
           {!loading && !canCreateAgent() && (
-            <div className="mb-8 p-6 bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl shadow-sm">
+            <div className="mb-8 p-6 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl shadow-sm">
               <div className="flex items-center space-x-3">
-                <div className="p-2 bg-yellow-100 rounded-lg">
-                  <Crown className="h-5 w-5 text-yellow-600" />
+                <div className="p-2 bg-yellow-100 dark:bg-yellow-900/40 rounded-lg">
+                  <Crown className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-semibold text-yellow-800 mb-1">{t('userDashboard.limitReached')}</h4>
-                  <p className="text-sm text-yellow-700">
+                  <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-1">{t('userDashboard.limitReached')}</h4>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
                     {t('userDashboard.limitInfo', { planName: getPlanDisplayName(planType), limit: agentLimit })}
                     <button 
                       onClick={() => setShowUpgradeModal(true)}
@@ -582,15 +583,15 @@ const Dashboard = () => {
           )}
 
           {agents.length === 0 ? (
-            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+            <Card className="shadow-lg border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
               <CardContent className="p-8 md:p-16 text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Bot className="h-10 w-10 text-gray-400" />
+                <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <Bot className="h-10 w-10 text-gray-400 dark:text-gray-500" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
                   {t('userDashboard.noAgentsYet')}
                 </h3>
-                <p className="text-gray-600 mb-8 text-base max-w-md mx-auto leading-relaxed">
+                <p className="text-gray-600 dark:text-gray-400 mb-8 text-base max-w-md mx-auto leading-relaxed">
                   {t('userDashboard.noAgentsDescription')}
                 </p>
                 <Button 

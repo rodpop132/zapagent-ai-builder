@@ -12,16 +12,17 @@ export const useTheme = () => {
   const applyTheme = (newTheme: Theme) => {
     const root = document.documentElement;
     
+    // Remove qualquer classe dark existente
+    root.classList.remove('dark');
+    
     if (newTheme === 'dark') {
       root.classList.add('dark');
     } else if (newTheme === 'light') {
-      root.classList.remove('dark');
+      // Já removemos dark acima
     } else if (newTheme === 'system') {
       const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       if (systemDark) {
         root.classList.add('dark');
-      } else {
-        root.classList.remove('dark');
       }
     }
     
@@ -33,16 +34,16 @@ export const useTheme = () => {
     // Aplicar tema inicial
     applyTheme(theme);
 
-    // Escutar mudanças no sistema
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = () => {
-      if (theme === 'system') {
+    // Escutar mudanças no sistema apenas se tema for 'system'
+    if (theme === 'system') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      const handleChange = () => {
         applyTheme('system');
-      }
-    };
+      };
 
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+      mediaQuery.addEventListener('change', handleChange);
+      return () => mediaQuery.removeEventListener('change', handleChange);
+    }
   }, [theme]);
 
   return { theme, setTheme: applyTheme };
