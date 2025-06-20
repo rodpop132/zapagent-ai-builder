@@ -13,11 +13,11 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { User, Settings, CreditCard, HelpCircle, LogOut, Shield, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import ProfileModal from './ProfileModal';
 import NotificationsModal from './NotificationsModal';
 import SettingsModal from './SettingsModal';
 import SecurityModal from './SecurityModal';
+import SubscriptionModal from './SubscriptionModal';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const ProfileMenu = () => {
@@ -29,7 +29,7 @@ const ProfileMenu = () => {
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showSecurityModal, setShowSecurityModal] = useState(false);
-  const [loadingPortal, setLoadingPortal] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -50,55 +50,11 @@ const ProfileMenu = () => {
     }
   };
 
-  const handleManageSubscription = async (e: React.MouseEvent) => {
+  const handleManageSubscription = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('🎯 Botão Gerenciar Assinatura clicado');
-    setLoadingPortal(true);
-    
-    try {
-      console.log('🎯 Invocando função customer-portal...');
-      
-      const { data, error } = await supabase.functions.invoke('customer-portal');
-      
-      if (error) {
-        console.error('❌ Erro ao invocar customer-portal:', error);
-        toast({
-          title: "Erro",
-          description: "Não foi possível abrir o portal de assinatura. Erro: " + error.message,
-          variant: "destructive"
-        });
-        return;
-      }
-
-      console.log('✅ Resposta da função customer-portal:', data);
-
-      if (data?.url) {
-        console.log('✅ Portal URL recebida:', data.url);
-        window.open(data.url, '_blank');
-        toast({
-          title: "Portal do Cliente",
-          description: "Abrindo portal de gerenciamento da assinatura",
-          variant: "default"
-        });
-      } else {
-        console.error('❌ URL do portal não retornada na resposta:', data);
-        toast({
-          title: "Erro",
-          description: "URL do portal não foi retornada pelo servidor",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('❌ Erro geral ao abrir portal:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível abrir o portal de assinatura. Verifique se você possui uma assinatura ativa.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoadingPortal(false);
-    }
+    console.log('💳 Botão Gerenciar Assinatura clicado - abrindo modal');
+    setShowSubscriptionModal(true);
   };
 
   const handleSettingsClick = (e: React.MouseEvent) => {
@@ -206,17 +162,12 @@ const ProfileMenu = () => {
           
           <DropdownMenuItem 
             onClick={handleManageSubscription}
-            disabled={loadingPortal}
             className="cursor-pointer p-2 md:p-3 hover:bg-gray-50 rounded-lg transition-colors"
           >
             <CreditCard className="mr-3 h-4 w-4 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <span className="font-medium text-sm md:text-base">
-                {loadingPortal ? 'Carregando...' : 'Gerenciar Assinatura'}
-              </span>
-              <p className="text-xs text-gray-500 hidden md:block">
-                {loadingPortal ? 'Abrindo portal...' : 'Billing, faturas e pagamentos'}
-              </p>
+              <span className="font-medium text-sm md:text-base">Gerenciar Assinatura</span>
+              <p className="text-xs text-gray-500 hidden md:block">Billing, faturas e pagamentos</p>
             </div>
           </DropdownMenuItem>
           
@@ -286,6 +237,11 @@ const ProfileMenu = () => {
       <SecurityModal 
         isOpen={showSecurityModal} 
         onClose={() => setShowSecurityModal(false)} 
+      />
+      
+      <SubscriptionModal 
+        isOpen={showSubscriptionModal} 
+        onClose={() => setShowSubscriptionModal(false)} 
       />
     </>
   );
