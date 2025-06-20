@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -6,6 +5,7 @@ import { useAffiliates } from '@/hooks/useAffiliates';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
 import { toast } from 'sonner';
 
 const AffiliateRegistrationForm = () => {
@@ -105,6 +105,7 @@ const AffiliateRegistrationForm = () => {
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
                 />
+                <PasswordStrengthIndicator password={formData.password} />
               </div>
               <div>
                 <Label htmlFor="confirmPassword">Confirmar Senha *</Label>

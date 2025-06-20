@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import LanguageSelector from '@/components/LanguageSelector';
+import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
 import { useTranslation } from 'react-i18next';
 
 const Auth = () => {
@@ -82,10 +83,10 @@ const Auth = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">{t('auth.loading')}</p>
+          <p className="text-gray-600 dark:text-gray-400">{t('auth.loading')}</p>
         </div>
       </div>
     );
@@ -96,7 +97,7 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       {/* Language Selector - Fixed position */}
       <div className="fixed top-4 right-4 z-50">
         <LanguageSelector />
@@ -108,20 +109,20 @@ const Auth = () => {
             <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold">ZA</span>
             </div>
-            <span className="text-2xl font-bold text-gray-900">ZapAgent AI</span>
+            <span className="text-2xl font-bold text-gray-900 dark:text-white">ZapAgent AI</span>
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
             {isLogin ? t('auth.loginTitle') : t('auth.signupTitle')}
           </h2>
-          <p className="mt-2 text-gray-600">
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
             {isLogin ? t('auth.loginSubtitle') : t('auth.signupSubtitle')}
           </p>
         </div>
 
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardHeader>
-            <CardTitle>{isLogin ? t('auth.loginButton') : t('auth.signupButton')}</CardTitle>
-            <CardDescription>
+            <CardTitle className="dark:text-white">{isLogin ? t('auth.loginButton') : t('auth.signupButton')}</CardTitle>
+            <CardDescription className="dark:text-gray-400">
               {isLogin ? t('auth.loginDescription') : t('auth.signupDescription')}
             </CardDescription>
           </CardHeader>
@@ -129,7 +130,7 @@ const Auth = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
                 <div>
-                  <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     {t('auth.fullName')}
                   </label>
                   <Input
@@ -140,12 +141,13 @@ const Auth = () => {
                     required={!isLogin}
                     placeholder={t('auth.fullNamePlaceholder')}
                     disabled={isSubmitting}
+                    className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                   />
                 </div>
               )}
               
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('auth.email')}
                 </label>
                 <Input
@@ -156,11 +158,12 @@ const Auth = () => {
                   required
                   placeholder={t('auth.emailPlaceholder')}
                   disabled={isSubmitting}
+                  className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 />
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('auth.password')}
                 </label>
                 <Input
@@ -172,7 +175,9 @@ const Auth = () => {
                   placeholder={t('auth.passwordPlaceholder')}
                   minLength={6}
                   disabled={isSubmitting}
+                  className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 />
+                {!isLogin && <PasswordStrengthIndicator password={password} />}
               </div>
 
               <Button 

@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import PasswordStrengthIndicator from '@/components/PasswordStrengthIndicator';
 import { toast } from 'sonner';
 
 const AffiliateAuth = () => {
@@ -147,6 +147,7 @@ const AffiliateAuth = () => {
                     onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
                     required
                   />
+                  <PasswordStrengthIndicator password={registerData.password} />
                 </div>
                 <div>
                   <Label htmlFor="confirmPassword">Confirmar Senha</Label>
