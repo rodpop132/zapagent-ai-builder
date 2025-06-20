@@ -35,11 +35,15 @@ export const useAffiliates = () => {
   // Buscar dados do afiliado
   const fetchAffiliate = async () => {
     if (!user) {
+      setAffiliate(null);
       setLoading(false);
       return;
     }
 
     try {
+      setLoading(true);
+      console.log('Buscando afiliado para user:', user.id);
+      
       const { data, error } = await supabase
         .from('affiliates')
         .select('*')
@@ -48,19 +52,24 @@ export const useAffiliates = () => {
 
       if (error && error.code !== 'PGRST116') {
         console.error('Erro ao buscar afiliado:', error);
+        setAffiliate(null);
         return;
       }
 
       if (data) {
-        // Type assertion to ensure status is properly typed
+        console.log('Afiliado encontrado:', data);
         const affiliateData = {
           ...data,
           status: data.status as 'pending' | 'active' | 'suspended'
         };
         setAffiliate(affiliateData);
+      } else {
+        console.log('Nenhum afiliado encontrado');
+        setAffiliate(null);
       }
     } catch (error) {
       console.error('Erro ao buscar afiliado:', error);
+      setAffiliate(null);
     } finally {
       setLoading(false);
     }
@@ -68,9 +77,14 @@ export const useAffiliates = () => {
 
   // Buscar estatísticas do afiliado
   const fetchStats = async () => {
-    if (!affiliate) return;
+    if (!affiliate) {
+      setStats({ clicks: 0, conversions: 0, earnings: 0 });
+      return;
+    }
 
     try {
+      console.log('Buscando estatísticas para afiliado:', affiliate.id);
+      
       // Buscar cliques
       const { count: clicksCount } = await supabase
         .from('affiliate_clicks')
@@ -86,13 +100,17 @@ export const useAffiliates = () => {
 
       const totalEarnings = conversions?.reduce((sum, conv) => sum + (conv.commission_amount || 0), 0) || 0;
 
-      setStats({
+      const newStats = {
         clicks: clicksCount || 0,
         conversions: conversions?.length || 0,
         earnings: totalEarnings
-      });
+      };
+      
+      console.log('Estatísticas carregadas:', newStats);
+      setStats(newStats);
     } catch (error) {
       console.error('Erro ao buscar estatísticas:', error);
+      setStats({ clicks: 0, conversions: 0, earnings: 0 });
     }
   };
 
@@ -108,11 +126,19 @@ export const useAffiliates = () => {
     if (!user) throw new Error('Usuário não autenticado');
 
     try {
+      setLoading(true);
+      console.log('Criando afiliado para user:', user.id);
+      
       // Gerar código único
       const { data: codeData, error: codeError } = await supabase
         .rpc('generate_affiliate_code');
 
-      if (codeError) throw codeError;
+      if (codeError) {
+        console.error('Erro ao gerar código:', codeError);
+        throw codeError;
+      }
+
+      console.log('Código gerado:', codeData);
 
       const { data: newAffiliate, error } = await supabase
         .from('affiliates')
@@ -124,21 +150,25 @@ export const useAffiliates = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao inserir afiliado:', error);
+        throw error;
+      }
 
       if (newAffiliate) {
-        // Type assertion to ensure status is properly typed
+        console.log('Afiliado criado:', newAffiliate);
         const affiliateData = {
           ...newAffiliate,
           status: newAffiliate.status as 'pending' | 'active' | 'suspended'
         };
         setAffiliate(affiliateData);
-        setLoading(false); // Ensure loading is set to false
         return affiliateData;
       }
     } catch (error) {
       console.error('Erro ao criar afiliado:', error);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -157,7 +187,7 @@ export const useAffiliates = () => {
         .from('affiliate_clicks')
         .insert({
           affiliate_id: affiliateData.id,
-          ip_address: '', // Pode ser preenchido pelo servidor
+          ip_address: '', 
           user_agent: navigator.userAgent,
           referrer: document.referrer,
           utm_source: new URLSearchParams(window.location.search).get('utm_source'),
@@ -171,6 +201,7 @@ export const useAffiliates = () => {
 
   useEffect(() => {
     if (!authLoading) {
+      console.log('Auth loading finished, user:', user ? 'exists' : 'null');
       fetchAffiliate();
     }
   }, [user, authLoading]);
