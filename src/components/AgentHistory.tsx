@@ -1,92 +1,42 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MessageCircle, RefreshCw, Clock, User, Bot, TrendingUp } from 'lucide-react';
+import { ZapAgentService } from '@/services/zapAgentService';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 interface AgentHistoryProps {
   phoneNumber: string;
   agentName: string;
   subscription: any;
-  onMessageUpdate?: () => void;
 }
 
-interface AgentMessage {
-  id: string;
-  numero: string;
-  pergunta: string;
-  resposta: string;
-  created_at: string;
-}
-
-const AgentHistory = ({ phoneNumber, agentName, subscription, onMessageUpdate }: AgentHistoryProps) => {
-  const [messages, setMessages] = useState<AgentMessage[]>([]);
-  const [totalMessages, setTotalMessages] = useState(0);
+const AgentHistory = ({ phoneNumber, agentName, subscription }: AgentHistoryProps) => {
+  const [history, setHistory] = useState<any[]>([]);
+  const [agentStatus, setAgentStatus] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const loadMessages = async () => {
+  const loadAgentData = async () => {
     setLoading(true);
     try {
-      console.log(`📜 Carregando mensagens para o número ${phoneNumber}...`);
+      console.log(`📜 Carregando dados do agente ${phoneNumber}...`);
       
-      // Buscar agente pelo número de telefone
-      const cleanNumber = phoneNumber.replace(/\D/g, '');
-      const { data: agent, error: agentError } = await supabase
-        .from('agents')
-        .select('id')
-        .eq('phone_number', cleanNumber)
-        .single();
-
-      if (agentError || !agent) {
-        console.error('❌ Agente não encontrado:', agentError);
-        return;
-      }
-
-      // Buscar mensagens do agente
-      const { data: messagesData, error: messagesError } = await supabase
-        .from('agent_messages')
-        .select('*')
-        .eq('agent_id', agent.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (messagesError) {
-        console.error('❌ Erro ao buscar mensagens:', messagesError);
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar as mensagens",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      // Contar total de mensagens
-      const { count, error: countError } = await supabase
-        .from('agent_messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('agent_id', agent.id);
-
-      if (countError) {
-        console.error('❌ Erro ao contar mensagens:', countError);
-      }
-
-      setMessages(messagesData || []);
-      setTotalMessages(count || 0);
+      const statusData = await ZapAgentService.getAgentStatus(phoneNumber);
+      setAgentStatus(statusData);
+      setHistory(statusData.historico || []);
       
-      // Notificar componente pai sobre atualização
-      if (onMessageUpdate) {
-        onMessageUpdate();
-      }
-      
-      console.log(`✅ ${messagesData?.length || 0} mensagens carregadas, total: ${count || 0}`);
+      console.log(`✅ Dados carregados:`, {
+        historico: statusData.historico?.length || 0,
+        mensagens_enviadas: statusData.mensagens_enviadas || 0
+      });
     } catch (error) {
-      console.error('❌ Erro ao carregar mensagens:', error);
+      console.error('❌ Erro ao carregar dados do agente:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível carregar as mensagens",
+        description: "Não foi possível carregar os dados do agente",
         variant: "destructive"
       });
     } finally {
@@ -95,10 +45,10 @@ const AgentHistory = ({ phoneNumber, agentName, subscription, onMessageUpdate }:
   };
 
   useEffect(() => {
-    loadMessages();
+    loadAgentData();
     
     // Atualizar dados a cada 30 segundos
-    const interval = setInterval(loadMessages, 30000);
+    const interval = setInterval(loadAgentData, 30000);
     return () => clearInterval(interval);
   }, [phoneNumber]);
 
@@ -127,14 +77,14 @@ const AgentHistory = ({ phoneNumber, agentName, subscription, onMessageUpdate }:
   };
 
   const getUsagePercentage = () => {
-    const used = totalMessages;
+    const used = agentStatus?.mensagens_enviadas || 0;
     const limit = getMessagesLimit();
     if (limit === '∞') return 0;
     return Math.min((used / limit) * 100, 100);
   };
 
   const isLimitReached = () => {
-    const used = totalMessages;
+    const used = agentStatus?.mensagens_enviadas || 0;
     const limit = getMessagesLimit();
     return limit !== '∞' && used >= limit;
   };
@@ -152,7 +102,7 @@ const AgentHistory = ({ phoneNumber, agentName, subscription, onMessageUpdate }:
             <Button
               variant="outline"
               size="sm"
-              onClick={loadMessages}
+              onClick={loadAgentData}
               disabled={loading}
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
@@ -164,9 +114,9 @@ const AgentHistory = ({ phoneNumber, agentName, subscription, onMessageUpdate }:
           {/* Contador de Mensagens */}
           <div className="space-y-2">
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Total de Mensagens Recebidas</span>
+              <span className="text-sm font-medium">Mensagens Enviadas</span>
               <Badge variant={isLimitReached() ? "destructive" : "default"}>
-                {totalMessages} / {getMessagesLimit()}
+                {agentStatus?.mensagens_enviadas || 0} / {getMessagesLimit()}
               </Badge>
             </div>
             
@@ -190,18 +140,24 @@ const AgentHistory = ({ phoneNumber, agentName, subscription, onMessageUpdate }:
           </div>
 
           {/* Última Mensagem */}
-          {messages.length > 0 && (
+          {agentStatus?.ultima_mensagem && (
             <div className="p-3 bg-gray-50 rounded-lg">
               <h4 className="text-sm font-medium mb-2">Última Interação</h4>
-              <p className="text-xs text-gray-600 mb-1">
-                <strong>Cliente ({messages[0].numero}):</strong> {messages[0].pergunta}
-              </p>
-              <p className="text-xs text-gray-600 mb-1">
-                <strong>{agentName}:</strong> {messages[0].resposta}
-              </p>
-              <p className="text-xs text-gray-500">
-                {formatTimestamp(messages[0].created_at)}
-              </p>
+              {agentStatus.ultima_mensagem.user && (
+                <p className="text-xs text-gray-600 mb-1">
+                  <strong>Cliente:</strong> {agentStatus.ultima_mensagem.user}
+                </p>
+              )}
+              {agentStatus.ultima_mensagem.bot && (
+                <p className="text-xs text-gray-600 mb-1">
+                  <strong>{agentName}:</strong> {agentStatus.ultima_mensagem.bot}
+                </p>
+              )}
+              {agentStatus.ultima_mensagem.timestamp && (
+                <p className="text-xs text-gray-500">
+                  {formatTimestamp(agentStatus.ultima_mensagem.timestamp)}
+                </p>
+              )}
             </div>
           )}
         </CardContent>
@@ -212,36 +168,36 @@ const AgentHistory = ({ phoneNumber, agentName, subscription, onMessageUpdate }:
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center">
             <MessageCircle className="h-5 w-5 mr-2 text-brand-green" />
-            Últimas Perguntas e Respostas
+            Histórico de Conversas
           </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="text-center py-4">
               <RefreshCw className="h-8 w-8 animate-spin text-brand-green mx-auto mb-2" />
-              <p className="text-sm text-gray-600">Carregando mensagens...</p>
+              <p className="text-sm text-gray-600">Carregando histórico...</p>
             </div>
-          ) : messages.length === 0 ? (
+          ) : history.length === 0 ? (
             <div className="text-center py-8">
               <MessageCircle className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-600">Nenhuma mensagem registrada ainda</p>
+              <p className="text-gray-600">Nenhuma conversa registrada ainda</p>
               <p className="text-sm text-gray-500 mt-1">
-                As mensagens aparecerão aqui quando o bot começar a responder
+                As conversas aparecerão aqui quando o agente começar a responder mensagens
               </p>
             </div>
           ) : (
             <div className="space-y-4 max-h-96 overflow-y-auto">
-              {messages.map((message) => (
-                <div key={message.id} className="border rounded-lg p-4 bg-gray-50">
+              {history.map((chat, index) => (
+                <div key={index} className="border rounded-lg p-4 bg-gray-50">
                   <div className="space-y-3">
-                    {/* Pergunta do usuário */}
+                    {/* Mensagem do usuário */}
                     <div className="flex items-start space-x-3">
                       <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                         <User className="h-4 w-4 text-white" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">Cliente ({message.numero})</p>
-                        <p className="text-sm text-gray-700 mt-1">{message.pergunta}</p>
+                        <p className="text-sm font-medium text-gray-900">Cliente</p>
+                        <p className="text-sm text-gray-700 mt-1">{chat.message}</p>
                       </div>
                     </div>
 
@@ -252,15 +208,17 @@ const AgentHistory = ({ phoneNumber, agentName, subscription, onMessageUpdate }:
                       </div>
                       <div className="flex-1">
                         <p className="text-sm font-medium text-brand-green">{agentName}</p>
-                        <p className="text-sm text-gray-700 mt-1">{message.resposta}</p>
+                        <p className="text-sm text-gray-700 mt-1">{chat.response}</p>
                       </div>
                     </div>
 
                     {/* Timestamp */}
-                    <div className="flex items-center text-xs text-gray-500 mt-2">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {formatTimestamp(message.created_at)}
-                    </div>
+                    {chat.timestamp && (
+                      <div className="flex items-center text-xs text-gray-500 mt-2">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {formatTimestamp(chat.timestamp)}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
