@@ -10,7 +10,7 @@ const testimonials = [
     company: "Loja Virtual SP",
     rating: 5,
     text: "O ZapAgent AI revolucionou nosso atendimento! Conseguimos responder 10x mais clientes com a mesma qualidade.",
-    avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face"
+    avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop&crop=face"
   },
   {
     name: "João Santos",
@@ -74,10 +74,10 @@ const Testimonials = () => {
     <section className="py-20 bg-gradient-to-br from-gray-50 to-white">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16 animate-fade-in">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4 transition-all duration-700 hover:text-primary">
             O que nossos clientes dizem
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto transition-all duration-500 hover:text-gray-800">
             Mais de 10.000 empresas já transformaram seu atendimento com o ZapAgent AI
           </p>
         </div>
@@ -86,18 +86,21 @@ const Testimonials = () => {
           {testimonials.map((testimonial, index) => (
             <div
               key={index}
-              className="bg-white rounded-xl shadow-lg p-6 hover-lift animate-scale-in"
+              className="bg-white rounded-xl shadow-lg p-6 hover-lift animate-scale-in transition-all duration-500 hover:shadow-2xl hover:bg-gray-50 group"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <div className="flex items-center mb-4">
                 {[...Array(testimonial.rating)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                  <Star 
+                    key={i} 
+                    className="h-5 w-5 text-yellow-400 fill-current transition-transform duration-300 hover:scale-125" 
+                  />
                 ))}
               </div>
               
               <div className="relative mb-6">
-                <Quote className="absolute -top-2 -left-2 h-8 w-8 text-primary opacity-20" />
-                <p className="text-gray-700 leading-relaxed pl-4">
+                <Quote className="absolute -top-2 -left-2 h-8 w-8 text-primary opacity-20 transition-all duration-300 group-hover:opacity-40 group-hover:scale-110" />
+                <p className="text-gray-700 leading-relaxed pl-4 transition-all duration-300 group-hover:text-gray-900">
                   "{testimonial.text}"
                 </p>
               </div>
@@ -106,12 +109,12 @@ const Testimonials = () => {
                 <img
                   src={testimonial.avatar}
                   alt={testimonial.name}
-                  className="w-12 h-12 rounded-full object-cover mr-4"
+                  className="w-12 h-12 rounded-full object-cover mr-4 transition-all duration-300 group-hover:scale-110 group-hover:ring-2 group-hover:ring-primary group-hover:ring-opacity-50"
                 />
-                <div>
-                  <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
-                  <p className="text-sm text-gray-600">{testimonial.role}</p>
-                  <p className="text-sm text-primary font-medium">{testimonial.company}</p>
+                <div className="transition-all duration-300">
+                  <h4 className="font-semibold text-gray-900 transition-colors duration-300 group-hover:text-primary">{testimonial.name}</h4>
+                  <p className="text-sm text-gray-600 transition-colors duration-300 group-hover:text-gray-800">{testimonial.role}</p>
+                  <p className="text-sm text-primary font-medium transition-all duration-300 group-hover:font-bold">{testimonial.company}</p>
                 </div>
               </div>
             </div>
@@ -119,16 +122,19 @@ const Testimonials = () => {
         </div>
 
         <div className="text-center mt-16 animate-fade-in">
-          <div className="inline-flex items-center bg-white rounded-full px-8 py-4 shadow-lg">
+          <div className="inline-flex items-center bg-white rounded-full px-8 py-4 shadow-lg transition-all duration-500 hover:shadow-2xl hover:scale-105 hover:bg-gray-50 group">
             <div className="flex items-center mr-6">
               <div className="flex">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-6 w-6 text-yellow-400 fill-current" />
+                  <Star 
+                    key={i} 
+                    className="h-6 w-6 text-yellow-400 fill-current transition-transform duration-300 hover:scale-125" 
+                  />
                 ))}
               </div>
-              <span className="ml-2 text-lg font-bold text-gray-900">4.9/5.0</span>
+              <span className="ml-2 text-lg font-bold text-gray-900 transition-colors duration-300 group-hover:text-primary">4.9/5.0</span>
             </div>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-gray-600 transition-colors duration-300 group-hover:text-gray-800">
               Baseado em <span className="font-semibold">2.847 avaliações</span>
             </div>
           </div>
