@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { Sidebar, SidebarContent, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { home, chart-bar, users, message-square, settings } from 'lucide-react';
+import { Home, BarChart3, Users, MessageSquare, Settings } from 'lucide-react';
 
 interface SidebarItem {
   title: string;
@@ -21,32 +21,32 @@ const AffiliateSidebar = ({ activeSection, onSectionChange, userPlan }: Affiliat
   const menuItems: SidebarItem[] = [
     {
       title: 'Início',
-      icon: home,
+      icon: Home,
       active: activeSection === 'dashboard',
       onClick: () => onSectionChange('dashboard')
     },
     {
       title: 'Agentes',
-      icon: users,
+      icon: Users,
       active: activeSection === 'agents',
       onClick: () => onSectionChange('agents')
     },
     {
       title: 'WhatsApp Integrado',
-      icon: message-square,
+      icon: MessageSquare,
       active: activeSection === 'whatsapp',
       disabled: userPlan !== 'pro',
       onClick: () => userPlan === 'pro' ? onSectionChange('whatsapp') : null
     },
     {
       title: 'Relatórios',
-      icon: chart-bar,
+      icon: BarChart3,
       active: activeSection === 'reports',
       onClick: () => onSectionChange('reports')
     },
     {
       title: 'Configurações',
-      icon: settings,
+      icon: Settings,
       active: activeSection === 'settings',
       onClick: () => onSectionChange('settings')
     }

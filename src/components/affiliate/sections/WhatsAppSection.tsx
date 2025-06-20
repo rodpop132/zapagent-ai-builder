@@ -2,7 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { message-square, crown, zap } from 'lucide-react';
+import { MessageSquare, Crown, Zap, BarChart3 } from 'lucide-react';
 
 const WhatsAppSection = () => {
   return (
@@ -13,7 +13,7 @@ const WhatsAppSection = () => {
           <p className="text-gray-600 mt-2">Conecte diretamente com o WhatsApp oficial</p>
         </div>
         <Badge className="bg-orange-100 text-orange-700 border border-orange-200">
-          <crown className="h-3 w-3 mr-1" />
+          <Crown className="h-3 w-3 mr-1" />
           Recurso PRO
         </Badge>
       </div>
@@ -22,7 +22,7 @@ const WhatsAppSection = () => {
       <Card className="border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50">
         <CardHeader className="text-center">
           <div className="mx-auto w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mb-4">
-            <crown className="h-8 w-8 text-orange-600" />
+            <Crown className="h-8 w-8 text-orange-600" />
           </div>
           <CardTitle className="text-2xl text-orange-900">Upgrade para PRO</CardTitle>
           <CardDescription className="text-orange-700">
@@ -63,7 +63,7 @@ const WhatsAppSection = () => {
           
           <div className="text-center pt-4 border-t border-orange-200">
             <Button className="bg-orange-600 hover:bg-orange-700 text-white px-8 py-3">
-              <zap className="h-4 w-4 mr-2" />
+              <Zap className="h-4 w-4 mr-2" />
               Fazer Upgrade Agora
             </Button>
             <p className="text-sm text-orange-600 mt-2">
@@ -78,7 +78,7 @@ const WhatsAppSection = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <message-square className="h-5 w-5 mr-2" />
+              <MessageSquare className="h-5 w-5 mr-2" />
               Conexões Ativas
             </CardTitle>
           </CardHeader>
@@ -92,7 +92,7 @@ const WhatsAppSection = () => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <chart-bar className="h-5 w-5 mr-2" />
+              <BarChart3 className="h-5 w-5 mr-2" />
               Métricas WhatsApp
             </CardTitle>
           </CardHeader>
