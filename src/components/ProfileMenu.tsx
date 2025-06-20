@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -10,14 +11,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { User, Settings, CreditCard, HelpCircle, LogOut, Shield, Bell } from 'lucide-react';
+import { User, Settings, HelpCircle, LogOut, Shield, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import ProfileModal from './ProfileModal';
 import NotificationsModal from './NotificationsModal';
 import SettingsModal from './SettingsModal';
 import SecurityModal from './SecurityModal';
-import SubscriptionModal from './SubscriptionModal';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const ProfileMenu = () => {
@@ -29,7 +29,6 @@ const ProfileMenu = () => {
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showSecurityModal, setShowSecurityModal] = useState(false);
-  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
 
   const handleSignOut = async () => {
     try {
@@ -48,13 +47,6 @@ const ProfileMenu = () => {
         variant: "destructive"
       });
     }
-  };
-
-  const handleManageSubscription = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('💳 Botão Gerenciar Assinatura clicado - abrindo modal');
-    setShowSubscriptionModal(true);
   };
 
   const handleSettingsClick = (e: React.MouseEvent) => {
@@ -161,17 +153,6 @@ const ProfileMenu = () => {
           </DropdownMenuItem>
           
           <DropdownMenuItem 
-            onClick={handleManageSubscription}
-            className="cursor-pointer p-2 md:p-3 hover:bg-gray-50 rounded-lg transition-colors"
-          >
-            <CreditCard className="mr-3 h-4 w-4 flex-shrink-0" />
-            <div className="flex-1 min-w-0">
-              <span className="font-medium text-sm md:text-base">Gerenciar Assinatura</span>
-              <p className="text-xs text-gray-500 hidden md:block">Billing, faturas e pagamentos</p>
-            </div>
-          </DropdownMenuItem>
-          
-          <DropdownMenuItem 
             onClick={handleSettingsClick}
             className="cursor-pointer p-2 md:p-3 hover:bg-gray-50 rounded-lg transition-colors"
           >
@@ -237,11 +218,6 @@ const ProfileMenu = () => {
       <SecurityModal 
         isOpen={showSecurityModal} 
         onClose={() => setShowSecurityModal(false)} 
-      />
-      
-      <SubscriptionModal 
-        isOpen={showSubscriptionModal} 
-        onClose={() => setShowSubscriptionModal(false)} 
       />
     </>
   );
