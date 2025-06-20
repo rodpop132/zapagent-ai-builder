@@ -60,7 +60,6 @@ const ProfileMenu = () => {
       }
 
       if (data?.url) {
-        // Abrir portal em nova aba
         window.open(data.url, '_blank');
         toast({
           title: "Portal do Cliente",
