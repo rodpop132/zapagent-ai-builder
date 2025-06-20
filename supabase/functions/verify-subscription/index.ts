@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -138,7 +137,7 @@ serve(async (req) => {
       // Mapear price ID para plano - usando os novos links do Stripe
       if (priceId === "price_1RVbYyPpmCy5gtzzPUjXC12Z" || priceId.includes("pro")) {
         planType = 'pro';
-        messagesLimit = 10000;
+        messagesLimit = 1000; // Corrigido de 10000 para 1000
         console.log('✅ Plano Pro identificado');
       } else if (priceId === "price_1RVfjlPpmCy5gtzzfOMaqUJO" || priceId.includes("ultra")) {
         planType = 'ultra';
@@ -148,7 +147,7 @@ serve(async (req) => {
       } else {
         console.log(`⚠️ Price ID não reconhecido: ${priceId}, assumindo Pro`);
         planType = 'pro';
-        messagesLimit = 10000;
+        messagesLimit = 1000; // Corrigido de 10000 para 1000
       }
     }
 

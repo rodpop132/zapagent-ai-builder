@@ -164,7 +164,7 @@ const Dashboard = () => {
   const getAgentLimitByPlan = (planType: string) => {
     switch (planType) {
       case 'free': return 1;
-      case 'pro': return 3; // Corrigido de 10 para 3
+      case 'pro': return 3; // Corrigido de 5 para 3
       case 'ultra': return 999999;
       case 'unlimited': return 999999;
       default: return 1;

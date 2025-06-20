@@ -42,7 +42,7 @@ const testimonials = [
     company: "Moda & Estilo",
     rating: 5,
     text: "Nossos clientes adoram a rapidez nas respostas. O atendimento ficou disponível 24/7 sem custos extras.",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&h=150&fit=crop&crop=face"
+    avatar: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=150&h=150&fit=crop&crop=face"
   },
   {
     name: "Rafael Lima",
