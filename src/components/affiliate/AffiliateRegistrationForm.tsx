@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -21,7 +22,6 @@ const AffiliateRegistrationForm = () => {
     confirmPassword: '',
     // Dados de afiliado
     name: '',
-    phone: '',
     instagram_handle: '',
     youtube_channel: '',
     other_social: ''
@@ -61,7 +61,6 @@ const AffiliateRegistrationForm = () => {
       await createAffiliate({
         name: formData.name,
         email: formData.email,
-        phone: formData.phone,
         instagram_handle: formData.instagram_handle,
         youtube_channel: formData.youtube_channel,
         other_social: formData.other_social
@@ -136,17 +135,6 @@ const AffiliateRegistrationForm = () => {
           />
         </div>
 
-        <div>
-          <Label htmlFor="phone">Telefone</Label>
-          <Input
-            id="phone"
-            type="tel"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            placeholder="(11) 99999-9999"
-          />
-        </div>
-
         <div className="space-y-4">
           <h4 className="font-medium">Redes Sociais (Opcional)</h4>
           
@@ -185,9 +173,9 @@ const AffiliateRegistrationForm = () => {
         </div>
       </div>
 
-      <div className="bg-blue-50 p-4 rounded-lg">
-        <h4 className="font-semibold text-blue-900">Benefícios do Programa:</h4>
-        <ul className="list-disc list-inside text-blue-800 mt-2 space-y-1">
+      <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+        <h4 className="font-semibold text-blue-900 dark:text-blue-100">Benefícios do Programa:</h4>
+        <ul className="list-disc list-inside text-blue-800 dark:text-blue-200 mt-2 space-y-1">
           <li>Comissão de 10% em todas as vendas</li>
           <li>Link personalizado de rastreamento</li>
           <li>Dashboard com estatísticas detalhadas</li>

@@ -9,7 +9,6 @@ export interface Affiliate {
   affiliate_code: string;
   name: string;
   email: string;
-  phone?: string;
   instagram_handle?: string;
   youtube_channel?: string;
   other_social?: string;
@@ -100,7 +99,6 @@ export const useAffiliates = () => {
   const createAffiliate = async (data: {
     name: string;
     email: string;
-    phone?: string;
     instagram_handle?: string;
     youtube_channel?: string;
     other_social?: string;
