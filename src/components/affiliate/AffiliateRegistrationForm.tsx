@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -52,23 +51,21 @@ const AffiliateRegistrationForm = () => {
           return;
         }
 
-        toast.success('Conta criada! Aguarde enquanto criamos seu perfil de afiliado...');
-        // Aguardar um pouco para o usuário ser autenticado
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        toast.success('Conta criada! Verifique seu email para confirmar a conta.');
+        setLoading(false);
+        return;
       }
 
-      // Criar perfil de afiliado
+      // Se já está logado, criar perfil de afiliado
       await createAffiliate({
         name: formData.name,
-        email: formData.email,
+        email: user.email || formData.email,
         instagram_handle: formData.instagram_handle,
         youtube_channel: formData.youtube_channel,
         other_social: formData.other_social
       });
 
       toast.success('Perfil de afiliado criado com sucesso!');
-      
-      // Redirecionar para a dashboard
       navigate('/afiliados/dashboard');
     } catch (error) {
       toast.error('Erro ao criar perfil');
@@ -77,6 +74,78 @@ const AffiliateRegistrationForm = () => {
       setLoading(false);
     }
   };
+
+  // Se o usuário já está logado, mostrar apenas o formulário de afiliado
+  if (user) {
+    return (
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Dados do Afiliado</h3>
+          <div>
+            <Label htmlFor="name">Nome Completo *</Label>
+            <Input
+              id="name"
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+            />
+          </div>
+
+          <div className="space-y-4">
+            <h4 className="font-medium">Redes Sociais (Opcional)</h4>
+            
+            <div>
+              <Label htmlFor="instagram">Instagram</Label>
+              <Input
+                id="instagram"
+                type="text"
+                value={formData.instagram_handle}
+                onChange={(e) => setFormData({ ...formData, instagram_handle: e.target.value })}
+                placeholder="@seuusuario"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="youtube">YouTube</Label>
+              <Input
+                id="youtube"
+                type="text"
+                value={formData.youtube_channel}
+                onChange={(e) => setFormData({ ...formData, youtube_channel: e.target.value })}
+                placeholder="https://youtube.com/@seucanal"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="other">Outras Redes</Label>
+              <Input
+                id="other"
+                type="text"
+                value={formData.other_social}
+                onChange={(e) => setFormData({ ...formData, other_social: e.target.value })}
+                placeholder="TikTok, LinkedIn, etc."
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+          <h4 className="font-semibold text-blue-900 dark:text-blue-100">Benefícios do Programa:</h4>
+          <ul className="list-disc list-inside text-blue-800 dark:text-blue-200 mt-2 space-y-1">
+            <li>Comissão de 10% em todas as vendas</li>
+            <li>Link personalizado de rastreamento</li>
+            <li>Dashboard com estatísticas detalhadas</li>
+            <li>Pagamentos mensais</li>
+          </ul>
+        </div>
+
+        <Button type="submit" className="w-full" disabled={loading}>
+          {loading ? 'Criando Perfil...' : 'Criar Perfil de Afiliado'}
+        </Button>
+      </form>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -184,8 +253,12 @@ const AffiliateRegistrationForm = () => {
       </div>
 
       <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? 'Criando Perfil...' : user ? 'Criar Perfil de Afiliado' : 'Criar Conta e Perfil'}
+        {loading ? 'Criando Conta...' : user ? 'Criar Perfil de Afiliado' : 'Criar Conta e Perfil'}
       </Button>
+      
+      <div className="text-sm text-center text-gray-600 dark:text-gray-400">
+        Após criar a conta, você precisará confirmar seu email antes de poder acessar o dashboard.
+      </div>
     </form>
   );
 };
