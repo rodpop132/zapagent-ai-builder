@@ -349,20 +349,20 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       {/* Enhanced Header with Plan Buttons */}
       <header className="bg-white shadow-lg border-b border-gray-100 backdrop-blur-sm bg-white/95">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-brand-green to-green-600 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-                <span className="text-white font-bold text-lg">ZA</span>
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+          <div className="flex justify-between items-center py-4 md:py-6">
+            <div className="flex items-center space-x-3 md:space-x-4 min-w-0 flex-1">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-brand-green to-green-600 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex-shrink-0">
+                <span className="text-white font-bold text-sm md:text-lg">ZA</span>
               </div>
-              <div>
-                <h1 className="text-xl md:text-2xl font-bold text-gray-900">ZapAgent AI</h1>
-                <p className="text-sm text-gray-500 hidden md:block">Dashboard Profissional</p>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 truncate">ZapAgent AI</h1>
+                <p className="text-xs md:text-sm text-gray-500 hidden sm:block">Dashboard Profissional</p>
               </div>
             </div>
             
             {/* Desktop Header Content */}
-            <div className="hidden md:flex items-center space-x-6">
+            <div className="hidden lg:flex items-center space-x-6">
               <LanguageSelector />
               <div className="flex items-center space-x-3">
                 <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-semibold px-3 py-1 text-sm shadow-sm`}>
@@ -392,7 +392,7 @@ const Dashboard = () => {
               </div>
               
               <div className="flex items-center space-x-3">
-                <div className="text-right hidden lg:block">
+                <div className="text-right hidden xl:block">
                   <p className="text-sm font-medium text-gray-900">{t('userDashboard.welcome')}</p>
                   <p className="text-sm text-gray-500">{user?.email}</p>
                 </div>
@@ -400,8 +400,9 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Mobile Header Content */}
-            <div className="md:hidden flex items-center space-x-3">
+            {/* Tablet Header Content */}
+            <div className="hidden md:flex lg:hidden items-center space-x-2">
+              <LanguageSelector />
               <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-semibold px-2 py-1 text-xs shadow-sm`}>
                 {getPlanDisplayName(subscription?.plan_type || 'free')}
               </Badge>
@@ -426,9 +427,43 @@ const Dashboard = () => {
               )}
               <ProfileMenu />
             </div>
+
+            {/* Mobile Header Content */}
+            <div className="md:hidden flex items-center space-x-2">
+              <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-semibold px-2 py-1 text-xs shadow-sm`}>
+                {getPlanDisplayName(subscription?.plan_type || 'free').substring(0, 4)}
+              </Badge>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={verifySubscription}
+                disabled={verifyingSubscription}
+                className="text-blue-600 border-blue-200 hover:bg-blue-50 text-xs p-1.5"
+              >
+                <RefreshCw className={`h-3 w-3 ${verifyingSubscription ? 'animate-spin' : ''}`} />
+              </Button>
+              {shouldShowUpgradeButton() && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowUpgradeModal(true)}
+                  className="text-brand-green border-brand-green/30 hover:bg-brand-green hover:text-white text-xs p-1.5"
+                >
+                  <Crown className="h-3 w-3" />
+                </Button>
+              )}
+              <ProfileMenu />
+            </div>
           </div>
         </div>
       </header>
+
+      {/* Mobile Controls Bar */}
+      <div className="md:hidden bg-white border-b border-gray-200 px-3 py-2">
+        <div className="flex items-center justify-center space-x-2">
+          <LanguageSelector />
+        </div>
+      </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Enhanced Limit Warning */}
