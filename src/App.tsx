@@ -15,6 +15,7 @@ import AdminPanel from "./pages/AdminPanel";
 import Staff from "./pages/Staff";
 import Afiliados from "./pages/Afiliados";
 import AfiliadosDashboard from "./pages/AfiliadosDashboard";
+import FAQPage from "./pages/FAQ";
 import "./i18n";
 import FacebookTracker from "./components/FacebookTracker";
 
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/sucesso" element={<Sucesso />} />
             <Route path="/cancelado" element={<Cancelado />} />
             <Route path="/sobre" element={<Sobre />} />
+            <Route path="/faq" element={<FAQPage />} />
             <Route path="/admin" element={<AdminPanel />} />
             <Route path="/staff" element={<Staff />} />
             <Route path="/afiliados" element={<Afiliados />} />

@@ -57,12 +57,12 @@ const ProfileMenu = () => {
     setLoadingPortal(true);
     
     try {
-      console.log('🎯 Abrindo portal do cliente...');
+      console.log('🎯 Invocando função customer-portal...');
       
       const { data, error } = await supabase.functions.invoke('customer-portal');
       
       if (error) {
-        console.error('❌ Erro ao criar portal:', error);
+        console.error('❌ Erro ao invocar customer-portal:', error);
         toast({
           title: "Erro",
           description: "Não foi possível abrir o portal de assinatura. Erro: " + error.message,
@@ -70,6 +70,8 @@ const ProfileMenu = () => {
         });
         return;
       }
+
+      console.log('✅ Resposta da função customer-portal:', data);
 
       if (data?.url) {
         console.log('✅ Portal URL recebida:', data.url);
@@ -80,7 +82,7 @@ const ProfileMenu = () => {
           variant: "default"
         });
       } else {
-        console.error('❌ URL do portal não retornada');
+        console.error('❌ URL do portal não retornada na resposta:', data);
         toast({
           title: "Erro",
           description: "URL do portal não foi retornada pelo servidor",
@@ -88,7 +90,7 @@ const ProfileMenu = () => {
         });
       }
     } catch (error) {
-      console.error('❌ Erro ao abrir portal:', error);
+      console.error('❌ Erro geral ao abrir portal:', error);
       toast({
         title: "Erro",
         description: "Não foi possível abrir o portal de assinatura. Verifique se você possui uma assinatura ativa.",
@@ -116,12 +118,8 @@ const ProfileMenu = () => {
   const handleHelpClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('❓ Botão Ajuda clicado');
-    toast({
-      title: "Ajuda & Suporte",
-      description: "Funcionalidade em desenvolvimento",
-      variant: "default"
-    });
+    console.log('❓ Botão Ajuda clicado - redirecionando para FAQ');
+    navigate('/faq');
   };
 
   const handleProfileClick = (e: React.MouseEvent) => {
