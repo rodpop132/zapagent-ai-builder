@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -46,9 +47,12 @@ const ProfileMenu = () => {
     }
   };
 
-  const handleManageSubscription = async () => {
+  const handleManageSubscription = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     console.log('🎯 Botão Gerenciar Assinatura clicado');
     setLoadingPortal(true);
+    
     try {
       console.log('🎯 Abrindo portal do cliente...');
       
@@ -92,7 +96,9 @@ const ProfileMenu = () => {
     }
   };
 
-  const handleSettingsClick = () => {
+  const handleSettingsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     console.log('⚙️ Botão Configurações clicado');
     toast({
       title: "Configurações",
@@ -101,7 +107,9 @@ const ProfileMenu = () => {
     });
   };
 
-  const handleSecurityClick = () => {
+  const handleSecurityClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     console.log('🔒 Botão Segurança clicado');
     toast({
       title: "Segurança",
@@ -110,13 +118,29 @@ const ProfileMenu = () => {
     });
   };
 
-  const handleHelpClick = () => {
+  const handleHelpClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     console.log('❓ Botão Ajuda clicado');
     toast({
       title: "Ajuda & Suporte",
       description: "Funcionalidade em desenvolvimento",
       variant: "default"
     });
+  };
+
+  const handleProfileClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('👤 Botão Editar Perfil clicado');
+    setShowProfileModal(true);
+  };
+
+  const handleNotificationsClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('🔔 Botão Notificações clicado');
+    setShowNotificationsModal(true);
   };
 
   const getUserInitials = () => {
@@ -166,7 +190,7 @@ const ProfileMenu = () => {
           <DropdownMenuSeparator />
           
           <DropdownMenuItem 
-            onClick={() => setShowProfileModal(true)}
+            onClick={handleProfileClick}
             className="cursor-pointer p-2 md:p-3 hover:bg-gray-50 rounded-lg transition-colors"
           >
             <User className="mr-3 h-4 w-4 flex-shrink-0" />
@@ -177,7 +201,7 @@ const ProfileMenu = () => {
           </DropdownMenuItem>
           
           <DropdownMenuItem 
-            onClick={() => setShowNotificationsModal(true)}
+            onClick={handleNotificationsClick}
             className="cursor-pointer p-2 md:p-3 hover:bg-gray-50 rounded-lg transition-colors"
           >
             <Bell className="mr-3 h-4 w-4 flex-shrink-0" />
