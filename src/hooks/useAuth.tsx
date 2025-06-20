@@ -71,6 +71,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         email,
         password,
       });
+      
+      // Check if the error is related to unconfirmed email
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          // Try to check if it's an unconfirmed email by attempting to resend confirmation
+          const { error: resendError } = await supabase.auth.resend({
+            type: 'signup',
+            email: email,
+          });
+          
+          // If resend succeeds, it means the email exists but is unconfirmed
+          if (!resendError) {
+            return { 
+              data, 
+              error: { 
+                ...error, 
+                message: 'Por favor, confirme sua conta pelo email antes de fazer login.' 
+              } 
+            };
+          }
+        }
+      }
+      
       return { data, error };
     } catch (error) {
       return { error };

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -50,6 +49,10 @@ const Auth = () => {
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
             toast.error('Email ou senha incorretos');
+          } else if (error.message.includes('Email not confirmed')) {
+            toast.error('Por favor, confirme sua conta através do email enviado para você antes de fazer login.');
+          } else if (error.message.includes('signup_disabled')) {
+            toast.error('Por favor, confirme sua conta pelo email antes de fazer login.');
           } else {
             toast.error(`Erro no login: ${error.message}`);
           }
@@ -66,7 +69,7 @@ const Auth = () => {
             toast.error(`Erro no cadastro: ${error.message}`);
           }
         } else {
-          toast.success('Cadastro realizado com sucesso!');
+          toast.success('Cadastro realizado com sucesso! Verifique seu email para confirmar sua conta.');
         }
       }
     } catch (error) {
