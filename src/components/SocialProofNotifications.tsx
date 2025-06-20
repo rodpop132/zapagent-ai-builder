@@ -58,9 +58,9 @@ const SocialProofNotifications = () => {
   ];
 
   const plans = [
-    { name: 'Pro', color: 'bg-blue-100 text-blue-700', icon: <Zap className="h-4 w-4" /> },
-    { name: 'Ultra', color: 'bg-purple-100 text-purple-700', icon: <Crown className="h-4 w-4" /> },
-    { name: 'Premium', color: 'bg-yellow-100 text-yellow-700', icon: <Star className="h-4 w-4" /> }
+    { name: 'Grátis', color: 'bg-gray-100 text-gray-700', icon: <Star className="h-4 w-4" /> },
+    { name: 'Pro', color: 'bg-blue-100 text-blue-700', icon: <Crown className="h-4 w-4" /> },
+    { name: 'Ultra', color: 'bg-purple-100 text-purple-700', icon: <Zap className="h-4 w-4" /> }
   ];
 
   const generateNotification = (): SocialProofNotification => {
