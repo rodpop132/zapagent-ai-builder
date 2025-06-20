@@ -15,9 +15,11 @@ const AffiliateRegistrationForm = () => {
   const [loading, setLoading] = useState(false);
 
   const [formData, setFormData] = useState({
+    // Dados de conta
     email: '',
     password: '',
     confirmPassword: '',
+    // Dados de afiliado
     name: '',
     phone: '',
     instagram_handle: '',
@@ -27,22 +29,17 @@ const AffiliateRegistrationForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.email || !formData.name || !formData.password || !formData.confirmPassword) {
-      toast.error('Email, nome e senha são obrigatórios');
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('As senhas não coincidem');
-      return;
-    }
-
     setLoading(true);
 
     try {
       if (!user) {
-        // Criar conta primeiro
+        // Se não está logado, precisa criar conta primeiro
+        if (formData.password !== formData.confirmPassword) {
+          toast.error('As senhas não coincidem');
+          setLoading(false);
+          return;
+        }
+
         const { error: signUpError } = await signUp(
           formData.email, 
           formData.password, 
@@ -51,11 +48,12 @@ const AffiliateRegistrationForm = () => {
         
         if (signUpError) {
           toast.error('Erro ao criar conta: ' + signUpError.message);
+          setLoading(false);
           return;
         }
 
-        toast.success('Conta criada! Criando perfil de afiliado...');
-        // Aguardar autenticação
+        toast.success('Conta criada! Aguarde enquanto criamos seu perfil de afiliado...');
+        // Aguardar um pouco para o usuário ser autenticado
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
 
@@ -70,6 +68,8 @@ const AffiliateRegistrationForm = () => {
       });
 
       toast.success('Perfil de afiliado criado com sucesso!');
+      
+      // Redirecionar para a dashboard
       navigate('/afiliados/dashboard');
     } catch (error) {
       toast.error('Erro ao criar perfil');
@@ -81,43 +81,46 @@ const AffiliateRegistrationForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Dados da Conta</h3>
-        <div>
-          <Label htmlFor="email">E-mail *</Label>
-          <Input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            required
-          />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label htmlFor="password">Senha *</Label>
-            <Input
-              id="password"
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              required
-            />
+      {!user && (
+        <>
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Dados da Conta</h3>
+            <div>
+              <Label htmlFor="email">E-mail *</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                required
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="password">Senha *</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
           </div>
-          <div>
-            <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              value={formData.confirmPassword}
-              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-              required
-            />
-          </div>
-        </div>
-      </div>
-
-      <hr />
+          <hr />
+        </>
+      )}
 
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Dados do Afiliado</h3>
@@ -144,7 +147,7 @@ const AffiliateRegistrationForm = () => {
         </div>
 
         <div className="space-y-4">
-          <h4 className="font-semibold">Redes Sociais (Opcional)</h4>
+          <h4 className="font-medium">Redes Sociais (Opcional)</h4>
           
           <div>
             <Label htmlFor="instagram">Instagram</Label>
@@ -192,7 +195,7 @@ const AffiliateRegistrationForm = () => {
       </div>
 
       <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? 'Criando Perfil...' : 'Criar Perfil de Afiliado'}
+        {loading ? 'Criando Perfil...' : user ? 'Criar Perfil de Afiliado' : 'Criar Conta e Perfil'}
       </Button>
     </form>
   );
