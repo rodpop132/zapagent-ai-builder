@@ -28,17 +28,12 @@ const AffiliateRegistrationForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.email || !formData.name) {
-      toast.error('Email e nome são obrigatórios');
+    if (!formData.email || !formData.name || !formData.password || !formData.confirmPassword) {
+      toast.error('Email, nome e senha são obrigatórios');
       return;
     }
 
-    if (!user && (!formData.password || !formData.confirmPassword)) {
-      toast.error('Senha é obrigatória para criar conta');
-      return;
-    }
-
-    if (!user && formData.password !== formData.confirmPassword) {
+    if (formData.password !== formData.confirmPassword) {
       toast.error('As senhas não coincidem');
       return;
     }
@@ -86,46 +81,43 @@ const AffiliateRegistrationForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {!user && (
-        <>
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Dados da Conta</h3>
-            <div>
-              <Label htmlFor="email">E-mail *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                required
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="password">Senha *</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  required
-                />
-              </div>
-              <div>
-                <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  required
-                />
-              </div>
-            </div>
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Dados da Conta</h3>
+        <div>
+          <Label htmlFor="email">E-mail *</Label>
+          <Input
+            id="email"
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            required
+          />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="password">Senha *</Label>
+            <Input
+              id="password"
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              required
+            />
           </div>
-          <hr />
-        </>
-      )}
+          <div>
+            <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              value={formData.confirmPassword}
+              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              required
+            />
+          </div>
+        </div>
+      </div>
+
+      <hr />
 
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Dados do Afiliado</h3>
@@ -139,19 +131,6 @@ const AffiliateRegistrationForm = () => {
             required
           />
         </div>
-        
-        {user && (
-          <div>
-            <Label htmlFor="email-affiliate">E-mail *</Label>
-            <Input
-              id="email-affiliate"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
-            />
-          </div>
-        )}
 
         <div>
           <Label htmlFor="phone">Telefone</Label>
