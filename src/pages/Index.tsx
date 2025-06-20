@@ -11,6 +11,7 @@ import Footer from "@/components/Footer";
 import SupportWidget from "@/components/SupportWidget";
 import MetaPixel from "@/components/MetaPixel";
 import AffiliateTracker from "@/components/AffiliateTracker";
+import SocialProofNotifications from "@/components/SocialProofNotifications";
 
 const Index = () => {
   return (
@@ -27,6 +28,7 @@ const Index = () => {
       <FAQ />
       <Footer />
       <SupportWidget />
+      <SocialProofNotifications />
     </div>
   );
 };

@@ -15,6 +15,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import SupportNotifications from '@/components/SupportNotifications';
+import SocialProofNotifications from '@/components/SocialProofNotifications';
 
 interface Agent {
   id: string;
@@ -634,6 +635,7 @@ const Dashboard = () => {
 
       {/* Support Notifications */}
       <SupportNotifications />
+      <SocialProofNotifications />
     </div>
   );
 };
