@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Bot, MessageCircle, Settings, BarChart3, Crown, LogOut, Menu, RefreshCw } from 'lucide-react';
+import { Plus, Bot, MessageCircle, Settings, BarChart3, Crown, LogOut, Menu, RefreshCw, TrendingUp, Users, Activity } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import AgentCard from '@/components/AgentCard';
@@ -354,10 +354,10 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green mx-auto mb-4"></div>
-          <p className="text-gray-600">{t('userDashboard.loading')}</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-brand-green mx-auto mb-6 shadow-lg"></div>
+          <p className="text-gray-600 text-lg font-medium">{t('userDashboard.loading')}</p>
         </div>
       </div>
     );
@@ -367,23 +367,26 @@ const Dashboard = () => {
   const agentLimit = getAgentLimitByPlan(planType);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      {/* Enhanced Header */}
+      <header className="bg-white shadow-lg border-b border-gray-100 backdrop-blur-sm bg-white/95">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-brand-green rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">ZA</span>
+          <div className="flex justify-between items-center py-6">
+            <div className="flex items-center space-x-4">
+              <div className="w-10 h-10 bg-gradient-to-br from-brand-green to-green-600 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+                <span className="text-white font-bold text-lg">ZA</span>
               </div>
-              <h1 className="text-lg md:text-xl font-bold text-brand-dark">ZapAgent AI</h1>
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900">ZapAgent AI</h1>
+                <p className="text-sm text-gray-500 hidden md:block">Dashboard Profissional</p>
+              </div>
             </div>
             
             {/* Desktop Header Content */}
-            <div className="hidden md:flex items-center space-x-4">
+            <div className="hidden md:flex items-center space-x-6">
               <LanguageSelector />
-              <div className="flex items-center space-x-2">
-                <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-medium`}>
+              <div className="flex items-center space-x-3">
+                <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-semibold px-3 py-1 text-sm shadow-sm`}>
                   {getPlanDisplayName(subscription?.plan_type || 'free')}
                 </Badge>
                 <Button
@@ -391,9 +394,9 @@ const Dashboard = () => {
                   size="sm"
                   onClick={verifySubscription}
                   disabled={verifyingSubscription}
-                  className="text-blue-600 border-blue-600 hover:bg-blue-50 transition-all duration-200"
+                  className="text-blue-600 border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-all duration-200 shadow-sm"
                 >
-                  <RefreshCw className={`h-4 w-4 mr-1 ${verifyingSubscription ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`h-4 w-4 mr-2 ${verifyingSubscription ? 'animate-spin' : ''}`} />
                   {verifyingSubscription ? t('userDashboard.verifying') : t('userDashboard.verifyPlan')}
                 </Button>
                 {shouldShowUpgradeButton() && (
@@ -401,28 +404,33 @@ const Dashboard = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => setShowUpgradeModal(true)}
-                    className="text-brand-green border-brand-green hover:bg-brand-green hover:text-white transition-all duration-200 hover:scale-105"
+                    className="text-brand-green border-brand-green/30 hover:bg-brand-green hover:text-white transition-all duration-200 hover:scale-105 shadow-sm"
                   >
-                    <Crown className="h-4 w-4 mr-1" />
+                    <Crown className="h-4 w-4 mr-2" />
                     {getUpgradeButtonText()}
                   </Button>
                 )}
               </div>
               
-              <span className="text-sm text-gray-600 hidden lg:block">{t('userDashboard.welcome')}, {user?.email}</span>
-              <Button 
-                variant="outline" 
-                onClick={handleSignOut}
-                className="hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all duration-200"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                {t('userDashboard.logout')}
-              </Button>
+              <div className="flex items-center space-x-3">
+                <div className="text-right hidden lg:block">
+                  <p className="text-sm font-medium text-gray-900">{t('userDashboard.welcome')}</p>
+                  <p className="text-sm text-gray-500">{user?.email}</p>
+                </div>
+                <Button 
+                  variant="outline" 
+                  onClick={handleSignOut}
+                  className="hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-all duration-200 shadow-sm"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  {t('userDashboard.logout')}
+                </Button>
+              </div>
             </div>
 
             {/* Mobile Menu Button */}
             <button
-              className="md:hidden p-2 text-gray-600 hover:text-gray-900 transition-colors"
+              className="md:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               <Menu className="h-6 w-6" />
@@ -431,7 +439,7 @@ const Dashboard = () => {
 
           {/* Mobile Menu */}
           {mobileMenuOpen && (
-            <div className="md:hidden border-t border-gray-200 py-4">
+            <div className="md:hidden border-t border-gray-100 py-4 bg-gray-50/50 rounded-b-lg">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <LanguageSelector />
@@ -467,7 +475,10 @@ const Dashboard = () => {
                     )}
                   </div>
                 </div>
-                <p className="text-sm text-gray-600">{t('userDashboard.welcome')}, {user?.email}</p>
+                <div className="text-center py-2">
+                  <p className="text-sm font-medium text-gray-900">{t('userDashboard.welcome')}</p>
+                  <p className="text-sm text-gray-600">{user?.email}</p>
+                </div>
                 <Button 
                   variant="outline" 
                   onClick={handleSignOut}
@@ -482,15 +493,16 @@ const Dashboard = () => {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-        {/* Alerta de limite de mensagens */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        {/* Enhanced Limit Warning */}
         {shouldShowLimitWarning() && (
-          <Alert className="mb-6 border-yellow-200 bg-yellow-50">
-            <AlertDescription className="text-yellow-800">
+          <Alert className="mb-8 border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 shadow-sm">
+            <Activity className="h-4 w-4" />
+            <AlertDescription className="text-amber-800 font-medium">
               {t('userDashboard.limitWarning')}
               <button 
                 onClick={() => setShowUpgradeModal(true)}
-                className="ml-1 text-brand-green hover:underline font-medium"
+                className="ml-2 text-brand-green hover:underline font-semibold transition-colors"
               >
                 {t('userDashboard.planUpgrade')}
               </button>
@@ -498,97 +510,130 @@ const Dashboard = () => {
           </Alert>
         )}
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-6 md:mb-8">
+        {/* Enhanced Stats Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
           {[
-            { icon: Bot, label: t('userDashboard.agents'), value: `${agents.length}/${agentLimit === 999999 ? '∞' : agentLimit}`, color: 'text-brand-green' },
+            { 
+              icon: Bot, 
+              label: t('userDashboard.agents'), 
+              value: `${agents.length}/${agentLimit === 999999 ? '∞' : agentLimit}`, 
+              color: 'from-brand-green to-green-600',
+              bgColor: 'bg-green-50',
+              iconColor: 'text-green-600'
+            },
             { 
               icon: MessageCircle, 
               label: t('userDashboard.messages'), 
               value: getMessagesDisplay(), 
-              color: 'text-blue-600'
+              color: 'from-blue-500 to-blue-600',
+              bgColor: 'bg-blue-50',
+              iconColor: 'text-blue-600'
             },
             { 
               icon: BarChart3, 
               label: t('userDashboard.plan'), 
               value: getPlanDisplayName(subscription?.plan_type || 'free'), 
-              color: 'text-purple-600'
+              color: 'from-purple-500 to-purple-600',
+              bgColor: 'bg-purple-50',
+              iconColor: 'text-purple-600'
             },
             { 
-              icon: Settings, 
+              icon: TrendingUp, 
               label: t('userDashboard.active'), 
               value: agents.filter(agent => agent.is_active).length, 
-              color: 'text-orange-600'
+              color: 'from-orange-500 to-orange-600',
+              bgColor: 'bg-orange-50',
+              iconColor: 'text-orange-600'
             }
           ].map((stat, index) => (
             <Card 
               key={index} 
-              className="hover:shadow-lg transition-all hover:scale-105"
+              className="hover:shadow-xl transition-all duration-300 hover:scale-105 border-0 shadow-lg bg-white/80 backdrop-blur-sm group"
             >
               <CardContent className="p-4 md:p-6">
-                <div className="flex items-center">
-                  <stat.icon className={`h-6 w-6 md:h-8 md:w-8 ${stat.color}`} />
-                  <div className="ml-3 md:ml-4 min-w-0 flex-1">
-                    <p className="text-xs md:text-sm font-medium text-gray-600 truncate">{stat.label}</p>
-                    <p className="text-lg md:text-2xl font-bold text-gray-900 truncate">{stat.value}</p>
+                <div className="flex items-center justify-between">
+                  <div className={`p-3 rounded-xl ${stat.bgColor} group-hover:scale-110 transition-transform duration-300`}>
+                    <stat.icon className={`h-6 w-6 md:h-7 md:w-7 ${stat.iconColor}`} />
+                  </div>
+                  <div className="text-right min-w-0 flex-1 ml-3">
+                    <p className="text-xs md:text-sm font-medium text-gray-600 mb-1">{stat.label}</p>
+                    <p className="text-lg md:text-2xl font-bold text-gray-900 group-hover:scale-105 transition-transform duration-300">
+                      {stat.value}
+                    </p>
                   </div>
                 </div>
+                <div className={`h-1 w-full bg-gradient-to-r ${stat.color} rounded-full mt-3 md:mt-4 opacity-20 group-hover:opacity-100 transition-opacity duration-300`}></div>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* Agents Section */}
+        {/* Enhanced Agents Section */}
         <div className="mb-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
-            <h2 className="text-xl md:text-2xl font-bold text-gray-900">{t('userDashboard.myAgents')}</h2>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">{t('userDashboard.myAgents')}</h2>
+              <p className="text-gray-600">Gerencie seus assistentes virtuais</p>
+            </div>
             <Button 
               onClick={handleCreateAgent}
-              className="bg-brand-green hover:bg-brand-green/90 text-white transition-all duration-200 hover:scale-105 w-full sm:w-auto"
+              className="bg-gradient-to-r from-brand-green to-green-600 hover:from-brand-green/90 hover:to-green-600/90 text-white transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl w-full sm:w-auto"
               disabled={loading}
+              size="lg"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-5 w-5 mr-2" />
               {loading ? t('userDashboard.loading') : t('userDashboard.createAgent')}
             </Button>
           </div>
 
-          {/* Plan info message */}
+          {/* Enhanced Plan info message */}
           {!loading && !canCreateAgent() && (
-            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800">
-                <strong>{t('userDashboard.limitReached')}:</strong> {t('userDashboard.limitInfo', { planName: getPlanDisplayName(planType), limit: agentLimit })}
-                <button 
-                  onClick={() => setShowUpgradeModal(true)}
-                  className="ml-1 text-brand-green hover:underline font-medium"
-                >
-                  {t('userDashboard.planUpgrade')}
-                </button>
-              </p>
+            <div className="mb-8 p-6 bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl shadow-sm">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-yellow-100 rounded-lg">
+                  <Crown className="h-5 w-5 text-yellow-600" />
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-yellow-800 mb-1">{t('userDashboard.limitReached')}</h4>
+                  <p className="text-sm text-yellow-700">
+                    {t('userDashboard.limitInfo', { planName: getPlanDisplayName(planType), limit: agentLimit })}
+                    <button 
+                      onClick={() => setShowUpgradeModal(true)}
+                      className="ml-2 text-brand-green hover:underline font-semibold transition-colors"
+                    >
+                      {t('userDashboard.planUpgrade')}
+                    </button>
+                  </p>
+                </div>
+              </div>
             </div>
           )}
 
           {agents.length === 0 ? (
-            <Card>
-              <CardContent className="p-8 md:p-12 text-center">
-                <Bot className="h-12 w-12 md:h-16 md:w-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+              <CardContent className="p-8 md:p-16 text-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                  <Bot className="h-10 w-10 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">
                   {t('userDashboard.noAgentsYet')}
                 </h3>
-                <p className="text-gray-600 mb-6 text-sm md:text-base px-4">
+                <p className="text-gray-600 mb-8 text-base max-w-md mx-auto leading-relaxed">
                   {t('userDashboard.noAgentsDescription')}
                 </p>
                 <Button 
                   onClick={handleCreateAgent}
-                  className="bg-brand-green hover:bg-brand-green/90 text-white transition-all duration-200 hover:scale-105"
+                  className="bg-gradient-to-r from-brand-green to-green-600 hover:from-brand-green/90 hover:to-green-600/90 text-white transition-all duration-300 hover:scale-105 shadow-lg"
                   disabled={loading}
+                  size="lg"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-5 w-5 mr-2" />
                   {loading ? t('userDashboard.loading') : t('userDashboard.createFirstAgent')}
                 </Button>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
               {agents.map((agent) => (
                 <AgentCard
                   key={agent.id}
