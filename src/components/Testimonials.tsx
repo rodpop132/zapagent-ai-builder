@@ -10,7 +10,7 @@ const testimonials = [
     company: "Loja Virtual SP",
     rating: 5,
     text: "O ZapAgent AI revolucionou nosso atendimento! Conseguimos responder 10x mais clientes com a mesma qualidade.",
-    avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face"
+    avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&h=150&fit=crop&crop=face"
   },
   {
     name: "João Santos",
@@ -42,7 +42,7 @@ const testimonials = [
     company: "Moda & Estilo",
     rating: 5,
     text: "Nossos clientes adoram a rapidez nas respostas. O atendimento ficou disponível 24/7 sem custos extras.",
-    avatar: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=150&h=150&fit=crop&crop=face"
+    avatar: "https://images.unsplash.com/photo-1594736797933-d0d13b5a8a56?w=150&h=150&fit=crop&crop=face"
   },
   {
     name: "Rafael Lima",
