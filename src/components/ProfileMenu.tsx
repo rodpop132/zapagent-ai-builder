@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -17,6 +16,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import ProfileModal from './ProfileModal';
 import NotificationsModal from './NotificationsModal';
+import SettingsModal from './SettingsModal';
+import SecurityModal from './SecurityModal';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const ProfileMenu = () => {
@@ -26,6 +27,8 @@ const ProfileMenu = () => {
   const isMobile = useIsMobile();
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showNotificationsModal, setShowNotificationsModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showSecurityModal, setShowSecurityModal] = useState(false);
   const [loadingPortal, setLoadingPortal] = useState(false);
 
   const handleSignOut = async () => {
@@ -100,22 +103,14 @@ const ProfileMenu = () => {
     e.preventDefault();
     e.stopPropagation();
     console.log('⚙️ Botão Configurações clicado');
-    toast({
-      title: "Configurações",
-      description: "Funcionalidade em desenvolvimento",
-      variant: "default"
-    });
+    setShowSettingsModal(true);
   };
 
   const handleSecurityClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     console.log('🔒 Botão Segurança clicado');
-    toast({
-      title: "Segurança",
-      description: "Funcionalidade em desenvolvimento",
-      variant: "default"
-    });
+    setShowSecurityModal(true);
   };
 
   const handleHelpClick = (e: React.MouseEvent) => {
@@ -283,6 +278,16 @@ const ProfileMenu = () => {
       <NotificationsModal 
         isOpen={showNotificationsModal} 
         onClose={() => setShowNotificationsModal(false)} 
+      />
+      
+      <SettingsModal 
+        isOpen={showSettingsModal} 
+        onClose={() => setShowSettingsModal(false)} 
+      />
+      
+      <SecurityModal 
+        isOpen={showSecurityModal} 
+        onClose={() => setShowSecurityModal(false)} 
       />
     </>
   );
