@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -48,6 +47,7 @@ const ProfileMenu = () => {
   };
 
   const handleManageSubscription = async () => {
+    console.log('🎯 Botão Gerenciar Assinatura clicado');
     setLoadingPortal(true);
     try {
       console.log('🎯 Abrindo portal do cliente...');
@@ -56,10 +56,16 @@ const ProfileMenu = () => {
       
       if (error) {
         console.error('❌ Erro ao criar portal:', error);
-        throw error;
+        toast({
+          title: "Erro",
+          description: "Não foi possível abrir o portal de assinatura. Erro: " + error.message,
+          variant: "destructive"
+        });
+        return;
       }
 
       if (data?.url) {
+        console.log('✅ Portal URL recebida:', data.url);
         window.open(data.url, '_blank');
         toast({
           title: "Portal do Cliente",
@@ -67,7 +73,12 @@ const ProfileMenu = () => {
           variant: "default"
         });
       } else {
-        throw new Error('URL do portal não retornada');
+        console.error('❌ URL do portal não retornada');
+        toast({
+          title: "Erro",
+          description: "URL do portal não foi retornada pelo servidor",
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error('❌ Erro ao abrir portal:', error);
@@ -82,6 +93,7 @@ const ProfileMenu = () => {
   };
 
   const handleSettingsClick = () => {
+    console.log('⚙️ Botão Configurações clicado');
     toast({
       title: "Configurações",
       description: "Funcionalidade em desenvolvimento",
@@ -90,6 +102,7 @@ const ProfileMenu = () => {
   };
 
   const handleSecurityClick = () => {
+    console.log('🔒 Botão Segurança clicado');
     toast({
       title: "Segurança",
       description: "Funcionalidade em desenvolvimento",
@@ -98,6 +111,7 @@ const ProfileMenu = () => {
   };
 
   const handleHelpClick = () => {
+    console.log('❓ Botão Ajuda clicado');
     toast({
       title: "Ajuda & Suporte",
       description: "Funcionalidade em desenvolvimento",
