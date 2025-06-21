@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -12,6 +11,7 @@ import CreateAgentModal from '@/components/CreateAgentModal';
 import PlanUpgradeModal from '@/components/PlanUpgradeModal';
 import LanguageSelector from '@/components/LanguageSelector';
 import ProfileMenu from '@/components/ProfileMenu';
+import GlobalUsageStats from '@/components/GlobalUsageStats';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -481,6 +481,13 @@ const Dashboard = () => {
               </button>
             </AlertDescription>
           </Alert>
+        )}
+
+        {/* Estatísticas Globais de Uso */}
+        {agents.length > 0 && (
+          <div className="mb-8">
+            <GlobalUsageStats agents={agents} subscription={subscription} />
+          </div>
         )}
 
         {/* Enhanced Stats Cards */}

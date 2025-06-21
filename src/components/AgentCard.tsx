@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import WhatsAppStatus from './WhatsAppStatus';
 import EditAgentModal from './EditAgentModal';
 import AgentHistory from './AgentHistory';
+import MessagesUsageCard from './MessagesUsageCard';
 import { ZapAgentService } from '@/services/zapAgentService';
 
 interface Agent {
@@ -42,6 +44,7 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showUsageDetails, setShowUsageDetails] = useState(false);
   const [whatsappStatus, setWhatsappStatus] = useState<'connected' | 'pending'>('pending');
   const [agentStats, setAgentStats] = useState<any>(null);
   const { toast } = useToast();
@@ -188,6 +191,14 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
     }
   };
 
+  const handleLimitReached = () => {
+    toast({
+      title: "Limite de mensagens atingido",
+      description: "Este agente atingiu o limite de mensagens. Considere fazer upgrade do seu plano.",
+      variant: "destructive"
+    });
+  };
+
   const formatPhoneNumber = (phone: string) => {
     return phone.replace(/(\d{3})(\d{3})(\d{3})(\d{3})/, '+$1 $2 $3 $4');
   };
@@ -256,6 +267,15 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
                   >
                     <Edit className="h-4 w-4 mr-2" />
                     Configurar Bot
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => {
+                      setShowUsageDetails(!showUsageDetails);
+                    }}
+                    className="cursor-pointer hover:bg-gray-50"
+                  >
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    {showUsageDetails ? 'Ocultar' : 'Ver'} Uso Detalhado
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => {
@@ -351,6 +371,18 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
             </Button>
           </div>
         </CardContent>
+
+        {/* Detalhes de uso de mensagens */}
+        {showUsageDetails && (
+          <CardContent className="pt-0">
+            <MessagesUsageCard
+              phoneNumber={agent.phone_number}
+              agentName={agent.name}
+              subscription={subscription}
+              onLimitReached={handleLimitReached}
+            />
+          </CardContent>
+        )}
 
         {/* Histórico de conversas */}
         {showHistory && (
