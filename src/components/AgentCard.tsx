@@ -10,7 +10,6 @@ import { supabase } from '@/integrations/supabase/client';
 import WhatsAppStatus from './WhatsAppStatus';
 import EditAgentModal from './EditAgentModal';
 import AgentHistory from './AgentHistory';
-import MessagesUsageCard from './MessagesUsageCard';
 import { ZapAgentService } from '@/services/zapAgentService';
 
 interface Agent {
@@ -44,7 +43,6 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [showUsageDetails, setShowUsageDetails] = useState(false);
   const [whatsappStatus, setWhatsappStatus] = useState<'connected' | 'pending'>('pending');
   const [agentStats, setAgentStats] = useState<any>(null);
   const { toast } = useToast();
@@ -270,15 +268,6 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
                   </DropdownMenuItem>
                   <DropdownMenuItem 
                     onClick={() => {
-                      setShowUsageDetails(!showUsageDetails);
-                    }}
-                    className="cursor-pointer hover:bg-gray-50"
-                  >
-                    <MessageCircle className="h-4 w-4 mr-2" />
-                    {showUsageDetails ? 'Ocultar' : 'Ver'} Uso Detalhado
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => {
                       setShowHistory(!showHistory);
                       if (!showHistory) loadAgentStats();
                     }}
@@ -371,18 +360,6 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
             </Button>
           </div>
         </CardContent>
-
-        {/* Detalhes de uso de mensagens */}
-        {showUsageDetails && (
-          <CardContent className="pt-0">
-            <MessagesUsageCard
-              phoneNumber={agent.phone_number}
-              agentName={agent.name}
-              subscription={subscription}
-              onLimitReached={handleLimitReached}
-            />
-          </CardContent>
-        )}
 
         {/* Histórico de conversas */}
         {showHistory && (
