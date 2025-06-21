@@ -11,11 +11,11 @@ import CreateAgentModal from '@/components/CreateAgentModal';
 import PlanUpgradeModal from '@/components/PlanUpgradeModal';
 import LanguageSelector from '@/components/LanguageSelector';
 import ProfileMenu from '@/components/ProfileMenu';
-import GlobalUsageStats from '@/components/GlobalUsageStats';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import SupportNotifications from '@/components/SupportNotifications';
+import { ZapAgentService } from '@/services/zapAgentService';
 
 interface Agent {
   id: string;
@@ -38,6 +38,12 @@ interface Subscription {
   is_unlimited?: boolean;
 }
 
+interface GlobalUsageData {
+  totalMessagesUsed: number;
+  activeAgents: number;
+  agentsCount: number;
+}
+
 const Dashboard = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
@@ -45,11 +51,61 @@ const Dashboard = () => {
   
   const [agents, setAgents] = useState<Agent[]>([]);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
+  const [globalUsage, setGlobalUsage] = useState<GlobalUsageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [verifyingSubscription, setVerifyingSubscription] = useState(false);
   const { toast } = useToast();
+
+  const getMessagesLimitByPlan = (planType: string) => {
+    switch (planType) {
+      case 'free': return 30;
+      case 'pro': return 10000;
+      case 'ultra': return 999999;
+      case 'unlimited': return 999999;
+      default: return 30;
+    }
+  };
+
+  const loadGlobalUsage = async () => {
+    if (!user?.id || agents.length === 0) return;
+    
+    try {
+      console.log('📊 Carregando uso global de mensagens...');
+      
+      // Buscar dados de todos os agentes
+      const promises = agents.map(agent => 
+        ZapAgentService.getMessagesUsed(user.id, agent.phone_number)
+      );
+      
+      const results = await Promise.all(promises);
+      
+      // Calcular totais
+      const totalMessagesUsed = results.reduce((sum, data) => 
+        sum + (data?.mensagensUsadas || 0), 0
+      );
+      
+      const activeAgents = results.reduce((sum, data) => 
+        sum + (data?.agentesAtivos || 0), 0
+      );
+
+      setGlobalUsage({
+        totalMessagesUsed,
+        activeAgents,
+        agentsCount: agents.length
+      });
+      
+      console.log('✅ Uso global carregado:', {
+        totalMessagesUsed,
+        activeAgents,
+        agentsCount: agents.length
+      });
+      
+    } catch (error) {
+      console.error('❌ Erro ao carregar uso global:', error);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -57,6 +113,16 @@ const Dashboard = () => {
       loadData();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (agents.length > 0) {
+      loadGlobalUsage();
+      
+      // Atualizar a cada 30 segundos
+      const interval = setInterval(loadGlobalUsage, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [agents, user?.id]);
 
   const loadData = async () => {
     try {
@@ -169,16 +235,6 @@ const Dashboard = () => {
       case 'ultra': return 999999;
       case 'unlimited': return 999999;
       default: return 1;
-    }
-  };
-
-  const getMessagesLimitByPlan = (planType: string) => {
-    switch (planType) {
-      case 'free': return 30;
-      case 'pro': return 1000;
-      case 'ultra': return 999999;
-      case 'unlimited': return 999999;
-      default: return 30;
     }
   };
 
@@ -300,22 +356,18 @@ const Dashboard = () => {
     return t(`userDashboard.planNames.${planType}`) || t('userDashboard.planNames.free');
   };
 
-  const getTotalMessagesUsed = () => {
-    return agents.reduce((total, agent) => total + (agent.messages_used || 0), 0);
-  };
-
   const getMessagesDisplay = () => {
     if (subscription?.is_unlimited) {
-      return '∞ Ilimitado';
+      return '∞';
     }
-    const totalUsed = getTotalMessagesUsed();
+    const totalUsed = globalUsage?.totalMessagesUsed || 0;
     const limit = getMessagesLimitByPlan(subscription?.plan_type || 'free');
     return `${totalUsed}/${limit}`;
   };
 
   const shouldShowLimitWarning = () => {
     if (subscription?.is_unlimited) return false;
-    const totalUsed = getTotalMessagesUsed();
+    const totalUsed = globalUsage?.totalMessagesUsed || 0;
     const limit = getMessagesLimitByPlan(subscription?.plan_type || 'free');
     return totalUsed >= limit * 0.8;
   };
@@ -483,14 +535,7 @@ const Dashboard = () => {
           </Alert>
         )}
 
-        {/* Estatísticas Globais de Uso */}
-        {agents.length > 0 && (
-          <div className="mb-8">
-            <GlobalUsageStats agents={agents} subscription={subscription} />
-          </div>
-        )}
-
-        {/* Enhanced Stats Cards */}
+        {/* Enhanced Stats Cards with Real Data */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
           {[
             { 
@@ -507,7 +552,8 @@ const Dashboard = () => {
               value: getMessagesDisplay(), 
               color: 'from-blue-500 to-blue-600',
               bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-              iconColor: 'text-blue-600 dark:text-blue-400'
+              iconColor: 'text-blue-600 dark:text-blue-400',
+              loading: !globalUsage && agents.length > 0
             },
             { 
               icon: BarChart3, 
@@ -520,10 +566,11 @@ const Dashboard = () => {
             { 
               icon: TrendingUp, 
               label: t('userDashboard.active'), 
-              value: agents.filter(agent => agent.is_active).length, 
+              value: globalUsage?.activeAgents || agents.filter(agent => agent.is_active).length, 
               color: 'from-orange-500 to-orange-600',
               bgColor: 'bg-orange-50 dark:bg-orange-900/20',
-              iconColor: 'text-orange-600 dark:text-orange-400'
+              iconColor: 'text-orange-600 dark:text-orange-400',
+              loading: !globalUsage && agents.length > 0
             }
           ].map((stat, index) => (
             <Card 
@@ -538,7 +585,11 @@ const Dashboard = () => {
                   <div className="text-right min-w-0 flex-1 ml-3">
                     <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">{stat.label}</p>
                     <p className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white group-hover:scale-105 transition-transform duration-300">
-                      {stat.value}
+                      {stat.loading ? (
+                        <RefreshCw className="h-5 w-5 animate-spin inline" />
+                      ) : (
+                        stat.value
+                      )}
                     </p>
                   </div>
                 </div>
