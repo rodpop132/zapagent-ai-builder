@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,7 @@ import { Bot, Settings, MessageCircle, Phone, Users, MoreVertical, Edit, History
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import WhatsAppStatus from './WhatsAppStatus';
 import EditAgentModal from './EditAgentModal';
 import AgentHistory from './AgentHistory';
@@ -45,6 +47,7 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
   const [whatsappStatus, setWhatsappStatus] = useState<'connected' | 'pending'>('pending');
   const [agentStats, setAgentStats] = useState<any>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const getMessagesLimitByPlan = (planType: string) => {
     switch (planType) {
@@ -128,6 +131,15 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
   };
 
   const handleSendTestMessage = async () => {
+    if (!user) {
+      toast({
+        title: "Usuário não autenticado",
+        description: "Faça login para testar mensagens",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (whatsappStatus !== 'connected') {
       toast({
         title: "WhatsApp não conectado",
@@ -158,16 +170,12 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
       const prompt = agent.personality_prompt || `Você é um assistente virtual para ${agent.business_type}. Seja prestativo e educado.`;
       const testMessage = 'Olá! Esta é uma mensagem de teste do sistema.';
       
-      // Importar dinâmicamente para evitar dependência circular
-      const { MessagesPersistenceService } = await import('@/services/messagesPersistenceService');
-      const { useAuth } = await import('@/hooks/useAuth');
-      
       // Enviar mensagem com persistência
       const response = await ZapAgentService.sendMessage(
         agent.phone_number,
         testMessage,
         prompt,
-        agent.user_id, // userId do agente
+        user.id, // userId do usuário autenticado
         agent.id, // agentId
         agent.name // agentName
       );
@@ -373,7 +381,7 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
         </CardContent>
 
         {/* Histórico de conversas */}
-        {showHistory && (
+        {showHistory && user && (
           <CardContent className="pt-0">
             <AgentHistory 
               phoneNumber={agent.phone_number}
