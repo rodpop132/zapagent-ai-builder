@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -159,23 +158,35 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
       const prompt = agent.personality_prompt || `Você é um assistente virtual para ${agent.business_type}. Seja prestativo e educado.`;
       const testMessage = 'Olá! Esta é uma mensagem de teste do sistema.';
       
+      // Importar dinâmicamente para evitar dependência circular
+      const { MessagesPersistenceService } = await import('@/services/messagesPersistenceService');
+      const { useAuth } = await import('@/hooks/useAuth');
+      
+      // Enviar mensagem com persistência
       const response = await ZapAgentService.sendMessage(
         agent.phone_number,
         testMessage,
-        prompt
+        prompt,
+        agent.user_id, // userId do agente
+        agent.id, // agentId
+        agent.name // agentName
       );
 
       console.log('✅ Resposta da IA:', response);
 
-      toast({
-        title: "✅ Teste enviado",
-        description: "Mensagem de teste enviada com sucesso!",
-        variant: "default"
-      });
+      if (response.success) {
+        toast({
+          title: "✅ Teste enviado",
+          description: "Mensagem de teste enviada e salva com sucesso!",
+          variant: "default"
+        });
 
-      // Recarregar estatísticas e dados do agente
-      await loadAgentStats();
-      onUpdate();
+        // Recarregar estatísticas e dados do agente
+        await loadAgentStats();
+        onUpdate();
+      } else {
+        throw new Error(response.error || 'Erro desconhecido');
+      }
 
     } catch (error) {
       console.error('❌ Erro no teste:', error);

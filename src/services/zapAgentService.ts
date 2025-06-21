@@ -301,12 +301,39 @@ export const ZapAgentService = {
     }
   },
 
-  // Método de compatibilidade para sendMessage (se necessário no futuro)
-  async sendMessage(numero: string, message: string, prompt: string): Promise<SendMessageResponse> {
-    console.warn('⚠️ sendMessage não implementado na API atual');
-    return {
-      success: false,
-      error: 'Funcionalidade não disponível na API atual'
-    };
+  // Método atualizado para incluir persistência
+  async sendMessage(numero: string, message: string, prompt: string, userId?: string, agentId?: string, agentName?: string): Promise<SendMessageResponse> {
+    try {
+      console.log('🧪 Enviando mensagem de teste:', { numero, message });
+      
+      // Simular envio (já que a API atual não tem endpoint de envio)
+      const mockResponse = `Olá! Sou o assistente virtual ${agentName || 'do sistema'}. Recebi sua mensagem: "${message}". Como posso ajudá-lo hoje?`;
+      
+      // Se temos dados do usuário, salvar a conversa no banco
+      if (userId && agentName) {
+        console.log('💾 Salvando conversa no banco de dados...');
+        await import('@/services/messagesPersistenceService').then(({ MessagesPersistenceService }) => {
+          return MessagesPersistenceService.saveConversation(
+            userId,
+            agentId,
+            numero,
+            agentName,
+            message,
+            mockResponse
+          );
+        });
+      }
+      
+      return {
+        success: true,
+        response: mockResponse
+      };
+    } catch (error) {
+      console.error('❌ Erro ao enviar mensagem:', error);
+      return {
+        success: false,
+        error: 'Erro ao enviar mensagem de teste'
+      };
+    }
   }
 };

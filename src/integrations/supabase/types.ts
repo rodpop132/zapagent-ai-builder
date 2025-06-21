@@ -233,6 +233,42 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_conversations: {
+        Row: {
+          agent_id: string | null
+          agent_name: string
+          bot_response: string
+          created_at: string
+          id: string
+          phone_number: string
+          updated_at: string
+          user_id: string
+          user_message: string
+        }
+        Insert: {
+          agent_id?: string | null
+          agent_name: string
+          bot_response: string
+          created_at?: string
+          id?: string
+          phone_number: string
+          updated_at?: string
+          user_id: string
+          user_message: string
+        }
+        Update: {
+          agent_id?: string | null
+          agent_name?: string
+          bot_response?: string
+          created_at?: string
+          id?: string
+          phone_number?: string
+          updated_at?: string
+          user_id?: string
+          user_message?: string
+        }
+        Relationships: []
+      }
       agent_messages: {
         Row: {
           agent_id: string | null
@@ -267,6 +303,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      agent_statistics: {
+        Row: {
+          agent_name: string
+          created_at: string
+          id: string
+          last_message_at: string | null
+          phone_number: string
+          total_messages: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agent_name: string
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          phone_number: string
+          total_messages?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agent_name?: string
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          phone_number?: string
+          total_messages?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       agents: {
         Row: {
