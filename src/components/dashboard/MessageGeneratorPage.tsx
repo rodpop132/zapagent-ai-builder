@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Copy, RefreshCw, MessageCircle, Lightbulb, Zap } from 'lucide-react';
+import { Sparkles, Copy, RefreshCw, MessageCircle, Lightbulb, Zap, Crown } from 'lucide-react';
 import { toast } from 'sonner';
 
 const MessageGeneratorPage = () => {
@@ -44,36 +44,53 @@ const MessageGeneratorPage = () => {
 
     setIsGenerating(true);
     
-    // Simulação de geração de mensagem (aqui você implementaria a chamada para a IA)
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Exemplo de resposta gerada
-    const responses = {
-      professional: {
-        response: `Olá! Obrigado pelo seu contato. Em relação à sua solicitação, terei o prazer em ajudá-lo. Permita-me esclarecer todas as suas dúvidas de forma detalhada para que possamos oferecer a melhor solução para suas necessidades.`,
-        'follow-up': `Espero que esteja bem! Gostaria de dar seguimento ao nosso último contato. Ficou alguma dúvida pendente que eu possa esclarecer? Estou à disposição para ajudá-lo com qualquer informação adicional que precise.`,
-        sales: `Fico feliz com seu interesse! Temos excelentes opções que certamente atenderão suas expectativas. Gostaria de apresentar algumas alternativas especiais que preparei especificamente para seu perfil. Quando seria um bom momento para conversarmos?`,
-        support: `Compreendo sua situação e estou aqui para ajudar. Vou analisar cuidadosamente sua solicitação e providenciar uma solução adequada. Pode contar com nosso suporte completo para resolver esta questão da melhor forma possível.`
-      },
-      friendly: {
-        response: `Oi! Que bom falar com você! 😊 Vi sua mensagem e vou te ajudar com muito prazer. Deixa eu te explicar tudo direitinho para esclarecer suas dúvidas, ok?`,
-        'follow-up': `Oi! Tudo bem? Queria saber como você está e se consegui te ajudar direito da última vez. Se tiver mais alguma coisa que eu possa fazer por você, é só falar! 😄`,
-        sales: `Que legal que você se interessou! 🎉 Tenho certeza que temos o que você está procurando. Preparei algumas opções incríveis que acho que você vai amar. Quer que eu te conte mais sobre elas?`,
-        support: `Oi! Entendi seu problema e vou te ajudar a resolver isso rapidinho! 💪 Pode ficar tranquilo que vamos encontrar a melhor solução juntos. Conte comigo!`
-      }
-    };
+    try {
+      console.log('🤖 Enviando para API de IA...', {
+        mensagem: clientMessage,
+        tom: selectedTone,
+        tipo: selectedType
+      });
 
-    const currentTone = selectedTone as keyof typeof responses;
-    const currentType = selectedType as keyof typeof responses[typeof currentTone];
-    
-    setGeneratedMessage(responses[currentTone]?.[currentType] || responses.professional.response);
-    setIsGenerating(false);
-    toast.success('Mensagem gerada com sucesso!');
+      const response = await fetch('https://ia-resposters.onrender.com/gerar-resposta-profissional', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          mensagem: clientMessage.trim(),
+          tom: selectedTone,
+          tipo: selectedType
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro HTTP: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ Resposta da IA recebida:', data);
+
+      if (data.resposta) {
+        setGeneratedMessage(data.resposta);
+        toast.success('Mensagem gerada com sucesso!');
+      } else {
+        throw new Error('Resposta inválida da API');
+      }
+
+    } catch (error) {
+      console.error('❌ Erro ao gerar mensagem:', error);
+      toast.error('❌ Erro ao gerar resposta. Tente novamente.');
+      setGeneratedMessage('');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const copyMessage = () => {
-    navigator.clipboard.writeText(generatedMessage);
-    toast.success('Mensagem copiada para a área de transferência!');
+    if (generatedMessage) {
+      navigator.clipboard.writeText(generatedMessage);
+      toast.success('Mensagem copiada para a área de transferência!');
+    }
   };
 
   const useExample = (message: string) => {
@@ -85,7 +102,7 @@ const MessageGeneratorPage = () => {
       {/* Título */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Gerador de Mensagens com IA</h1>
-        <p className="text-gray-600 dark:text-gray-400">Crie respostas profissionais e personalizadas para seus clientes</p>
+        <p className="text-gray-600 dark:text-gray-400">Crie respostas profissionais e personalizadas para seus clientes usando inteligência artificial</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -169,9 +186,10 @@ const MessageGeneratorPage = () => {
               <Textarea
                 placeholder="Cole aqui a mensagem que o cliente enviou..."
                 value={clientMessage}
-                onChange={(e) => setClientMessage(e.target.value)}
+                onChange={(e) => setClientMessage(e.target.value.slice(0, 500))}
                 rows={4}
                 className="w-full"
+                maxLength={500}
               />
               <div className="flex justify-between items-center mt-4">
                 <p className="text-sm text-gray-500">
@@ -185,7 +203,7 @@ const MessageGeneratorPage = () => {
                   {isGenerating ? (
                     <>
                       <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Gerando...
+                      Gerando com IA...
                     </>
                   ) : (
                     <>
@@ -202,7 +220,7 @@ const MessageGeneratorPage = () => {
           <Card>
             <CardHeader>
               <CardTitle className="text-lg flex items-center justify-between">
-                Resposta Gerada
+                Resposta Gerada pela IA
                 {generatedMessage && (
                   <div className="flex items-center space-x-2">
                     <Badge className={tones.find(t => t.id === selectedTone)?.color}>
@@ -248,6 +266,21 @@ const MessageGeneratorPage = () => {
                   <p className="text-sm mt-2">Insira a mensagem do cliente e clique em "Gerar Resposta"</p>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Upgrade Reminder */}
+          <Card className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border-yellow-200 dark:border-yellow-700">
+            <CardContent className="p-4">
+              <div className="flex items-start space-x-3">
+                <Crown className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-2">🔓 Atualize para o plano Pro</h4>
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                    Gere até 10.000 mensagens/mês com IA e tenha acesso a recursos avançados de personalização
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
