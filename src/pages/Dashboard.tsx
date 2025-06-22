@@ -70,6 +70,8 @@ const Dashboard = () => {
   const [verifyingSubscription, setVerifyingSubscription] = useState(false);
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
   const { toast } = useToast();
 
   // Menu items
@@ -121,6 +123,8 @@ const Dashboard = () => {
         agentsCount: agents.length
       });
       
+      setLastUpdate(new Date());
+      
       console.log('✅ Uso global carregado:', {
         totalMessagesUsed,
         activeAgents,
@@ -129,6 +133,19 @@ const Dashboard = () => {
       
     } catch (error) {
       console.error('❌ Erro ao carregar uso global:', error);
+    }
+  };
+
+  const refreshAllData = async () => {
+    try {
+      console.log('🔄 Atualizando todos os dados...');
+      await Promise.all([
+        fetchAgents(),
+        fetchSubscription()
+      ]);
+      setLastUpdate(new Date());
+    } catch (error) {
+      console.error('❌ Erro ao atualizar dados:', error);
     }
   };
 
@@ -142,12 +159,25 @@ const Dashboard = () => {
   useEffect(() => {
     if (agents.length > 0) {
       loadGlobalUsage();
-      
-      // Atualizar a cada 30 segundos
-      const interval = setInterval(loadGlobalUsage, 30000);
-      return () => clearInterval(interval);
     }
   }, [agents, user?.id]);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    if (!autoRefreshEnabled || agents.length === 0) return;
+
+    const interval = setInterval(() => {
+      console.log('🔄 Auto-refresh: Atualizando dados...');
+      loadGlobalUsage();
+      
+      // Refresh agents status every 2 minutes
+      if (Math.floor(Date.now() / 1000) % 120 === 0) {
+        refreshAllData();
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [agents, autoRefreshEnabled, user?.id]);
 
   const loadData = async () => {
     try {
@@ -403,6 +433,15 @@ const Dashboard = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
+  const toggleAutoRefresh = () => {
+    setAutoRefreshEnabled(!autoRefreshEnabled);
+    toast({
+      title: autoRefreshEnabled ? "Auto-refresh desativado" : "Auto-refresh ativado",
+      description: autoRefreshEnabled ? "Os dados não serão mais atualizados automaticamente" : "Os dados serão atualizados a cada 30 segundos",
+      variant: "default"
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
@@ -505,6 +544,38 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Auto-refresh indicator */}
+      <div className="mb-6 flex items-center justify-between bg-white/50 dark:bg-gray-800/50 rounded-lg p-3 backdrop-blur-sm">
+        <div className="flex items-center space-x-3">
+          <div className={`w-3 h-3 rounded-full ${autoRefreshEnabled ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            {autoRefreshEnabled ? 'Auto-refresh ativo' : 'Auto-refresh desativado'}
+          </span>
+          <span className="text-xs text-gray-500">
+            Última atualização: {lastUpdate.toLocaleTimeString('pt-BR')}
+          </span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleAutoRefresh}
+            className="text-xs"
+          >
+            {autoRefreshEnabled ? 'Pausar' : 'Ativar'} Auto-refresh
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshAllData}
+            className="text-xs"
+          >
+            <RefreshCw className="h-3 w-3 mr-1" />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
       {/* Agents Section */}

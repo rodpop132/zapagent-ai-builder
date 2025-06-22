@@ -1,10 +1,12 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Legend } from 'recharts';
-import { TrendingUp, MessageCircle, Bot, Activity, Sparkles } from 'lucide-react';
+import { TrendingUp, MessageCircle, Bot, Activity, Sparkles, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { ZapAgentService } from '@/services/zapAgentService';
 
 interface Agent {
   id: string;
@@ -55,113 +57,150 @@ const MetricsPage = ({ agents, globalUsage, subscription }: MetricsPageProps) =>
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
   const [agentStats, setAgentStats] = useState<AgentStats[]>([]);
   const [conversationStats, setConversationStats] = useState({ total: 0, today: 0 });
+  const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchRealData = async () => {
+    if (!user?.id) return;
+
+    setRefreshing(true);
+    try {
+      // Buscar uso de mensagens IA
+      const { data: aiUsage } = await supabase
+        .from('ai_messages_usage')
+        .select('messages_generated')
+        .eq('user_id', user.id)
+        .single();
+
+      setAiMessagesUsage(aiUsage?.messages_generated || 0);
+
+      // Definir limite baseado no plano
+      const planType = subscription?.plan_type || 'free';
+      let limit = 10; // free
+      if (planType === 'pro') limit = 10000;
+      if (planType === 'ultra' || planType === 'unlimited') limit = 999999;
+      
+      setAiMessagesLimit(limit);
+
+      // Buscar estatísticas reais de conversas dos últimos 7 dias
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const { data: conversations } = await supabase
+        .from('agent_conversations')
+        .select('created_at, agent_name')
+        .eq('user_id', user.id)
+        .gte('created_at', sevenDaysAgo.toISOString());
+
+      // Processar dados diários
+      const dailyMap = new Map<string, { messages: number, responses: number }>();
+      const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+      
+      // Inicializar últimos 7 dias com 0
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dayName = days[date.getDay()];
+        dailyMap.set(dayName, { messages: 0, responses: 0 });
+      }
+
+      // Contar conversas por dia
+      conversations?.forEach(conv => {
+        const date = new Date(conv.created_at);
+        const dayName = days[date.getDay()];
+        const current = dailyMap.get(dayName) || { messages: 0, responses: 0 };
+        dailyMap.set(dayName, { 
+          messages: current.messages + 1, 
+          responses: current.responses + 1 // Assumindo que toda conversa tem resposta
+        });
+      });
+
+      const dailyDataArray: DailyData[] = Array.from(dailyMap.entries()).map(([day, data]) => ({
+        day,
+        ...data
+      }));
+
+      setDailyData(dailyDataArray);
+
+      // Buscar estatísticas por agente usando ZapAgentService
+      const agentStatsArray: AgentStats[] = [];
+      for (const agent of agents) {
+        try {
+          const usageData = await ZapAgentService.getMessagesUsed(user.id, agent.phone_number);
+          agentStatsArray.push({
+            agent_id: agent.phone_number,
+            agent_name: agent.name.length > 10 ? agent.name.substring(0, 10) + '...' : agent.name,
+            total_messages: usageData?.mensagensUsadas || 0,
+            phone_number: agent.phone_number
+          });
+        } catch (error) {
+          console.error(`Erro ao buscar stats para agente ${agent.name}:`, error);
+          agentStatsArray.push({
+            agent_id: agent.phone_number,
+            agent_name: agent.name.length > 10 ? agent.name.substring(0, 10) + '...' : agent.name,
+            total_messages: 0,
+            phone_number: agent.phone_number
+          });
+        }
+      }
+
+      // Ordenar por total de mensagens
+      agentStatsArray.sort((a, b) => b.total_messages - a.total_messages);
+      setAgentStats(agentStatsArray.slice(0, 5)); // Top 5
+
+      // Buscar total de conversas
+      const { data: totalConversations, count: totalCount } = await supabase
+        .from('agent_conversations')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      // Buscar conversas de hoje
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const { data: todayConversations, count: todayCount } = await supabase
+        .from('agent_conversations')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .gte('created_at', today.toISOString());
+
+      setConversationStats({
+        total: totalCount || 0,
+        today: todayCount || 0
+      });
+
+      setLastUpdate(new Date());
+
+    } catch (error) {
+      console.error('Erro ao buscar dados reais:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const refreshData = async () => {
+    await fetchRealData();
+  };
+
+  const toggleAutoRefresh = () => {
+    setAutoRefreshEnabled(!autoRefreshEnabled);
+  };
 
   useEffect(() => {
-    const fetchRealData = async () => {
-      if (!user?.id) return;
-
-      try {
-        // Buscar uso de mensagens IA
-        const { data: aiUsage } = await supabase
-          .from('ai_messages_usage')
-          .select('messages_generated')
-          .eq('user_id', user.id)
-          .single();
-
-        setAiMessagesUsage(aiUsage?.messages_generated || 0);
-
-        // Definir limite baseado no plano
-        const planType = subscription?.plan_type || 'free';
-        let limit = 10; // free
-        if (planType === 'pro') limit = 10000;
-        if (planType === 'ultra' || planType === 'unlimited') limit = 999999;
-        
-        setAiMessagesLimit(limit);
-
-        // Buscar estatísticas reais de conversas dos últimos 7 dias
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-        const { data: conversations } = await supabase
-          .from('agent_conversations')
-          .select('created_at, agent_name')
-          .eq('user_id', user.id)
-          .gte('created_at', sevenDaysAgo.toISOString());
-
-        // Processar dados diários
-        const dailyMap = new Map<string, { messages: number, responses: number }>();
-        const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-        
-        // Inicializar últimos 7 dias com 0
-        for (let i = 6; i >= 0; i--) {
-          const date = new Date();
-          date.setDate(date.getDate() - i);
-          const dayName = days[date.getDay()];
-          dailyMap.set(dayName, { messages: 0, responses: 0 });
-        }
-
-        // Contar conversas por dia
-        conversations?.forEach(conv => {
-          const date = new Date(conv.created_at);
-          const dayName = days[date.getDay()];
-          const current = dailyMap.get(dayName) || { messages: 0, responses: 0 };
-          dailyMap.set(dayName, { 
-            messages: current.messages + 1, 
-            responses: current.responses + 1 // Assumindo que toda conversa tem resposta
-          });
-        });
-
-        const dailyDataArray: DailyData[] = Array.from(dailyMap.entries()).map(([day, data]) => ({
-          day,
-          ...data
-        }));
-
-        setDailyData(dailyDataArray);
-
-        // Buscar estatísticas por agente
-        const { data: agentStatistics } = await supabase
-          .from('agent_statistics')
-          .select('agent_name, total_messages, phone_number')
-          .eq('user_id', user.id)
-          .order('total_messages', { ascending: false })
-          .limit(5);
-
-        const agentStatsFormatted: AgentStats[] = agentStatistics?.map(stat => ({
-          agent_id: stat.phone_number,
-          agent_name: stat.agent_name.length > 10 ? stat.agent_name.substring(0, 10) + '...' : stat.agent_name,
-          total_messages: stat.total_messages,
-          phone_number: stat.phone_number
-        })) || [];
-
-        setAgentStats(agentStatsFormatted);
-
-        // Buscar total de conversas
-        const { data: totalConversations, count: totalCount } = await supabase
-          .from('agent_conversations')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id);
-
-        // Buscar conversas de hoje
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const { data: todayConversations, count: todayCount } = await supabase
-          .from('agent_conversations')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .gte('created_at', today.toISOString());
-
-        setConversationStats({
-          total: totalCount || 0,
-          today: todayCount || 0
-        });
-
-      } catch (error) {
-        console.error('Erro ao buscar dados reais:', error);
-      }
-    };
-
     fetchRealData();
-  }, [user?.id, subscription?.plan_type]);
+  }, [user?.id, subscription?.plan_type, agents]);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    if (!autoRefreshEnabled) return;
+
+    const interval = setInterval(() => {
+      console.log('🔄 Auto-refresh: Atualizando métricas...');
+      fetchRealData();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [autoRefreshEnabled, user?.id, subscription?.plan_type, agents]);
 
   // Calcular taxa de resposta baseada em dados reais
   const responseRate = conversationStats.total > 0 ? Math.round((conversationStats.total / (conversationStats.total + (conversationStats.total * 0.1))) * 100) : 0;
@@ -218,14 +257,41 @@ const MetricsPage = ({ agents, globalUsage, subscription }: MetricsPageProps) =>
 
   return (
     <div className="space-y-4 md:space-y-8 px-2 md:px-0">
-      {/* Título - Mobile Otimizado */}
-      <div className="text-center md:text-left">
-        <h1 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">
-          Métricas de Performance
-        </h1>
-        <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
-          Dados reais do desempenho dos seus agentes
-        </p>
+      {/* Título e controles - Mobile Otimizado */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center space-y-4 md:space-y-0">
+        <div className="text-center md:text-left">
+          <h1 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">
+            Métricas de Performance
+          </h1>
+          <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
+            Dados reais do desempenho dos seus agentes
+          </p>
+        </div>
+        
+        {/* Auto-refresh controls */}
+        <div className="flex items-center space-x-2 bg-white/50 dark:bg-gray-800/50 rounded-lg p-2 backdrop-blur-sm">
+          <div className={`w-2 h-2 rounded-full ${autoRefreshEnabled ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
+          <span className="text-xs text-gray-600 dark:text-gray-400">
+            {lastUpdate.toLocaleTimeString('pt-BR')}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleAutoRefresh}
+            className="text-xs px-2 py-1"
+          >
+            {autoRefreshEnabled ? 'Pausar' : 'Ativar'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshData}
+            disabled={refreshing}
+            className="text-xs px-2 py-1"
+          >
+            <RefreshCw className={`h-3 w-3 ${refreshing ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
       </div>
 
       {/* Cards de Estatísticas - Mobile: Grid 2x2 */}
