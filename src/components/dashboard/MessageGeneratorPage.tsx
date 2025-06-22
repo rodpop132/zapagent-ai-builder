@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -183,7 +182,7 @@ const MessageGeneratorPage = () => {
                 <Button
                   key={tone.id}
                   variant={selectedTone === tone.id ? "default" : "outline"}
-                  className={`w-full justify-start text-xs md:text-sm py-2 md:py-2.5 h-auto ${
+                  className={`w-full justify-start text-xs md:text-sm py-2 md:py-2.5 h-auto transition-all duration-200 hover:scale-105 ${
                     selectedTone === tone.id 
                       ? 'bg-brand-green hover:bg-brand-green/90' 
                       : ''
@@ -206,7 +205,7 @@ const MessageGeneratorPage = () => {
                 <Button
                   key={type.id}
                   variant={selectedType === type.id ? "default" : "outline"}
-                  className={`w-full justify-start text-xs md:text-sm py-2 md:py-2.5 h-auto ${
+                  className={`w-full justify-start text-xs md:text-sm py-2 md:py-2.5 h-auto transition-all duration-200 hover:scale-105 ${
                     selectedType === type.id 
                       ? 'bg-brand-green hover:bg-brand-green/90' 
                       : ''
@@ -220,7 +219,7 @@ const MessageGeneratorPage = () => {
             </CardContent>
           </Card>
 
-          {/* Exemplos - Mobile: Dropdown colapsável */}
+          {/* Exemplos - Mobile: Dropdown colapsável com animação */}
           <Card className="shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -229,22 +228,20 @@ const MessageGeneratorPage = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowExamples(!showExamples)}
-                  className="md:hidden h-6 w-6 p-0"
+                  className="md:hidden h-6 w-6 p-0 transition-transform duration-200"
                 >
-                  {showExamples ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
+                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${showExamples ? 'rotate-180' : ''}`} />
                 </Button>
               </div>
             </CardHeader>
-            <CardContent className={`space-y-2 ${showExamples ? 'block' : 'hidden'} md:block`}>
+            <CardContent className={`space-y-2 transition-all duration-300 overflow-hidden ${
+              showExamples ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+            } md:max-h-none md:opacity-100`}>
               {exampleMessages.map((message, index) => (
                 <Button
                   key={index}
                   variant="ghost"
-                  className="w-full text-left text-xs md:text-sm p-2 h-auto whitespace-normal justify-start leading-relaxed"
+                  className="w-full text-left text-xs md:text-sm p-2 h-auto whitespace-normal justify-start leading-relaxed transition-all duration-200 hover:scale-105 hover:bg-gray-100 dark:hover:bg-gray-800"
                   onClick={() => useExample(message)}
                 >
                   <span className="text-left">"{message}"</span>
@@ -268,7 +265,7 @@ const MessageGeneratorPage = () => {
                 value={clientMessage}
                 onChange={(e) => setClientMessage(e.target.value.slice(0, 500))}
                 rows={3}
-                className="w-full text-sm md:text-base resize-none"
+                className="w-full text-sm md:text-base resize-none transition-all duration-200 focus:scale-[1.02]"
                 maxLength={500}
               />
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-3 space-y-2 sm:space-y-0">
@@ -278,7 +275,7 @@ const MessageGeneratorPage = () => {
                 <Button
                   onClick={generateMessage}
                   disabled={isGenerating || !clientMessage.trim() || !usage?.can_generate}
-                  className="bg-brand-green hover:bg-brand-green/90 w-full sm:w-auto text-sm md:text-base"
+                  className="bg-brand-green hover:bg-brand-green/90 w-full sm:w-auto text-sm md:text-base transition-all duration-200 hover:scale-105"
                   size={window.innerWidth < 768 ? "default" : "default"}
                 >
                   {isGenerating ? (
@@ -316,7 +313,7 @@ const MessageGeneratorPage = () => {
             </CardHeader>
             <CardContent>
               {generatedMessage ? (
-                <div className="space-y-4">
+                <div className="space-y-4 animate-in fade-in-50 duration-500">
                   <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 md:p-4 border">
                     <p className="text-gray-900 dark:text-white whitespace-pre-wrap text-sm md:text-base leading-relaxed">
                       {generatedMessage}
@@ -326,7 +323,7 @@ const MessageGeneratorPage = () => {
                     <Button
                       onClick={copyMessage}
                       variant="outline"
-                      className="flex-1 text-sm"
+                      className="flex-1 text-sm transition-all duration-200 hover:scale-105"
                     >
                       <Copy className="h-4 w-4 mr-2" />
                       Copiar Mensagem
@@ -335,7 +332,7 @@ const MessageGeneratorPage = () => {
                       onClick={generateMessage}
                       variant="outline"
                       disabled={isGenerating || !usage?.can_generate}
-                      className="sm:w-auto text-sm"
+                      className="sm:w-auto text-sm transition-all duration-200 hover:scale-105"
                     >
                       <RefreshCw className="h-4 w-4" />
                       <span className="sm:hidden ml-2">Gerar Novamente</span>

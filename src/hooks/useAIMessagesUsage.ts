@@ -78,13 +78,14 @@ export const useAIMessagesUsage = () => {
     if (!user?.id || !usage) return false;
 
     try {
+      // Usar UPDATE ao invés de UPSERT para evitar conflitos
       const { error } = await supabase
         .from('ai_messages_usage')
-        .upsert({
-          user_id: user.id,
+        .update({
           messages_generated: usage.messages_generated + 1,
           updated_at: new Date().toISOString()
-        });
+        })
+        .eq('user_id', user.id);
 
       if (!error) {
         setUsage(prev => prev ? {
@@ -93,6 +94,8 @@ export const useAIMessagesUsage = () => {
           can_generate: (prev.messages_generated + 1) < prev.messages_limit
         } : null);
         return true;
+      } else {
+        console.error('Erro ao incrementar uso:', error);
       }
     } catch (error) {
       console.error('Erro ao incrementar uso:', error);
