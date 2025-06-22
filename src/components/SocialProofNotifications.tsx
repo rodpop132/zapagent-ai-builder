@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -121,70 +120,8 @@ const SocialProofNotifications = () => {
   }
 
   return (
-    <div 
-      className={`fixed bottom-4 left-4 z-40 max-w-sm transition-all duration-700 ease-out transform ${
-        isVisible 
-          ? 'opacity-100 translate-y-0 scale-100 translate-x-0' 
-          : 'opacity-0 translate-y-8 scale-90 -translate-x-4 pointer-events-none'
-      }`}
-      style={{
-        animation: isVisible 
-          ? 'slideInLeft 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards, bounceIn 0.3s ease-out 0.4s' 
-          : 'slideOutLeft 0.6s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards'
-      }}
-    >
-      <Card className="shadow-2xl border-2 border-green-200 bg-gradient-to-br from-green-50 via-white to-emerald-50 backdrop-blur-md hover:shadow-3xl transition-all duration-300 hover:scale-[1.02] group">
-        <CardContent className="p-4">
-          <div className="flex items-start space-x-3">
-            <div className="flex-shrink-0 relative">
-              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg transform transition-transform duration-300 group-hover:scale-110">
-                <CheckCircle className="h-5 w-5 text-white drop-shadow-sm" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center space-x-2 mb-1">
-                <p className="text-sm font-bold text-gray-900 truncate transition-colors duration-300 group-hover:text-green-700">
-                  {currentNotification.name}
-                </p>
-                <Badge className={`${currentNotification.planColor} text-xs px-2 py-0.5 flex items-center space-x-1 shadow-sm transform transition-all duration-300 group-hover:scale-105`}>
-                  {currentNotification.planIcon}
-                  <span>{currentNotification.plan}</span>
-                </Badge>
-              </div>
-              
-              <p className="text-xs text-gray-700 mb-1 font-medium">
-                acabou de assinar o plano <span className="font-bold text-green-600">{currentNotification.plan}</span>
-              </p>
-              
-              <p className="text-xs text-gray-500 flex items-center space-x-1 mb-2">
-                <span className="text-orange-500">📍</span>
-                <span className="font-medium">{currentNotification.location}</span>
-              </p>
-              
-              <div className="flex items-center space-x-1 mt-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-sm"></div>
-                <span className="text-xs text-green-600 font-bold">Ativo agora</span>
-                <div className="flex space-x-0.5 ml-2">
-                  <div className="w-1 h-1 bg-green-400 rounded-full animate-bounce"></div>
-                  <div className="w-1 h-1 bg-green-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                  <div className="w-1 h-1 bg-green-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                </div>
-              </div>
-            </div>
-            
-            <button
-              onClick={handleClose}
-              className="flex-shrink-0 p-1.5 text-gray-400 hover:text-gray-600 transition-all duration-300 rounded-full hover:bg-gray-100 hover:scale-110 active:scale-95"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <style jsx>{`
+    <>
+      <style>{`
         @keyframes slideInLeft {
           0% {
             transform: translateX(-100%) translateY(20px) scale(0.9);
@@ -223,7 +160,70 @@ const SocialProofNotifications = () => {
           }
         }
       `}</style>
-    </div>
+      <div 
+        className={`fixed bottom-4 left-4 z-40 max-w-sm transition-all duration-700 ease-out transform ${
+          isVisible 
+            ? 'opacity-100 translate-y-0 scale-100 translate-x-0' 
+            : 'opacity-0 translate-y-8 scale-90 -translate-x-4 pointer-events-none'
+        }`}
+        style={{
+          animation: isVisible 
+            ? 'slideInLeft 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards, bounceIn 0.3s ease-out 0.4s' 
+            : 'slideOutLeft 0.6s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards'
+        }}
+      >
+        <Card className="shadow-2xl border-2 border-green-200 bg-gradient-to-br from-green-50 via-white to-emerald-50 backdrop-blur-md hover:shadow-3xl transition-all duration-300 hover:scale-[1.02] group">
+          <CardContent className="p-4">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0 relative">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center shadow-lg transform transition-transform duration-300 group-hover:scale-110">
+                  <CheckCircle className="h-5 w-5 text-white drop-shadow-sm" />
+                </div>
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center space-x-2 mb-1">
+                  <p className="text-sm font-bold text-gray-900 truncate transition-colors duration-300 group-hover:text-green-700">
+                    {currentNotification.name}
+                  </p>
+                  <Badge className={`${currentNotification.planColor} text-xs px-2 py-0.5 flex items-center space-x-1 shadow-sm transform transition-all duration-300 group-hover:scale-105`}>
+                    {currentNotification.planIcon}
+                    <span>{currentNotification.plan}</span>
+                  </Badge>
+                </div>
+                
+                <p className="text-xs text-gray-700 mb-1 font-medium">
+                  acabou de assinar o plano <span className="font-bold text-green-600">{currentNotification.plan}</span>
+                </p>
+                
+                <p className="text-xs text-gray-500 flex items-center space-x-1 mb-2">
+                  <span className="text-orange-500">📍</span>
+                  <span className="font-medium">{currentNotification.location}</span>
+                </p>
+                
+                <div className="flex items-center space-x-1 mt-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-sm"></div>
+                  <span className="text-xs text-green-600 font-bold">Ativo agora</span>
+                  <div className="flex space-x-0.5 ml-2">
+                    <div className="w-1 h-1 bg-green-400 rounded-full animate-bounce"></div>
+                    <div className="w-1 h-1 bg-green-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                    <div className="w-1 h-1 bg-green-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  </div>
+                </div>
+              </div>
+              
+              <button
+                onClick={handleClose}
+                className="flex-shrink-0 p-1.5 text-gray-400 hover:text-gray-600 transition-all duration-300 rounded-full hover:bg-gray-100 hover:scale-110 active:scale-95"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </>
   );
 };
 
