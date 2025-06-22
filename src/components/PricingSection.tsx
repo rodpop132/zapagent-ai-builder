@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Check, X, Crown, Zap } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -271,14 +270,6 @@ const PricingSection = () => {
         </div>
 
         <div className="text-center mt-6 md:mt-8 lg:mt-12 px-4">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
-            <p className="text-sm md:text-base text-green-800 font-medium mb-2">
-              🎉 Oferta por tempo limitado! 50% de desconto nos primeiros 3 meses
-            </p>
-            <p className="text-xs md:text-sm text-green-700">
-              Garantia de 30 dias ou seu dinheiro de volta. Sem compromisso!
-            </p>
-          </div>
           <p className="text-xs md:text-sm lg:text-base text-brand-dark font-medium">
             Todos os planos incluem atualizações automáticas e novos recursos
           </p>
