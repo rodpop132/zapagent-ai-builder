@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -69,6 +68,10 @@ const Dashboard = () => {
     { id: 'metrics', name: 'Métricas', icon: LineChart },
     { id: 'message-generator', name: 'Gerador de Mensagens', icon: Sparkles },
   ];
+
+  // Calculate planType and agentLimit once
+  const planType = subscription?.plan_type || 'free';
+  const agentLimit = getAgentLimitByPlan(planType);
 
   const getMessagesLimitByPlan = (planType: string) => {
     switch (planType) {
@@ -407,9 +410,6 @@ const Dashboard = () => {
     );
   }
 
-  const planType = subscription?.plan_type || 'free';
-  const agentLimit = getAgentLimitByPlan(planType);
-
   const renderCurrentPage = () => {
     switch (currentPage) {
       case 'metrics':
@@ -604,9 +604,6 @@ const Dashboard = () => {
     );
   }
 
-  const planType = subscription?.plan_type || 'free';
-  const agentLimit = getAgentLimitByPlan(planType);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex">
       {/* Sidebar with animation */}
@@ -776,5 +773,15 @@ const Dashboard = () => {
     </div>
   );
 };
+
+function getAgentLimitByPlan(planType: string) {
+  switch (planType) {
+    case 'free': return 1;
+    case 'pro': return 3;
+    case 'ultra': return 999999;
+    case 'unlimited': return 999999;
+    default: return 1;
+  }
+}
 
 export default Dashboard;
