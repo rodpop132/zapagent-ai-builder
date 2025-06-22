@@ -597,9 +597,9 @@ const Dashboard = () => {
             variant="ghost"
             size="sm"
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden"
+            className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
           >
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </Button>
         </div>
         
@@ -642,14 +642,28 @@ const Dashboard = () => {
           <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
             <div className="flex justify-between items-center py-4 md:py-6">
               <div className="flex items-center space-x-3 md:space-x-4 min-w-0 flex-1">
+                {/* Botão de Menu - Melhorado para todas as telas */}
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  onClick={() => setSidebarOpen(true)}
-                  className="lg:hidden"
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="flex items-center space-x-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 lg:hidden"
                 >
-                  <Menu className="h-5 w-5" />
+                  {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+                  <span className="hidden sm:inline text-sm">{sidebarOpen ? 'Fechar' : 'Menu'}</span>
                 </Button>
+                
+                {/* Botão de Menu para Desktop - sempre visível */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="hidden lg:flex items-center space-x-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  <Menu className="h-4 w-4" />
+                  <span className="text-sm">Menu</span>
+                </Button>
+                
                 <div className="min-w-0 flex-1">
                   <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white truncate">
                     {menuItems.find(item => item.id === currentPage)?.name || 'Dashboard'}
