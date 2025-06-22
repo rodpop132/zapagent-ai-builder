@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -35,7 +36,7 @@ const PlanUpgradeModal = ({ isOpen, onClose, currentPlan }: PlanUpgradeModalProp
     {
       id: 'pro',
       name: 'Pro',
-      price: i18n.language === 'pt' ? 'R$ 79' : i18n.language === 'es' ? '€ 12' : '$ 15',
+      price: i18n.language === 'pt' ? 'R$ 39' : i18n.language === 'es' ? '€ 12' : '$ 15',
       period: i18n.language === 'pt' ? '/mês' : i18n.language === 'es' ? '/mes' : '/month',
       description: i18n.language === 'pt' ? 'Ideal para pequenas empresas' : i18n.language === 'es' ? 'Ideal para pequeñas empresas' : 'Ideal for small businesses',
       messages: i18n.language === 'pt' ? '10.000' : '10,000',
@@ -68,7 +69,7 @@ const PlanUpgradeModal = ({ isOpen, onClose, currentPlan }: PlanUpgradeModalProp
     {
       id: 'ultra',
       name: 'Ultra',
-      price: i18n.language === 'pt' ? 'R$ 179' : i18n.language === 'es' ? '€ 28' : '$ 37',
+      price: i18n.language === 'pt' ? 'R$ 99' : i18n.language === 'es' ? '€ 28' : '$ 37',
       period: i18n.language === 'pt' ? '/mês' : i18n.language === 'es' ? '/mes' : '/month',
       description: i18n.language === 'pt' ? 'Para empresas em crescimento' : i18n.language === 'es' ? 'Para empresas en crecimiento' : 'For growing businesses',
       messages: i18n.language === 'pt' ? 'Ilimitadas' : i18n.language === 'es' ? 'Ilimitados' : 'Unlimited',

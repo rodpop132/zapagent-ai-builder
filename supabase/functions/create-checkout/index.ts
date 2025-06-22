@@ -44,8 +44,8 @@ serve(async (req) => {
     // URLs atualizadas dos produtos baseado no país/idioma
     const productUrls = {
       brasil: {
-        pro: "https://buy.stripe.com/6oUdRb0Kp3kj9Zxf5KafS00",
-        ultra: "https://buy.stripe.com/dRmdRb1Ot4on1t11eUafS01"
+        pro: "https://buy.stripe.com/7sY9AV9gVbQP9Zx0aQafS06",
+        ultra: "https://buy.stripe.com/5kQ6oJ2SxaMLgnV6zeafS07"
       },
       usa: {
         pro: "https://buy.stripe.com/cNi4gBeBfaML3B99LqafS02",

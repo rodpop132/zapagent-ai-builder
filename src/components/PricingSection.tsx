@@ -41,8 +41,8 @@ const PricingSection = () => {
       
       // Track checkout initiation with Facebook
       const planPrices = {
-        pro: country === 'brasil' ? 79 : country === 'spain' ? 12 : 15,
-        ultra: country === 'brasil' ? 179 : country === 'spain' ? 28 : 37,
+        pro: country === 'brasil' ? 39 : country === 'spain' ? 12 : 15,
+        ultra: country === 'brasil' ? 99 : country === 'spain' ? 28 : 37,
       };
       
       const currency = country === 'brasil' ? 'BRL' : country === 'spain' ? 'EUR' : 'USD';
@@ -195,11 +195,11 @@ const PricingSection = () => {
                 Profissional
               </h3>
               <div className="mb-2">
-                <span className="text-sm md:text-base lg:text-lg text-gray-500 line-through">R$ 159</span>
+                <span className="text-sm md:text-base lg:text-lg text-gray-500 line-through">R$ 78</span>
                 <span className="text-xs bg-red-100 text-red-600 px-1 md:px-2 py-0.5 md:py-1 rounded ml-1 md:ml-2 font-bold">50% OFF</span>
               </div>
               <div className="mb-3 md:mb-4">
-                <span className="text-2xl md:text-3xl lg:text-4xl font-bold text-brand-green">R$ 79</span>
+                <span className="text-2xl md:text-3xl lg:text-4xl font-bold text-brand-green">R$ 39</span>
                 <span className="text-brand-gray ml-1 md:ml-2 text-sm md:text-base">/mês</span>
               </div>
               <p className="text-xs md:text-sm lg:text-base text-brand-gray px-2 font-medium">Ideal para pequenas e médias empresas</p>
@@ -246,11 +246,11 @@ const PricingSection = () => {
                 Ultra Premium
               </h3>
               <div className="mb-2">
-                <span className="text-sm md:text-base lg:text-lg text-gray-500 line-through">R$ 359</span>
+                <span className="text-sm md:text-base lg:text-lg text-gray-500 line-through">R$ 198</span>
                 <span className="text-xs bg-red-100 text-red-600 px-1 md:px-2 py-0.5 md:py-1 rounded ml-1 md:ml-2 font-bold">50% OFF</span>
               </div>
               <div className="mb-3 md:mb-4">
-                <span className="text-2xl md:text-3xl lg:text-4xl font-bold text-purple-600">R$ 179</span>
+                <span className="text-2xl md:text-3xl lg:text-4xl font-bold text-purple-600">R$ 99</span>
                 <span className="text-purple-700 ml-1 md:ml-2 text-sm md:text-base">/mês</span>
               </div>
               <p className="text-xs md:text-sm lg:text-base text-purple-700 px-2 font-medium">Para empresas que querem dominar</p>

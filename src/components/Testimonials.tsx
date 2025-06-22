@@ -66,12 +66,12 @@ const Testimonials = () => {
                   </div>
                 </div>
                 
-                {/* Screenshot */}
-                <div className="relative">
+                {/* Screenshot com tamanho fixo */}
+                <div className="relative h-96 overflow-hidden">
                   <img
                     src={testimonial.image}
                     alt={testimonial.alt}
-                    className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110"
+                    className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110"
                   />
                   
                   {/* Overlay with subtle gradient */}
