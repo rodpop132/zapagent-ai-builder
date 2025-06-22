@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -254,16 +253,6 @@ const Dashboard = () => {
     }
   };
 
-  const getAgentLimitByPlan = (planType: string) => {
-    switch (planType) {
-      case 'free': return 1;
-      case 'pro': return 3;
-      case 'ultra': return 999999;
-      case 'unlimited': return 999999;
-      default: return 1;
-    }
-  };
-
   const verifySubscription = async () => {
     setVerifyingSubscription(true);
     try {
@@ -413,7 +402,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center animate-fade-in">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-brand-green mx-auto mb-6 shadow-lg"></div>
           <p className="text-gray-600 text-lg font-medium">{t('userDashboard.loading')}</p>
         </div>
