@@ -590,36 +590,41 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex">
-      {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:relative lg:translate-x-0 ${sidebarOpen ? 'lg:block' : 'lg:hidden'}`}>
+      {/* Sidebar with smooth animations */}
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-xl transform transition-all duration-300 ease-in-out ${
+        sidebarOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
+      } lg:relative lg:translate-x-0 lg:opacity-100 ${
+        sidebarOpen ? 'lg:block' : 'lg:hidden'
+      }`}>
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-brand-green to-green-600 rounded-lg flex items-center justify-center">
+          <div className="flex items-center space-x-2 animate-fade-in">
+            <div className="w-8 h-8 bg-gradient-to-br from-brand-green to-green-600 rounded-lg flex items-center justify-center transform transition-transform duration-300 hover:scale-110">
               <span className="text-white font-bold text-sm">ZA</span>
             </div>
-            <span className="text-lg font-bold text-gray-900 dark:text-white">ZapAgent AI</span>
+            <span className="text-lg font-bold text-gray-900 dark:text-white transition-colors duration-300">ZapAgent AI</span>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setSidebarOpen(false)}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-all duration-200"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-all duration-300 hover:scale-105 lg:hidden"
           >
-            <X className="h-5 w-5" />
+            <X className="h-5 w-5 transition-transform duration-300 hover:rotate-90" />
           </Button>
         </div>
         
         <nav className="mt-8 px-4">
           <div className="space-y-2">
-            {menuItems.map((item) => (
+            {menuItems.map((item, index) => (
               <Button
                 key={item.id}
                 variant={currentPage === item.id ? "default" : "ghost"}
-                className={`w-full justify-start transition-all duration-300 ${
+                className={`w-full justify-start transition-all duration-300 transform hover:scale-105 animate-fade-in ${
                   currentPage === item.id 
-                    ? 'bg-brand-green text-white hover:bg-brand-green/90 shadow-lg' 
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    ? 'bg-brand-green text-white hover:bg-brand-green/90 shadow-lg scale-105' 
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:translate-x-1'
                 }`}
+                style={{ animationDelay: `${index * 0.1}s` }}
                 onClick={() => {
                   setCurrentPage(item.id);
                   if (window.innerWidth < 1024) {
@@ -627,45 +632,53 @@ const Dashboard = () => {
                   }
                 }}
               >
-                <item.icon className="h-4 w-4 mr-3" />
-                {item.name}
+                <item.icon className="h-4 w-4 mr-3 transition-transform duration-300" />
+                <span className="transition-all duration-300">{item.name}</span>
               </Button>
             ))}
           </div>
         </nav>
       </div>
 
-      {/* Overlay for mobile */}
+      {/* Overlay for mobile with smooth fade */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden transition-opacity duration-300 ease-in-out animate-fade-in"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Main Content */}
-      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'lg:ml-0' : 'lg:ml-0'}`}>
+      <div className={`flex-1 transition-all duration-300 ease-in-out ${sidebarOpen ? 'lg:ml-0' : 'lg:ml-0'}`}>
         {/* Header */}
-        <header className="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-100 dark:border-gray-700 backdrop-blur-sm bg-white/95 dark:bg-gray-800/95">
+        <header className="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-100 dark:border-gray-700 backdrop-blur-sm bg-white/95 dark:bg-gray-800/95 transition-all duration-300">
           <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
             <div className="flex justify-between items-center py-4 md:py-6">
               <div className="flex items-center space-x-3 md:space-x-4 min-w-0 flex-1">
-                {/* Botão de Menu - Funciona em mobile e desktop */}
+                {/* Menu Button with enhanced animation */}
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={toggleSidebar}
-                  className="flex items-center space-x-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300"
+                  className="flex items-center space-x-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300 hover:scale-105 hover:shadow-md"
                 >
-                  {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-                  <span className="hidden sm:inline text-sm">{sidebarOpen ? 'Fechar' : 'Menu'}</span>
+                  <div className="transition-transform duration-300 ease-in-out">
+                    {sidebarOpen ? (
+                      <X className="h-4 w-4 animate-fade-in" />
+                    ) : (
+                      <Menu className="h-4 w-4 animate-fade-in" />
+                    )}
+                  </div>
+                  <span className="hidden sm:inline text-sm transition-all duration-300">
+                    {sidebarOpen ? 'Fechar' : 'Menu'}
+                  </span>
                 </Button>
                 
                 <div className="min-w-0 flex-1">
-                  <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white truncate">
+                  <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white truncate transition-all duration-300">
                     {menuItems.find(item => item.id === currentPage)?.name || 'Dashboard'}
                   </h1>
-                  <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
+                  <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 hidden sm:block transition-colors duration-300">
                     {currentPage === 'dashboard' && 'Painel principal'}
                     {currentPage === 'metrics' && 'Análise de desempenho'}
                     {currentPage === 'message-generator' && 'IA para mensagens profissionais'}
