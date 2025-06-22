@@ -5,7 +5,7 @@ import { X, MessageCircle, User, Bot, Phone, Video, MoreVertical, Send, Papercli
 import { useTranslation } from 'react-i18next';
 
 interface Message {
-  id: number;
+  id: string;
   text: string;
   sender: 'user' | 'bot';
   timestamp: Date;
@@ -21,6 +21,7 @@ const ConversationSimulator = ({ isOpen, onClose }: ConversationSimulatorProps) 
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedLanguage, setSelectedLanguage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
+  const [conversationId, setConversationId] = useState(0); // Add conversation ID for unique keys
 
   const scenarios = {
     pt: {
@@ -399,9 +400,13 @@ const ConversationSimulator = ({ isOpen, onClose }: ConversationSimulatorProps) 
 
   const currentScenario = scenarios[i18n.language as keyof typeof scenarios] || scenarios.pt;
 
+  const generateUniqueId = () => {
+    return `${conversationId}-${Date.now()}-${Math.random()}`;
+  };
+
   const addMessage = (text: string, sender: 'user' | 'bot') => {
     const newMessage: Message = {
-      id: messages.length + 1,
+      id: generateUniqueId(),
       text,
       sender,
       timestamp: new Date()
@@ -426,9 +431,7 @@ const ConversationSimulator = ({ isOpen, onClose }: ConversationSimulatorProps) 
     setTimeout(() => {
       if (option.next === -1) {
         // Reiniciar conversa
-        setMessages([]);
-        setCurrentStep(0);
-        setSelectedLanguage('');
+        resetSimulation();
         return;
       }
 
@@ -444,6 +447,7 @@ const ConversationSimulator = ({ isOpen, onClose }: ConversationSimulatorProps) 
     setMessages([]);
     setCurrentStep(0);
     setSelectedLanguage('');
+    setConversationId(prev => prev + 1); // Increment conversation ID for unique keys
   };
 
   const formatTime = (date: Date) => {
@@ -523,7 +527,7 @@ const ConversationSimulator = ({ isOpen, onClose }: ConversationSimulatorProps) 
                 <div className="space-y-2">
                   {currentScenario.languages.map((lang) => (
                     <Button
-                      key={lang.code}
+                      key={`${conversationId}-lang-${lang.code}`}
                       variant="outline"
                       onClick={() => handleLanguageSelect(lang.code)}
                       className="w-full justify-start hover:bg-green-50 border-green-200"
@@ -572,7 +576,7 @@ const ConversationSimulator = ({ isOpen, onClose }: ConversationSimulatorProps) 
                   <div className="space-y-2">
                     {currentScenario.conversation[currentStep].options.map((option, index) => (
                       <Button
-                        key={index}
+                        key={`${conversationId}-option-${currentStep}-${index}`}
                         variant="outline"
                         onClick={() => handleOptionSelect(option)}
                         className="w-full text-sm justify-start hover:bg-green-50 border-green-200 text-green-700 hover:text-green-800"
