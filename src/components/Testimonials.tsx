@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Star, Quote } from 'lucide-react';
+import { Star, Quote, ChevronLeft, ChevronRight } from 'lucide-react';
 import TestimonialsLoading from './TestimonialsLoading';
 
 const testimonials = [
@@ -20,6 +20,8 @@ const testimonials = [
 
 const Testimonials = () => {
   const [loading, setLoading] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
 
   useEffect(() => {
     // Simulate loading time for testimonials
@@ -29,6 +31,39 @@ const Testimonials = () => {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Auto-rotate testimonials every 5 seconds
+  useEffect(() => {
+    if (!loading && isAutoPlaying) {
+      const interval = setInterval(() => {
+        setCurrentIndex((prevIndex) => 
+          (prevIndex + 1) % testimonials.length
+        );
+      }, 5000);
+
+      return () => clearInterval(interval);
+    }
+  }, [loading, isAutoPlaying]);
+
+  const goToPrevious = () => {
+    setCurrentIndex((prevIndex) => 
+      prevIndex === 0 ? testimonials.length - 1 : prevIndex - 1
+    );
+  };
+
+  const goToNext = () => {
+    setCurrentIndex((prevIndex) => 
+      (prevIndex + 1) % testimonials.length
+    );
+  };
+
+  const handleMouseEnter = () => {
+    setIsAutoPlaying(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsAutoPlaying(true);
+  };
 
   if (loading) {
     return <TestimonialsLoading />;
@@ -46,52 +81,92 @@ const Testimonials = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-4xl mx-auto mb-16">
-          {testimonials.map((testimonial, index) => (
-            <div
-              key={testimonial.id}
-              className="group relative animate-scale-in hover-lift transition-all duration-500"
-              style={{ animationDelay: `${index * 0.2}s` }}
-            >
-              <div className="relative overflow-hidden rounded-2xl shadow-2xl group-hover:shadow-3xl transition-all duration-500 group-hover:scale-105">
-                {/* iPhone-style frame */}
-                <div className="bg-gray-900 rounded-t-2xl px-4 py-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex space-x-2">
-                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                    </div>
-                    <div className="text-white text-xs font-medium">WhatsApp</div>
-                  </div>
-                </div>
-                
-                {/* Screenshot com tamanho fixo */}
-                <div className="relative h-96 overflow-hidden">
+        {/* Carrossel de Testimonials */}
+        <div 
+          className="relative max-w-2xl mx-auto mb-16"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+        >
+          {/* Container do carrossel */}
+          <div className="relative overflow-hidden rounded-2xl shadow-2xl bg-white">
+            {/* iPhone-style frame */}
+            <div className="bg-gray-900 px-4 py-3 flex items-center justify-between">
+              <div className="flex space-x-2">
+                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+              </div>
+              <div className="text-white text-sm font-medium">WhatsApp</div>
+              <div className="w-16"></div> {/* Spacer for centering */}
+            </div>
+            
+            {/* Container das imagens */}
+            <div className="relative h-[600px] overflow-hidden">
+              {testimonials.map((testimonial, index) => (
+                <div
+                  key={testimonial.id}
+                  className={`absolute inset-0 transition-all duration-1000 ease-in-out transform ${
+                    index === currentIndex 
+                      ? 'translate-x-0 opacity-100 scale-100' 
+                      : index < currentIndex 
+                        ? '-translate-x-full opacity-0 scale-95'
+                        : 'translate-x-full opacity-0 scale-95'
+                  }`}
+                >
                   <img
                     src={testimonial.image}
                     alt={testimonial.alt}
-                    className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110"
+                    className="w-full h-full object-contain bg-white"
                   />
                   
-                  {/* Overlay with subtle gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  {/* Overlay gradient sutil */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent"></div>
                 </div>
-                
-                {/* Floating badge */}
-                <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-bounce">
-                  ✓ Verificado
-                </div>
-              </div>
+              ))}
               
-              {/* Description */}
-              <div className="mt-4 text-center">
-                <p className="text-gray-600 text-sm font-medium group-hover:text-gray-800 transition-colors duration-300">
-                  {testimonial.description}
-                </p>
+              {/* Floating badge */}
+              <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-pulse">
+                ✓ Verificado
               </div>
             </div>
-          ))}
+          </div>
+
+          {/* Controles de navegação */}
+          <button
+            onClick={goToPrevious}
+            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl z-10"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          
+          <button
+            onClick={goToNext}
+            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl z-10"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+
+          {/* Indicadores de posição */}
+          <div className="flex justify-center mt-6 space-x-3">
+            {testimonials.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentIndex(index)}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  index === currentIndex 
+                    ? 'bg-primary scale-125 shadow-lg' 
+                    : 'bg-gray-300 hover:bg-gray-400 hover:scale-110'
+                }`}
+              />
+            ))}
+          </div>
+          
+          {/* Descrição do testimonio atual */}
+          <div className="text-center mt-6">
+            <p className="text-gray-600 text-lg font-medium transition-all duration-500">
+              {testimonials[currentIndex].description}
+            </p>
+          </div>
         </div>
 
         {/* Additional social proof elements */}
