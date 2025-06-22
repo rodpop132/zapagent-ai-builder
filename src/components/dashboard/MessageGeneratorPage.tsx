@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Copy, RefreshCw, MessageCircle, Lightbulb, Zap, Crown } from 'lucide-react';
+import { Sparkles, Copy, RefreshCw, MessageCircle, Lightbulb, Zap, Crown, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
 
 const MessageGeneratorPage = () => {
@@ -13,6 +13,7 @@ const MessageGeneratorPage = () => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedTone, setSelectedTone] = useState('professional');
   const [selectedType, setSelectedType] = useState('response');
+  const [showExamples, setShowExamples] = useState(false);
 
   const tones = [
     { id: 'professional', label: 'Profissional', color: 'bg-blue-100 text-blue-700' },
@@ -95,115 +96,139 @@ const MessageGeneratorPage = () => {
 
   const useExample = (message: string) => {
     setClientMessage(message);
+    setShowExamples(false);
   };
 
   return (
-    <div className="space-y-8">
-      {/* Título */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Gerador de Mensagens com IA</h1>
-        <p className="text-gray-600 dark:text-gray-400">Crie respostas profissionais e personalizadas para seus clientes usando inteligência artificial</p>
+    <div className="space-y-4 md:space-y-8 px-2 md:px-0">
+      {/* Título - Mobile Otimizado */}
+      <div className="text-center md:text-left">
+        <h1 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">
+          Gerador de Mensagens com IA
+        </h1>
+        <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
+          Crie respostas profissionais e personalizadas para seus clientes
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Configurações */}
-        <div className="space-y-6">
-          {/* Tom da Mensagem */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Tom da Mensagem</CardTitle>
+      {/* Layout responsivo - Stack no mobile, Grid no desktop */}
+      <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-1 lg:grid-cols-3 md:gap-6 lg:gap-8">
+        
+        {/* Configurações - Mobile: Cards compactos lado a lado */}
+        <div className="space-y-3 md:space-y-6 lg:col-span-1">
+          
+          {/* Tom da Mensagem - Mobile: Grid 2x2 */}
+          <Card className="shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base md:text-lg">Tom da Mensagem</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-3">
               {tones.map((tone) => (
                 <Button
                   key={tone.id}
                   variant={selectedTone === tone.id ? "default" : "outline"}
-                  className={`w-full justify-start ${
+                  className={`w-full justify-start text-xs md:text-sm py-2 md:py-2.5 h-auto ${
                     selectedTone === tone.id 
                       ? 'bg-brand-green hover:bg-brand-green/90' 
                       : ''
                   }`}
                   onClick={() => setSelectedTone(tone.id)}
                 >
-                  {tone.label}
+                  <span className="truncate">{tone.label}</span>
                 </Button>
               ))}
             </CardContent>
           </Card>
 
-          {/* Tipo de Mensagem */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Tipo de Mensagem</CardTitle>
+          {/* Tipo de Mensagem - Mobile: Grid 2x2 com ícones */}
+          <Card className="shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base md:text-lg">Tipo de Mensagem</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="grid grid-cols-2 md:grid-cols-1 gap-2 md:gap-3">
               {messageTypes.map((type) => (
                 <Button
                   key={type.id}
                   variant={selectedType === type.id ? "default" : "outline"}
-                  className={`w-full justify-start ${
+                  className={`w-full justify-start text-xs md:text-sm py-2 md:py-2.5 h-auto ${
                     selectedType === type.id 
                       ? 'bg-brand-green hover:bg-brand-green/90' 
                       : ''
                   }`}
                   onClick={() => setSelectedType(type.id)}
                 >
-                  <type.icon className="h-4 w-4 mr-2" />
-                  {type.label}
+                  <type.icon className="h-3 w-3 md:h-4 md:w-4 mr-1 md:mr-2 flex-shrink-0" />
+                  <span className="truncate">{type.label}</span>
                 </Button>
               ))}
             </CardContent>
           </Card>
 
-          {/* Exemplos */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Exemplos</CardTitle>
+          {/* Exemplos - Mobile: Dropdown colapsável */}
+          <Card className="shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base md:text-lg">Exemplos</CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowExamples(!showExamples)}
+                  className="md:hidden h-6 w-6 p-0"
+                >
+                  {showExamples ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-2">
+            <CardContent className={`space-y-2 ${showExamples ? 'block' : 'hidden'} md:block`}>
               {exampleMessages.map((message, index) => (
                 <Button
                   key={index}
                   variant="ghost"
-                  className="w-full text-left text-sm p-2 h-auto whitespace-normal justify-start"
+                  className="w-full text-left text-xs md:text-sm p-2 h-auto whitespace-normal justify-start leading-relaxed"
                   onClick={() => useExample(message)}
                 >
-                  "{message}"
+                  <span className="text-left">"{message}"</span>
                 </Button>
               ))}
             </CardContent>
           </Card>
         </div>
 
-        {/* Área Principal */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* Área Principal - Mobile: Full width */}
+        <div className="space-y-4 md:space-y-6 lg:col-span-2">
+          
           {/* Input da Mensagem do Cliente */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Mensagem do Cliente</CardTitle>
+          <Card className="shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base md:text-lg">Mensagem do Cliente</CardTitle>
             </CardHeader>
             <CardContent>
               <Textarea
                 placeholder="Cole aqui a mensagem que o cliente enviou..."
                 value={clientMessage}
                 onChange={(e) => setClientMessage(e.target.value.slice(0, 500))}
-                rows={4}
-                className="w-full"
+                rows={3}
+                className="w-full text-sm md:text-base resize-none"
                 maxLength={500}
               />
-              <div className="flex justify-between items-center mt-4">
-                <p className="text-sm text-gray-500">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-3 space-y-2 sm:space-y-0">
+                <p className="text-xs md:text-sm text-gray-500">
                   {clientMessage.length}/500 caracteres
                 </p>
                 <Button
                   onClick={generateMessage}
                   disabled={isGenerating || !clientMessage.trim()}
-                  className="bg-brand-green hover:bg-brand-green/90"
+                  className="bg-brand-green hover:bg-brand-green/90 w-full sm:w-auto text-sm md:text-base"
+                  size={window.innerWidth < 768 ? "default" : "default"}
                 >
                   {isGenerating ? (
                     <>
                       <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Gerando com IA...
+                      Gerando...
                     </>
                   ) : (
                     <>
@@ -217,35 +242,35 @@ const MessageGeneratorPage = () => {
           </Card>
 
           {/* Mensagem Gerada */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center justify-between">
-                Resposta Gerada pela IA
+          <Card className="shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
+                <CardTitle className="text-base md:text-lg">Resposta Gerada pela IA</CardTitle>
                 {generatedMessage && (
-                  <div className="flex items-center space-x-2">
-                    <Badge className={tones.find(t => t.id === selectedTone)?.color}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge className={`${tones.find(t => t.id === selectedTone)?.color} text-xs`}>
                       {tones.find(t => t.id === selectedTone)?.label}
                     </Badge>
-                    <Badge variant="outline">
+                    <Badge variant="outline" className="text-xs">
                       {messageTypes.find(t => t.id === selectedType)?.label}
                     </Badge>
                   </div>
                 )}
-              </CardTitle>
+              </div>
             </CardHeader>
             <CardContent>
               {generatedMessage ? (
                 <div className="space-y-4">
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border">
-                    <p className="text-gray-900 dark:text-white whitespace-pre-wrap">
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 md:p-4 border">
+                    <p className="text-gray-900 dark:text-white whitespace-pre-wrap text-sm md:text-base leading-relaxed">
                       {generatedMessage}
                     </p>
                   </div>
-                  <div className="flex space-x-2">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-2">
                     <Button
                       onClick={copyMessage}
                       variant="outline"
-                      className="flex-1"
+                      className="flex-1 text-sm"
                     >
                       <Copy className="h-4 w-4 mr-2" />
                       Copiar Mensagem
@@ -254,48 +279,54 @@ const MessageGeneratorPage = () => {
                       onClick={generateMessage}
                       variant="outline"
                       disabled={isGenerating}
+                      className="sm:w-auto text-sm"
                     >
                       <RefreshCw className="h-4 w-4" />
+                      <span className="sm:hidden ml-2">Gerar Novamente</span>
                     </Button>
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  <Sparkles className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>Sua mensagem profissional aparecerá aqui</p>
-                  <p className="text-sm mt-2">Insira a mensagem do cliente e clique em "Gerar Resposta"</p>
+                <div className="text-center py-6 md:py-8 text-gray-500 dark:text-gray-400">
+                  <Sparkles className="h-8 w-8 md:h-12 md:w-12 mx-auto mb-3 md:mb-4 opacity-50" />
+                  <p className="text-sm md:text-base">Sua mensagem profissional aparecerá aqui</p>
+                  <p className="text-xs md:text-sm mt-1 md:mt-2">Insira a mensagem do cliente e clique em "Gerar Resposta"</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
-          {/* Upgrade Reminder */}
-          <Card className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border-yellow-200 dark:border-yellow-700">
-            <CardContent className="p-4">
-              <div className="flex items-start space-x-3">
-                <Crown className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+          {/* Upgrade Reminder - Mobile: Compacto */}
+          <Card className="bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border-yellow-200 dark:border-yellow-700 shadow-sm">
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-start space-x-2 md:space-x-3">
+                <Crown className="h-4 w-4 md:h-5 md:w-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h4 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-2">🔓 Atualize para o plano Pro</h4>
-                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                    Gere até 10.000 mensagens/mês com IA e tenha acesso a recursos avançados de personalização
+                  <h4 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-1 md:mb-2 text-sm md:text-base">
+                    🔓 Atualize para o plano Pro
+                  </h4>
+                  <p className="text-xs md:text-sm text-yellow-800 dark:text-yellow-200 leading-relaxed">
+                    Gere até 10.000 mensagens/mês com IA e tenha acesso a recursos avançados
                   </p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Dicas */}
-          <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700">
-            <CardContent className="p-4">
-              <div className="flex items-start space-x-3">
-                <Lightbulb className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+          {/* Dicas - Mobile: Compacto */}
+          <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 shadow-sm">
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-start space-x-2 md:space-x-3">
+                <Lightbulb className="h-4 w-4 md:h-5 md:w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Dicas para melhores resultados:</h4>
-                  <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                    <li>• Forneça o máximo de contexto possível da mensagem do cliente</li>
-                    <li>• Escolha o tom adequado para o seu tipo de negócio</li>
+                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1 md:mb-2 text-sm md:text-base">
+                    Dicas para melhores resultados:
+                  </h4>
+                  <ul className="text-xs md:text-sm text-blue-800 dark:text-blue-200 space-y-0.5 md:space-y-1 leading-relaxed">
+                    <li>• Forneça o máximo de contexto da mensagem do cliente</li>
+                    <li>• Escolha o tom adequado para seu tipo de negócio</li>
                     <li>• Sempre revise a mensagem antes de enviar</li>
-                    <li>• Personalize a resposta com informações específicas quando necessário</li>
+                    <li>• Personalize com informações específicas quando necessário</li>
                   </ul>
                 </div>
               </div>

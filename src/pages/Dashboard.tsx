@@ -399,6 +399,10 @@ const Dashboard = () => {
     return 'Atualizar Plano';
   };
 
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex items-center justify-center">
@@ -587,7 +591,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex">
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:inset-0`}>
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:relative lg:translate-x-0 ${sidebarOpen ? 'lg:block' : 'lg:hidden'}`}>
         <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-to-br from-brand-green to-green-600 rounded-lg flex items-center justify-center">
@@ -599,7 +603,7 @@ const Dashboard = () => {
             variant="ghost"
             size="sm"
             onClick={() => setSidebarOpen(false)}
-            className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-all duration-200"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-all duration-200"
           >
             <X className="h-5 w-5" />
           </Button>
@@ -618,7 +622,9 @@ const Dashboard = () => {
                 }`}
                 onClick={() => {
                   setCurrentPage(item.id);
-                  setSidebarOpen(false);
+                  if (window.innerWidth < 1024) {
+                    setSidebarOpen(false);
+                  }
                 }}
               >
                 <item.icon className="h-4 w-4 mr-3" />
@@ -638,32 +644,21 @@ const Dashboard = () => {
       )}
 
       {/* Main Content */}
-      <div className="flex-1 lg:ml-0">
+      <div className={`flex-1 transition-all duration-300 ${sidebarOpen ? 'lg:ml-0' : 'lg:ml-0'}`}>
         {/* Header */}
         <header className="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-100 dark:border-gray-700 backdrop-blur-sm bg-white/95 dark:bg-gray-800/95">
           <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
             <div className="flex justify-between items-center py-4 md:py-6">
               <div className="flex items-center space-x-3 md:space-x-4 min-w-0 flex-1">
-                {/* Botão de Menu - Mobile */}
+                {/* Botão de Menu - Funciona em mobile e desktop */}
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="flex items-center space-x-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 lg:hidden transition-all duration-300"
+                  onClick={toggleSidebar}
+                  className="flex items-center space-x-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300"
                 >
                   {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
                   <span className="hidden sm:inline text-sm">{sidebarOpen ? 'Fechar' : 'Menu'}</span>
-                </Button>
-                
-                {/* Botão de Menu - Desktop */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="hidden lg:flex items-center space-x-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-300"
-                >
-                  <Menu className="h-4 w-4" />
-                  <span className="text-sm">Menu</span>
                 </Button>
                 
                 <div className="min-w-0 flex-1">
