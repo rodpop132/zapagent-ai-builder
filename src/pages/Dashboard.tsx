@@ -717,6 +717,30 @@ const Dashboard = () => {
                 <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-semibold px-2 py-1 text-xs shadow-sm`}>
                   {getPlanDisplayName(subscription?.plan_type || 'free').substring(0, 4)}
                 </Badge>
+                
+                {/* Botões Mobile - Verificar e Upgrade */}
+                <div className="flex items-center space-x-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={verifySubscription}
+                    disabled={verifyingSubscription}
+                    className="text-blue-600 border-blue-200 hover:bg-blue-50 transition-all duration-300 px-2 py-1"
+                  >
+                    <RefreshCw className={`h-3 w-3 ${verifyingSubscription ? 'animate-spin' : ''}`} />
+                  </Button>
+                  {shouldShowUpgradeButton() && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowUpgradeModal(true)}
+                      className="text-brand-green border-brand-green/30 hover:bg-brand-green hover:text-white transition-all duration-300 px-2 py-1"
+                    >
+                      <Crown className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+                
                 <ProfileMenu />
               </div>
             </div>

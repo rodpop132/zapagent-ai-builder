@@ -382,6 +382,33 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_messages_usage: {
+        Row: {
+          created_at: string
+          id: string
+          last_reset_date: string
+          messages_generated: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_reset_date?: string
+          messages_generated?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_reset_date?: string
+          messages_generated?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           company_name: string | null
@@ -654,6 +681,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_ai_messages_limit: {
+        Args: { plan_type: string }
+        Returns: number
+      }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean
@@ -661,6 +692,10 @@ export type Database = {
       is_staff: {
         Args: { user_id: string }
         Returns: boolean
+      }
+      reset_monthly_ai_usage: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {

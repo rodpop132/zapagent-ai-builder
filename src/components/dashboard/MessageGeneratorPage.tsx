@@ -1,11 +1,11 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Sparkles, Copy, RefreshCw, MessageCircle, Lightbulb, Zap, Crown, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, Copy, RefreshCw, MessageCircle, Lightbulb, Zap, Crown, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAIMessagesUsage } from '@/hooks/useAIMessagesUsage';
 
 const MessageGeneratorPage = () => {
   const [clientMessage, setClientMessage] = useState('');
@@ -14,6 +14,8 @@ const MessageGeneratorPage = () => {
   const [selectedTone, setSelectedTone] = useState('professional');
   const [selectedType, setSelectedType] = useState('response');
   const [showExamples, setShowExamples] = useState(false);
+  
+  const { usage, loading: usageLoading, incrementUsage } = useAIMessagesUsage();
 
   const tones = [
     { id: 'professional', label: 'Profissional', color: 'bg-blue-100 text-blue-700' },
@@ -40,6 +42,12 @@ const MessageGeneratorPage = () => {
   const generateMessage = async () => {
     if (!clientMessage.trim()) {
       toast.error('Por favor, insira a mensagem do cliente');
+      return;
+    }
+
+    // Verificar limite antes de gerar
+    if (!usage?.can_generate) {
+      toast.error(`Limite de ${usage?.messages_limit || 10} mensagens atingido. Faça upgrade do seu plano!`);
       return;
     }
 
@@ -72,8 +80,14 @@ const MessageGeneratorPage = () => {
       console.log('✅ Resposta da IA recebida:', data);
 
       if (data.resposta) {
-        setGeneratedMessage(data.resposta);
-        toast.success('Mensagem gerada com sucesso!');
+        // Incrementar contador de uso
+        const success = await incrementUsage();
+        if (success) {
+          setGeneratedMessage(data.resposta);
+          toast.success('Mensagem gerada com sucesso!');
+        } else {
+          throw new Error('Erro ao atualizar contador de uso');
+        }
       } else {
         throw new Error('Resposta inválida da API');
       }
@@ -99,6 +113,20 @@ const MessageGeneratorPage = () => {
     setShowExamples(false);
   };
 
+  const getUsageDisplay = () => {
+    if (usageLoading || !usage) return 'Carregando...';
+    if (usage.messages_limit >= 999999) return '∞';
+    return `${usage.messages_generated}/${usage.messages_limit}`;
+  };
+
+  const getUsageColor = () => {
+    if (!usage) return 'text-gray-500';
+    const percentage = usage.messages_generated / usage.messages_limit;
+    if (percentage >= 0.9) return 'text-red-600';
+    if (percentage >= 0.7) return 'text-yellow-600';
+    return 'text-green-600';
+  };
+
   return (
     <div className="space-y-4 md:space-y-8 px-2 md:px-0">
       {/* Título - Mobile Otimizado */}
@@ -109,7 +137,33 @@ const MessageGeneratorPage = () => {
         <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
           Crie respostas profissionais e personalizadas para seus clientes
         </p>
+        
+        {/* Contador de Uso */}
+        <div className="mt-2 md:mt-4">
+          <Badge variant="outline" className={`${getUsageColor()} text-xs md:text-sm`}>
+            Mensagens geradas: {getUsageDisplay()}
+          </Badge>
+        </div>
       </div>
+
+      {/* Aviso de Limite */}
+      {usage && !usage.can_generate && (
+        <Card className="border-red-200 bg-red-50 dark:bg-red-900/20">
+          <CardContent className="p-3 md:p-4">
+            <div className="flex items-center space-x-2">
+              <AlertTriangle className="h-4 w-4 text-red-600" />
+              <div>
+                <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                  Limite de mensagens atingido
+                </p>
+                <p className="text-xs text-red-600 dark:text-red-300">
+                  Você atingiu o limite de {usage.messages_limit} mensagens do seu plano. Faça upgrade para continuar gerando.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Layout responsivo - Stack no mobile, Grid no desktop */}
       <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-1 lg:grid-cols-3 md:gap-6 lg:gap-8">
@@ -221,7 +275,7 @@ const MessageGeneratorPage = () => {
                 </p>
                 <Button
                   onClick={generateMessage}
-                  disabled={isGenerating || !clientMessage.trim()}
+                  disabled={isGenerating || !clientMessage.trim() || !usage?.can_generate}
                   className="bg-brand-green hover:bg-brand-green/90 w-full sm:w-auto text-sm md:text-base"
                   size={window.innerWidth < 768 ? "default" : "default"}
                 >
@@ -278,7 +332,7 @@ const MessageGeneratorPage = () => {
                     <Button
                       onClick={generateMessage}
                       variant="outline"
-                      disabled={isGenerating}
+                      disabled={isGenerating || !usage?.can_generate}
                       className="sm:w-auto text-sm"
                     >
                       <RefreshCw className="h-4 w-4" />

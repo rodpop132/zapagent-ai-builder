@@ -1,7 +1,9 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Legend } from 'recharts';
-import { TrendingUp, MessageCircle, Bot, Activity } from 'lucide-react';
+import { TrendingUp, MessageCircle, Bot, Activity, Sparkles } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Agent {
   id: string;
@@ -15,6 +17,7 @@ interface GlobalUsageData {
   totalMessagesUsed: number;
   activeAgents: number;
   agentsCount: number;
+  aiMessagesGenerated?: number;
 }
 
 interface Subscription {
@@ -32,6 +35,40 @@ interface MetricsPageProps {
 }
 
 const MetricsPage = ({ agents, globalUsage, subscription }: MetricsPageProps) => {
+  const { user } = useAuth();
+  const [aiMessagesUsage, setAiMessagesUsage] = useState<number>(0);
+  const [aiMessagesLimit, setAiMessagesLimit] = useState<number>(10);
+
+  useEffect(() => {
+    const fetchAIUsage = async () => {
+      if (!user?.id) return;
+
+      try {
+        // Buscar uso de mensagens IA
+        const { data: aiUsage } = await supabase
+          .from('ai_messages_usage')
+          .select('messages_generated')
+          .eq('user_id', user.id)
+          .single();
+
+        setAiMessagesUsage(aiUsage?.messages_generated || 0);
+
+        // Definir limite baseado no plano
+        const planType = subscription?.plan_type || 'free';
+        let limit = 10; // free
+        if (planType === 'pro') limit = 10000;
+        if (planType === 'ultra' || planType === 'unlimited') limit = 999999;
+        
+        setAiMessagesLimit(limit);
+
+      } catch (error) {
+        console.error('Erro ao buscar uso de mensagens IA:', error);
+      }
+    };
+
+    fetchAIUsage();
+  }, [user?.id, subscription?.plan_type]);
+
   // Dados simulados para demonstração
   const generateDailyData = () => {
     const days = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
@@ -69,6 +106,15 @@ const MetricsPage = ({ agents, globalUsage, subscription }: MetricsPageProps) =>
       change: '+12%'
     },
     {
+      title: 'Mensagens IA Geradas',
+      value: aiMessagesUsage,
+      icon: Sparkles,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-50',
+      change: `${aiMessagesLimit >= 999999 ? '∞' : `${aiMessagesUsage}/${aiMessagesLimit}`}`,
+      subtitle: `Limite: ${aiMessagesLimit >= 999999 ? '∞' : aiMessagesLimit}`
+    },
+    {
       title: 'Agentes Ativos',
       value: globalUsage?.activeAgents || 0,
       icon: Bot,
@@ -80,8 +126,8 @@ const MetricsPage = ({ agents, globalUsage, subscription }: MetricsPageProps) =>
       title: 'Taxa de Resposta',
       value: '94%',
       icon: TrendingUp,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-50',
       change: '+2%'
     },
     {
@@ -119,6 +165,9 @@ const MetricsPage = ({ agents, globalUsage, subscription }: MetricsPageProps) =>
                   <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1 truncate">{stat.title}</p>
                   <p className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
                   <p className="text-xs md:text-sm text-green-600 font-medium">{stat.change}</p>
+                  {stat.subtitle && (
+                    <p className="text-xs text-gray-500 mt-1">{stat.subtitle}</p>
+                  )}
                 </div>
               </div>
             </CardContent>
