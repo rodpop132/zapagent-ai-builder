@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -44,6 +45,16 @@ interface GlobalUsageData {
   totalMessagesUsed: number;
   activeAgents: number;
   agentsCount: number;
+}
+
+function getAgentLimitByPlan(planType: string) {
+  switch (planType) {
+    case 'free': return 1;
+    case 'pro': return 3;
+    case 'ultra': return 999999;
+    case 'unlimited': return 999999;
+    default: return 1;
+  }
 }
 
 const Dashboard = () => {
@@ -773,15 +784,5 @@ const Dashboard = () => {
     </div>
   );
 };
-
-function getAgentLimitByPlan(planType: string) {
-  switch (planType) {
-    case 'free': return 1;
-    case 'pro': return 3;
-    case 'ultra': return 999999;
-    case 'unlimited': return 999999;
-    default: return 1;
-  }
-}
 
 export default Dashboard;
