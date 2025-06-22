@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Bot, MessageCircle, BarChart3, Crown, RefreshCw, TrendingUp, Activity } from 'lucide-react';
+import { Plus, Bot, MessageCircle, BarChart3, Crown, RefreshCw, TrendingUp, Activity, Menu, X, Home, LineChart, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import AgentCard from '@/components/AgentCard';
@@ -16,6 +16,8 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import SupportNotifications from '@/components/SupportNotifications';
 import { ZapAgentService } from '@/services/zapAgentService';
+import MetricsPage from '@/components/dashboard/MetricsPage';
+import MessageGeneratorPage from '@/components/dashboard/MessageGeneratorPage';
 
 interface Agent {
   id: string;
@@ -56,7 +58,16 @@ const Dashboard = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [verifyingSubscription, setVerifyingSubscription] = useState(false);
+  const [currentPage, setCurrentPage] = useState('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { toast } = useToast();
+
+  // Menu items
+  const menuItems = [
+    { id: 'dashboard', name: 'Dashboard', icon: Home },
+    { id: 'metrics', name: 'Métricas', icon: LineChart },
+    { id: 'message-generator', name: 'Gerador de Mensagens', icon: Sparkles },
+  ];
 
   const getMessagesLimitByPlan = (planType: string) => {
     switch (planType) {
@@ -398,301 +409,330 @@ const Dashboard = () => {
   const planType = subscription?.plan_type || 'free';
   const agentLimit = getAgentLimitByPlan(planType);
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      {/* Enhanced Header with Plan Buttons */}
-      <header className="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-100 dark:border-gray-700 backdrop-blur-sm bg-white/95 dark:bg-gray-800/95">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
-          <div className="flex justify-between items-center py-4 md:py-6">
-            <div className="flex items-center space-x-3 md:space-x-4 min-w-0 flex-1">
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-brand-green to-green-600 rounded-xl flex items-center justify-center shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex-shrink-0">
-                <span className="text-white font-bold text-sm md:text-lg">ZA</span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white truncate">ZapAgent AI</h1>
-                <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 hidden sm:block">Dashboard</p>
-              </div>
-            </div>
-            
-            {/* Desktop Header Content */}
-            <div className="hidden lg:flex items-center space-x-6">
-              <LanguageSelector />
-              <div className="flex items-center space-x-3">
-                <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-semibold px-3 py-1 text-sm shadow-sm`}>
-                  {getPlanDisplayName(subscription?.plan_type || 'free')}
-                </Badge>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={verifySubscription}
-                  disabled={verifyingSubscription}
-                  className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 shadow-sm"
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${verifyingSubscription ? 'animate-spin' : ''}`} />
-                  {verifyingSubscription ? t('userDashboard.verifying') : t('userDashboard.verifyPlan')}
-                </Button>
-                {shouldShowUpgradeButton() && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowUpgradeModal(true)}
-                    className="text-brand-green border-brand-green/30 hover:bg-brand-green hover:text-white transition-all duration-200 hover:scale-105 shadow-sm"
-                  >
-                    <Crown className="h-4 w-4 mr-2" />
-                    {getUpgradeButtonText()}
-                  </Button>
-                )}
-              </div>
-              
-              <div className="flex items-center space-x-3">
-                <div className="text-right hidden xl:block">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">{t('userDashboard.welcome')}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{user?.email}</p>
-                </div>
-                <ProfileMenu />
-              </div>
-            </div>
+  const renderCurrentPage = () => {
+    switch (currentPage) {
+      case 'metrics':
+        return <MetricsPage agents={agents} globalUsage={globalUsage} subscription={subscription} />;
+      case 'message-generator':
+        return <MessageGeneratorPage />;
+      default:
+        return renderDashboardContent();
+    }
+  };
 
-            {/* Tablet Header Content */}
-            <div className="hidden md:flex lg:hidden items-center space-x-2">
-              <LanguageSelector />
-              <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-semibold px-2 py-1 text-xs shadow-sm`}>
-                {getPlanDisplayName(subscription?.plan_type || 'free')}
-              </Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={verifySubscription}
-                disabled={verifyingSubscription}
-                className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-xs px-2"
-              >
-                <RefreshCw className={`h-3 w-3 ${verifyingSubscription ? 'animate-spin' : ''}`} />
-              </Button>
-              {shouldShowUpgradeButton() && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowUpgradeModal(true)}
-                  className="text-brand-green border-brand-green/30 hover:bg-brand-green hover:text-white text-xs px-2"
-                >
-                  <Crown className="h-3 w-3" />
-                </Button>
-              )}
-              <ProfileMenu />
-            </div>
-
-            {/* Mobile Header Content */}
-            <div className="md:hidden flex items-center space-x-2">
-              <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-semibold px-2 py-1 text-xs shadow-sm`}>
-                {getPlanDisplayName(subscription?.plan_type || 'free').substring(0, 4)}
-              </Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={verifySubscription}
-                disabled={verifyingSubscription}
-                className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-xs p-1.5"
-              >
-                <RefreshCw className={`h-3 w-3 ${verifyingSubscription ? 'animate-spin' : ''}`} />
-              </Button>
-              {shouldShowUpgradeButton() && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowUpgradeModal(true)}
-                  className="text-brand-green border-brand-green/30 hover:bg-brand-green hover:text-white text-xs p-1.5"
-                >
-                  <Crown className="h-3 w-3" />
-                </Button>
-              )}
-              <ProfileMenu />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile Controls Bar */}
-      <div className="md:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-3 py-2">
-        <div className="flex items-center justify-center space-x-2">
-          <LanguageSelector />
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-        {/* Enhanced Limit Warning */}
-        {shouldShowLimitWarning() && (
-          <Alert className="mb-8 border-amber-200 dark:border-amber-700 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 shadow-sm">
-            <Activity className="h-4 w-4" />
-            <AlertDescription className="text-amber-800 dark:text-amber-200 font-medium">
-              {t('userDashboard.limitWarning')}
-              <button 
-                onClick={() => setShowUpgradeModal(true)}
-                className="ml-2 text-brand-green hover:underline font-semibold transition-colors"
-              >
-                {t('userDashboard.planUpgrade')}
-              </button>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Enhanced Stats Cards with Real Data */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
-          {[
-            { 
-              icon: Bot, 
-              label: t('userDashboard.agents'), 
-              value: `${agents.length}/${agentLimit === 999999 ? '∞' : agentLimit}`, 
-              color: 'from-brand-green to-green-600',
-              bgColor: 'bg-green-50 dark:bg-green-900/20',
-              iconColor: 'text-green-600 dark:text-green-400'
-            },
-            { 
-              icon: MessageCircle, 
-              label: t('userDashboard.messages'), 
-              value: getMessagesDisplay(), 
-              color: 'from-blue-500 to-blue-600',
-              bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-              iconColor: 'text-blue-600 dark:text-blue-400',
-              loading: !globalUsage && agents.length > 0
-            },
-            { 
-              icon: BarChart3, 
-              label: t('userDashboard.plan'), 
-              value: getPlanDisplayName(subscription?.plan_type || 'free'), 
-              color: 'from-purple-500 to-purple-600',
-              bgColor: 'bg-purple-50 dark:bg-purple-900/20',
-              iconColor: 'text-purple-600 dark:text-purple-400'
-            },
-            { 
-              icon: TrendingUp, 
-              label: t('userDashboard.active'), 
-              value: globalUsage?.activeAgents || agents.filter(agent => agent.is_active).length, 
-              color: 'from-orange-500 to-orange-600',
-              bgColor: 'bg-orange-50 dark:bg-orange-900/20',
-              iconColor: 'text-orange-600 dark:text-orange-400',
-              loading: !globalUsage && agents.length > 0
-            }
-          ].map((stat, index) => (
-            <Card 
-              key={index} 
-              className="hover:shadow-xl transition-all duration-300 hover:scale-105 border-0 shadow-lg bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm group"
+  const renderDashboardContent = () => (
+    <>
+      {/* Enhanced Limit Warning */}
+      {shouldShowLimitWarning() && (
+        <Alert className="mb-8 border-amber-200 dark:border-amber-700 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 shadow-sm">
+          <Activity className="h-4 w-4" />
+          <AlertDescription className="text-amber-800 dark:text-amber-200 font-medium">
+            {t('userDashboard.limitWarning')}
+            <button 
+              onClick={() => setShowUpgradeModal(true)}
+              className="ml-2 text-brand-green hover:underline font-semibold transition-colors"
             >
-              <CardContent className="p-4 md:p-6">
-                <div className="flex items-center justify-between">
-                  <div className={`p-3 rounded-xl ${stat.bgColor} group-hover:scale-110 transition-transform duration-300`}>
-                    <stat.icon className={`h-6 w-6 md:h-7 md:w-7 ${stat.iconColor}`} />
-                  </div>
-                  <div className="text-right min-w-0 flex-1 ml-3">
-                    <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">{stat.label}</p>
-                    <p className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white group-hover:scale-105 transition-transform duration-300">
-                      {stat.loading ? (
-                        <RefreshCw className="h-5 w-5 animate-spin inline" />
-                      ) : (
-                        stat.value
-                      )}
-                    </p>
-                  </div>
-                </div>
-                <div className={`h-1 w-full bg-gradient-to-r ${stat.color} rounded-full mt-3 md:mt-4 opacity-20 group-hover:opacity-100 transition-opacity duration-300`}></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              {t('userDashboard.planUpgrade')}
+            </button>
+          </AlertDescription>
+        </Alert>
+      )}
 
-        {/* Enhanced Agents Section */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">{t('userDashboard.myAgents')}</h2>
-              <p className="text-gray-600 dark:text-gray-400">Gerencie seus assistentes virtuais</p>
-            </div>
-            <Button 
-              onClick={handleCreateAgent}
-              className="bg-gradient-to-r from-brand-green to-green-600 hover:from-brand-green/90 hover:to-green-600/90 text-white transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl w-full sm:w-auto"
-              disabled={loading}
-              size="lg"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              {loading ? t('userDashboard.loading') : t('userDashboard.createAgent')}
-            </Button>
-          </div>
-
-          {/* Enhanced Plan info message */}
-          {!loading && !canCreateAgent() && (
-            <div className="mb-8 p-6 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl shadow-sm">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 bg-yellow-100 dark:bg-yellow-900/40 rounded-lg">
-                  <Crown className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+      {/* Enhanced Stats Cards with Real Data */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8 md:mb-12">
+        {[
+          { 
+            icon: Bot, 
+            label: t('userDashboard.agents'), 
+            value: `${agents.length}/${agentLimit === 999999 ? '∞' : agentLimit}`, 
+            color: 'from-brand-green to-green-600',
+            bgColor: 'bg-green-50 dark:bg-green-900/20',
+            iconColor: 'text-green-600 dark:text-green-400'
+          },
+          { 
+            icon: MessageCircle, 
+            label: t('userDashboard.messages'), 
+            value: getMessagesDisplay(), 
+            color: 'from-blue-500 to-blue-600',
+            bgColor: 'bg-blue-50 dark:bg-blue-900/20',
+            iconColor: 'text-blue-600 dark:text-blue-400',
+            loading: !globalUsage && agents.length > 0
+          },
+          { 
+            icon: BarChart3, 
+            label: t('userDashboard.plan'), 
+            value: getPlanDisplayName(subscription?.plan_type || 'free'), 
+            color: 'from-purple-500 to-purple-600',
+            bgColor: 'bg-purple-50 dark:bg-purple-900/20',
+            iconColor: 'text-purple-600 dark:text-purple-400'
+          },
+          { 
+            icon: TrendingUp, 
+            label: t('userDashboard.active'), 
+            value: globalUsage?.activeAgents || agents.filter(agent => agent.is_active).length, 
+            color: 'from-orange-500 to-orange-600',
+            bgColor: 'bg-orange-50 dark:bg-orange-900/20',
+            iconColor: 'text-orange-600 dark:text-orange-400',
+            loading: !globalUsage && agents.length > 0
+          }
+        ].map((stat, index) => (
+          <Card 
+            key={index} 
+            className="hover:shadow-xl transition-all duration-300 hover:scale-105 border-0 shadow-lg bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm group"
+          >
+            <CardContent className="p-4 md:p-6">
+              <div className="flex items-center justify-between">
+                <div className={`p-3 rounded-xl ${stat.bgColor} group-hover:scale-110 transition-transform duration-300`}>
+                  <stat.icon className={`h-6 w-6 md:h-7 md:w-7 ${stat.iconColor}`} />
                 </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-1">{t('userDashboard.limitReached')}</h4>
-                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                    {t('userDashboard.limitInfo', { planName: getPlanDisplayName(planType), limit: agentLimit })}
-                    <button 
-                      onClick={() => setShowUpgradeModal(true)}
-                      className="ml-2 text-brand-green hover:underline font-semibold transition-colors"
-                    >
-                      {t('userDashboard.planUpgrade')}
-                    </button>
+                <div className="text-right min-w-0 flex-1 ml-3">
+                  <p className="text-xs md:text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">{stat.label}</p>
+                  <p className="text-lg md:text-2xl font-bold text-gray-900 dark:text-white group-hover:scale-105 transition-transform duration-300">
+                    {stat.loading ? (
+                      <RefreshCw className="h-5 w-5 animate-spin inline" />
+                    ) : (
+                      stat.value
+                    )}
                   </p>
                 </div>
               </div>
-            </div>
-          )}
-
-          {agents.length === 0 ? (
-            <Card className="shadow-lg border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
-              <CardContent className="p-8 md:p-16 text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Bot className="h-10 w-10 text-gray-400 dark:text-gray-500" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-                  {t('userDashboard.noAgentsYet')}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-8 text-base max-w-md mx-auto leading-relaxed">
-                  {t('userDashboard.noAgentsDescription')}
-                </p>
-                <Button 
-                  onClick={handleCreateAgent}
-                  className="bg-gradient-to-r from-brand-green to-green-600 hover:from-brand-green/90 hover:to-green-600/90 text-white transition-all duration-300 hover:scale-105 shadow-lg"
-                  disabled={loading}
-                  size="lg"
-                >
-                  <Plus className="h-5 w-5 mr-2" />
-                  {loading ? t('userDashboard.loading') : t('userDashboard.createFirstAgent')}
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
-              {agents.map((agent) => (
-                <AgentCard
-                  key={agent.id}
-                  agent={agent}
-                  onUpdate={fetchAgents}
-                  subscription={subscription}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+              <div className={`h-1 w-full bg-gradient-to-r ${stat.color} rounded-full mt-3 md:mt-4 opacity-20 group-hover:opacity-100 transition-opacity duration-300`}></div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Modals */}
-      <CreateAgentModal
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onAgentCreated={onAgentCreated}
-      />
+      {/* Enhanced Agents Section */}
+      <div className="mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">{t('userDashboard.myAgents')}</h2>
+            <p className="text-gray-600 dark:text-gray-400">Gerencie seus assistentes virtuais</p>
+          </div>
+          <Button 
+            onClick={handleCreateAgent}
+            className="bg-gradient-to-r from-brand-green to-green-600 hover:from-brand-green/90 hover:to-green-600/90 text-white transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl w-full sm:w-auto"
+            disabled={loading}
+            size="lg"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            {loading ? t('userDashboard.loading') : t('userDashboard.createAgent')}
+          </Button>
+        </div>
 
-      <PlanUpgradeModal
-        isOpen={showUpgradeModal}
-        onClose={() => setShowUpgradeModal(false)}
-        currentPlan={subscription?.plan_type || 'free'}
-      />
+        {/* Enhanced Plan info message */}
+        {!loading && !canCreateAgent() && (
+          <div className="mb-8 p-6 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl shadow-sm">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-yellow-100 dark:bg-yellow-900/40 rounded-lg">
+                <Crown className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-1">{t('userDashboard.limitReached')}</h4>
+                <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                  {t('userDashboard.limitInfo', { planName: getPlanDisplayName(planType), limit: agentLimit })}
+                  <button 
+                    onClick={() => setShowUpgradeModal(true)}
+                    className="ml-2 text-brand-green hover:underline font-semibold transition-colors"
+                  >
+                    {t('userDashboard.planUpgrade')}
+                  </button>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
-      {/* Support Notifications only - removed SocialProofNotifications */}
-      <SupportNotifications />
+        {agents.length === 0 ? (
+          <Card className="shadow-lg border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+            <CardContent className="p-8 md:p-16 text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Bot className="h-10 w-10 text-gray-400 dark:text-gray-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                {t('userDashboard.noAgentsYet')}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-8 text-base max-w-md mx-auto leading-relaxed">
+                {t('userDashboard.noAgentsDescription')}
+              </p>
+              <Button 
+                onClick={handleCreateAgent}
+                className="bg-gradient-to-r from-brand-green to-green-600 hover:from-brand-green/90 hover:to-green-600/90 text-white transition-all duration-300 hover:scale-105 shadow-lg"
+                disabled={loading}
+                size="lg"
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                {loading ? t('userDashboard.loading') : t('userDashboard.createFirstAgent')}
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
+            {agents.map((agent) => (
+              <AgentCard
+                key={agent.id}
+                agent={agent}
+                onUpdate={fetchAgents}
+                subscription={subscription}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex">
+      {/* Sidebar */}
+      <div className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 shadow-lg transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+        <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-brand-green to-green-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">ZA</span>
+            </div>
+            <span className="text-lg font-bold text-gray-900 dark:text-white">ZapAgent AI</span>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        
+        <nav className="mt-8 px-4">
+          <div className="space-y-2">
+            {menuItems.map((item) => (
+              <Button
+                key={item.id}
+                variant={currentPage === item.id ? "default" : "ghost"}
+                className={`w-full justify-start ${
+                  currentPage === item.id 
+                    ? 'bg-brand-green text-white hover:bg-brand-green/90' 
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+                onClick={() => {
+                  setCurrentPage(item.id);
+                  setSidebarOpen(false);
+                }}
+              >
+                <item.icon className="h-4 w-4 mr-3" />
+                {item.name}
+              </Button>
+            ))}
+          </div>
+        </nav>
+      </div>
+
+      {/* Overlay for mobile */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Main Content */}
+      <div className="flex-1 lg:ml-0">
+        {/* Enhanced Header */}
+        <header className="bg-white dark:bg-gray-800 shadow-lg border-b border-gray-100 dark:border-gray-700 backdrop-blur-sm bg-white/95 dark:bg-gray-800/95">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
+            <div className="flex justify-between items-center py-4 md:py-6">
+              <div className="flex items-center space-x-3 md:space-x-4 min-w-0 flex-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSidebarOpen(true)}
+                  className="lg:hidden"
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-gray-900 dark:text-white truncate">
+                    {menuItems.find(item => item.id === currentPage)?.name || 'Dashboard'}
+                  </h1>
+                  <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
+                    {currentPage === 'dashboard' && 'Painel principal'}
+                    {currentPage === 'metrics' && 'Análise de desempenho'}
+                    {currentPage === 'message-generator' && 'IA para mensagens profissionais'}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Desktop Header Content */}
+              <div className="hidden lg:flex items-center space-x-6">
+                <LanguageSelector />
+                <div className="flex items-center space-x-3">
+                  <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-semibold px-3 py-1 text-sm shadow-sm`}>
+                    {getPlanDisplayName(subscription?.plan_type || 'free')}
+                  </Badge>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={verifySubscription}
+                    disabled={verifyingSubscription}
+                    className="text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 shadow-sm"
+                  >
+                    <RefreshCw className={`h-4 w-4 mr-2 ${verifyingSubscription ? 'animate-spin' : ''}`} />
+                    {verifyingSubscription ? t('userDashboard.verifying') : t('userDashboard.verifyPlan')}
+                  </Button>
+                  {shouldShowUpgradeButton() && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowUpgradeModal(true)}
+                      className="text-brand-green border-brand-green/30 hover:bg-brand-green hover:text-white transition-all duration-200 hover:scale-105 shadow-sm"
+                    >
+                      <Crown className="h-4 w-4 mr-2" />
+                      {getUpgradeButtonText()}
+                    </Button>
+                  )}
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <div className="text-right hidden xl:block">
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{t('userDashboard.welcome')}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{user?.email}</p>
+                  </div>
+                  <ProfileMenu />
+                </div>
+              </div>
+
+              {/* Mobile Header Content */}
+              <div className="lg:hidden flex items-center space-x-2">
+                <Badge className={`${getPlanBadgeColor(subscription?.plan_type || 'free')} font-semibold px-2 py-1 text-xs shadow-sm`}>
+                  {getPlanDisplayName(subscription?.plan_type || 'free').substring(0, 4)}
+                </Badge>
+                <ProfileMenu />
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Page Content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+          {renderCurrentPage()}
+        </div>
+
+        {/* Modals */}
+        <CreateAgentModal
+          isOpen={showCreateModal}
+          onClose={() => setShowCreateModal(false)}
+          onAgentCreated={onAgentCreated}
+        />
+
+        <PlanUpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+          currentPlan={subscription?.plan_type || 'free'}
+        />
+
+        {/* Support Notifications */}
+        <SupportNotifications />
+      </div>
     </div>
   );
 };
