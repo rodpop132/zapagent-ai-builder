@@ -5,52 +5,16 @@ import TestimonialsLoading from './TestimonialsLoading';
 
 const testimonials = [
   {
-    name: "Maria Silva",
-    role: "E-commerce Manager",
-    company: "Loja Virtual SP",
-    rating: 5,
-    text: "O ZapAgent AI revolucionou nosso atendimento! Conseguimos responder 10x mais clientes com a mesma qualidade.",
-    avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop&crop=face"
+    id: 1,
+    image: "/lovable-uploads/0ffd057c-839c-471f-aaf5-c5ae8e964207.png",
+    alt: "Conversa WhatsApp com Manuel",
+    description: "Cliente impressionado com o ZapAgent e fazendo vendas mesmo dormindo"
   },
   {
-    name: "João Santos",
-    role: "Proprietário",
-    company: "Restaurante Sabor & Arte",
-    rating: 5,
-    text: "Desde que implementamos o assistente, nossos pedidos aumentaram 40%. O sistema é incrível!",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
-  },
-  {
-    name: "Ana Costa",
-    role: "Diretora de Marketing",
-    company: "Clínica Vida Saudável",
-    rating: 5,
-    text: "A automação do agendamento nos permitiu focar no que realmente importa: cuidar dos nossos pacientes.",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
-  },
-  {
-    name: "Carlos Oliveira",
-    role: "CEO",
-    company: "Tech Solutions",
-    rating: 5,
-    text: "ROI impressionante! O investimento se pagou em menos de 2 meses. Recomendo para qualquer negócio.",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
-  },
-  {
-    name: "Luciana Ferreira",
-    role: "Gerente de Vendas",
-    company: "Moda & Estilo",
-    rating: 5,
-    text: "Nossos clientes adoram a rapidez nas respostas. O atendimento ficou disponível 24/7 sem custos extras.",
-    avatar: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=150&h=150&fit=crop&crop=face"
-  },
-  {
-    name: "Rafael Lima",
-    role: "Fundador",
-    company: "Fitness Pro",
-    rating: 5,
-    text: "A integração foi super simples e os resultados apareceram na primeira semana. Fantástico!",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face"
+    id: 2,
+    image: "/lovable-uploads/06325286-8456-4fc7-a18f-a7eed0626138.png",
+    alt: "Conversa WhatsApp com ZapAgent",
+    description: "Cliente satisfeito com o atendimento e serviço do ZapAgent"
   }
 ];
 
@@ -75,53 +39,78 @@ const Testimonials = () => {
       <div className="container mx-auto px-6">
         <div className="text-center mb-16 animate-fade-in">
           <h2 className="text-4xl font-bold text-gray-900 mb-4 transition-all duration-700 hover:text-primary">
-            O que nossos clientes dizem
+            Resultados Reais dos Nossos Clientes
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto transition-all duration-500 hover:text-gray-800">
-            Mais de 10.000 empresas já transformaram seu atendimento com o ZapAgent AI
+            Veja como o ZapAgent está transformando negócios através do WhatsApp
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-4xl mx-auto mb-16">
           {testimonials.map((testimonial, index) => (
             <div
-              key={index}
-              className="bg-white rounded-xl shadow-lg p-6 hover-lift animate-scale-in transition-all duration-500 hover:shadow-2xl hover:bg-gray-50 group"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              key={testimonial.id}
+              className="group relative animate-scale-in hover-lift transition-all duration-500"
+              style={{ animationDelay: `${index * 0.2}s` }}
             >
-              <div className="flex items-center mb-4">
-                {[...Array(testimonial.rating)].map((_, i) => (
-                  <Star 
-                    key={i} 
-                    className="h-5 w-5 text-yellow-400 fill-current transition-transform duration-300 hover:scale-125" 
+              <div className="relative overflow-hidden rounded-2xl shadow-2xl group-hover:shadow-3xl transition-all duration-500 group-hover:scale-105">
+                {/* iPhone-style frame */}
+                <div className="bg-gray-900 rounded-t-2xl px-4 py-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex space-x-2">
+                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                      <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    </div>
+                    <div className="text-white text-xs font-medium">WhatsApp</div>
+                  </div>
+                </div>
+                
+                {/* Screenshot */}
+                <div className="relative">
+                  <img
+                    src={testimonial.image}
+                    alt={testimonial.alt}
+                    className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-110"
                   />
-                ))}
+                  
+                  {/* Overlay with subtle gradient */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                </div>
+                
+                {/* Floating badge */}
+                <div className="absolute top-4 right-4 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg animate-bounce">
+                  ✓ Verificado
+                </div>
               </div>
               
-              <div className="relative mb-6">
-                <Quote className="absolute -top-2 -left-2 h-8 w-8 text-primary opacity-20 transition-all duration-300 group-hover:opacity-40 group-hover:scale-110" />
-                <p className="text-gray-700 leading-relaxed pl-4 transition-all duration-300 group-hover:text-gray-900">
-                  "{testimonial.text}"
+              {/* Description */}
+              <div className="mt-4 text-center">
+                <p className="text-gray-600 text-sm font-medium group-hover:text-gray-800 transition-colors duration-300">
+                  {testimonial.description}
                 </p>
-              </div>
-
-              <div className="flex items-center">
-                <img
-                  src={testimonial.avatar}
-                  alt={testimonial.name}
-                  className="w-12 h-12 rounded-full object-cover mr-4 transition-all duration-300 group-hover:scale-110 group-hover:ring-2 group-hover:ring-primary group-hover:ring-opacity-50"
-                />
-                <div className="transition-all duration-300">
-                  <h4 className="font-semibold text-gray-900 transition-colors duration-300 group-hover:text-primary">{testimonial.name}</h4>
-                  <p className="text-sm text-gray-600 transition-colors duration-300 group-hover:text-gray-800">{testimonial.role}</p>
-                  <p className="text-sm text-primary font-medium transition-all duration-300 group-hover:font-bold">{testimonial.company}</p>
-                </div>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="text-center mt-16 animate-fade-in">
+        {/* Additional social proof elements */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+          <div className="text-center animate-fade-in">
+            <div className="text-3xl font-bold text-green-600 mb-2">98%</div>
+            <p className="text-gray-600">Taxa de Satisfação</p>
+          </div>
+          <div className="text-center animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <div className="text-3xl font-bold text-blue-600 mb-2">24/7</div>
+            <p className="text-gray-600">Disponibilidade</p>
+          </div>
+          <div className="text-center animate-fade-in" style={{ animationDelay: '0.4s' }}>
+            <div className="text-3xl font-bold text-purple-600 mb-2">+10k</div>
+            <p className="text-gray-600">Empresas Atendidas</p>
+          </div>
+        </div>
+
+        <div className="text-center animate-fade-in">
           <div className="inline-flex items-center bg-white rounded-full px-8 py-4 shadow-lg transition-all duration-500 hover:shadow-2xl hover:scale-105 hover:bg-gray-50 group">
             <div className="flex items-center mr-6">
               <div className="flex">
