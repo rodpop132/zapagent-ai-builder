@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { X, MessageCircle, User, Bot } from 'lucide-react';
+import { X, MessageCircle, User, Bot, Phone, Video, MoreVertical, Send, Paperclip, Mic, Smile } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface Message {
@@ -163,27 +163,6 @@ const ConversationSimulator = ({ isOpen, onClose }: ConversationSimulatorProps) 
           bot: "😊 De nada! Qualquer dúvida, é só chamar. Tenha um ótimo dia!",
           options: [
             { text: "Reiniciar conversa", next: -1 }
-          ]
-        },
-        {
-          bot: "Vou procurar por você! Enquanto isso, posso te ajudar com mais alguma coisa?",
-          options: [
-            { text: "Horário de funcionamento", next: 29 },
-            { text: "Formas de pagamento", next: 30 }
-          ]
-        },
-        {
-          bot: "🎨 Sim! Temos em: Azul Pacífico, Rosa, Preto Natural, Verde e Amarelo. Qual prefere?",
-          options: [
-            { text: "Azul Pacífico", next: 31 },
-            { text: "Preto Natural", next: 32 }
-          ]
-        },
-        {
-          bot: "💰 Notebook Dell por R$ 2.899 à vista ou 10x R$ 319. Ótimo custo-benefício!",
-          options: [
-            { text: "Quero comprar", next: 33 },
-            { text: "Tem garantia?", next: 34 }
           ]
         }
       ]
@@ -403,7 +382,7 @@ const ConversationSimulator = ({ isOpen, onClose }: ConversationSimulatorProps) 
           ]
         },
         {
-          bot: "💻 Laptop Dell Inspiron: Intel i7, 16GB RAM, SSD 512GB, pantalla 15.6\". ¡Perfecto para trabajo y estudio!",
+          bot: "💻 Laptop Dell Inspiron: Intel i7, 16GB RAM, 512GB SSD, 15.6\" screen. ¡Perfecto para trabajo y estudio!",
           options: [
             { text: "¿Cuál es el precio?", next: 23 }
           ]
@@ -467,94 +446,136 @@ const ConversationSimulator = ({ isOpen, onClose }: ConversationSimulatorProps) 
     setSelectedLanguage('');
   };
 
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fade-in">
-      <Card className="w-full max-w-md h-[600px] flex flex-col animate-scale-in">
-        <div className="flex items-center justify-between p-4 border-b bg-green-600 text-white rounded-t-lg">
-          <div className="flex items-center space-x-2">
-            <MessageCircle className="h-5 w-5" />
-            <span className="font-semibold">ZapAgent Simulator</span>
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fade-in backdrop-blur-sm">
+      <Card className="w-full max-w-md h-[700px] flex flex-col animate-scale-in overflow-hidden bg-white">
+        {/* WhatsApp Header */}
+        <div className="flex items-center justify-between p-3 bg-green-600 text-white">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+              <Bot className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-sm">ZapAgent Store</h3>
+              <p className="text-xs text-green-100 flex items-center">
+                <span className="w-2 h-2 bg-green-300 rounded-full mr-1"></span>
+                online
+              </p>
+            </div>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onClose}
-            className="text-white hover:bg-white/20"
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-green-700 p-2"
+            >
+              <Phone className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-green-700 p-2"
+            >
+              <Video className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-green-700 p-2"
+            >
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              className="text-white hover:bg-green-700 p-2"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
-        <CardContent className="flex-1 overflow-y-auto p-0">
+        {/* Chat Background */}
+        <div 
+          className="flex-1 overflow-y-auto bg-gray-100 relative"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-opacity='0.03'%3E%3Cpolygon fill='%23000' points='50 0 60 40 100 50 60 60 50 100 40 60 0 50 40 40'/%3E%3C/g%3E%3C/svg%3E")`
+          }}
+        >
           {!selectedLanguage ? (
-            // Language selection
-            <div className="p-6 text-center">
-              <h3 className="text-lg font-semibold mb-4">{currentScenario.initial}</h3>
-              <div className="space-y-3">
-                {currentScenario.languages.map((lang) => (
-                  <Button
-                    key={lang.code}
-                    variant="outline"
-                    onClick={() => handleLanguageSelect(lang.code)}
-                    className="w-full"
-                  >
-                    {lang.name}
-                  </Button>
-                ))}
-              </div>
-              <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                <p className="text-sm text-gray-600">
-                  Esta é uma simulação interativa onde você pode experimentar como seria uma conversa real com nosso assistente virtual. Escolha um idioma para começar!
-                </p>
+            // Language selection with WhatsApp style
+            <div className="p-6 flex flex-col items-center justify-center h-full">
+              <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
+                <div className="text-center mb-4">
+                  <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <MessageCircle className="h-8 w-8 text-white" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Bem-vindo!</h3>
+                  <p className="text-sm text-gray-600">{currentScenario.initial}</p>
+                </div>
+                <div className="space-y-2">
+                  {currentScenario.languages.map((lang) => (
+                    <Button
+                      key={lang.code}
+                      variant="outline"
+                      onClick={() => handleLanguageSelect(lang.code)}
+                      className="w-full justify-start hover:bg-green-50 border-green-200"
+                    >
+                      {lang.name}
+                    </Button>
+                  ))}
+                </div>
               </div>
             </div>
           ) : (
-            // Chat interface
+            // Chat messages with WhatsApp style
             <div className="flex flex-col h-full">
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {messages.map((message) => (
                   <div
                     key={message.id}
                     className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div
-                      className={`flex items-start space-x-2 max-w-[80%] ${
-                        message.sender === 'user' ? 'flex-row-reverse space-x-reverse' : ''
+                      className={`max-w-[80%] rounded-lg p-3 shadow-sm ${
+                        message.sender === 'user'
+                          ? 'bg-green-500 text-white rounded-br-none'
+                          : 'bg-white text-gray-800 rounded-bl-none border'
                       }`}
                     >
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        message.sender === 'user' 
-                          ? 'bg-blue-500 text-white' 
-                          : 'bg-green-600 text-white'
+                      <p className="text-sm leading-relaxed">{message.text}</p>
+                      <div className={`flex items-center justify-end mt-1 space-x-1 ${
+                        message.sender === 'user' ? 'text-green-100' : 'text-gray-500'
                       }`}>
-                        {message.sender === 'user' ? <User className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
-                      </div>
-                      <div
-                        className={`px-4 py-2 rounded-lg ${
-                          message.sender === 'user'
-                            ? 'bg-blue-500 text-white rounded-br-none'
-                            : 'bg-gray-100 text-gray-900 rounded-bl-none'
-                        }`}
-                      >
-                        <p className="text-sm">{message.text}</p>
+                        <span className="text-xs">{formatTime(message.timestamp)}</span>
+                        {message.sender === 'user' && (
+                          <div className="flex">
+                            <div className="w-3 h-3 text-green-200">✓✓</div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Options */}
+              {/* Quick replies with WhatsApp style */}
               {currentScenario.conversation[currentStep]?.options && (
-                <div className="p-4 border-t bg-gray-50">
+                <div className="p-3 bg-white border-t">
                   <div className="space-y-2">
                     {currentScenario.conversation[currentStep].options.map((option, index) => (
                       <Button
                         key={index}
                         variant="outline"
                         onClick={() => handleOptionSelect(option)}
-                        className="w-full text-sm justify-start"
+                        className="w-full text-sm justify-start hover:bg-green-50 border-green-200 text-green-700 hover:text-green-800"
                       >
                         {option.text}
                       </Button>
@@ -562,11 +583,40 @@ const ConversationSimulator = ({ isOpen, onClose }: ConversationSimulatorProps) 
                   </div>
                 </div>
               )}
+
+              {/* WhatsApp-style input bar */}
+              <div className="p-3 bg-gray-50 border-t flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="p-2 text-gray-500 hover:text-gray-700"
+                >
+                  <Smile className="h-5 w-5" />
+                </Button>
+                <div className="flex-1 bg-white rounded-full border flex items-center px-3 py-2">
+                  <span className="text-sm text-gray-500 flex-1">Digite uma mensagem...</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="p-1 text-gray-500 hover:text-gray-700"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="p-2 text-gray-500 hover:text-gray-700"
+                >
+                  <Mic className="h-5 w-5" />
+                </Button>
+              </div>
             </div>
           )}
-        </CardContent>
+        </div>
 
-        <div className="p-4 border-t">
+        {/* Reset button */}
+        <div className="p-3 border-t bg-gray-50">
           <Button
             variant="outline"
             onClick={resetSimulation}
