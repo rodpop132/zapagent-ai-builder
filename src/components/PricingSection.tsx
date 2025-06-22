@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Check, X, Crown, Zap } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -84,8 +85,9 @@ const PricingSection = () => {
     { text: 'Suporte básico por email', included: true, limited: true },
     { text: 'Funcionalidades limitadas', included: true, limited: true },
     { text: 'Sem análise de conversas', included: false },
-    { text: 'Sem integração avançada', included: false },
-    { text: 'Sem suporte prioritário', included: false },
+    { text: 'Sem rastreamento de mensagens', included: false },
+    { text: 'Sem métricas em tempo real', included: false },
+    { text: 'Sem atualização automática', included: false },
   ];
 
   const proPlanFeatures = [
@@ -93,9 +95,11 @@ const PricingSection = () => {
     { text: 'Até 3 agentes IA', included: true },
     { text: 'Suporte prioritário', included: true },
     { text: 'Análise detalhada de conversas', included: true },
+    { text: 'Rastreamento completo de mensagens', included: true },
+    { text: 'Métricas em tempo real', included: true },
+    { text: 'Auto-refresh a cada 30 segundos', included: true },
     { text: 'Integração WhatsApp Business', included: true },
     { text: 'Relatórios de performance', included: true },
-    { text: 'Personalização avançada', included: true },
   ];
 
   const ultraPlanFeatures = [
@@ -103,6 +107,10 @@ const PricingSection = () => {
     { text: 'Agentes IA ILIMITADOS', included: true },
     { text: 'Suporte VIP 24/7', included: true },
     { text: 'IA com memória avançada', included: true },
+    { text: 'Rastreamento avançado em tempo real', included: true },
+    { text: 'Dashboard executivo completo', included: true },
+    { text: 'Atualização automática instantânea', included: true },
+    { text: 'Análise preditiva de conversas', included: true },
     { text: 'API personalizada', included: true },
     { text: 'White label disponível', included: true },
     { text: 'Gerente de conta dedicado', included: true },
@@ -138,7 +146,7 @@ const PricingSection = () => {
               <p className="text-xs md:text-sm lg:text-base text-gray-500 px-2">Para testar o básico</p>
             </div>
             
-            <ul className="space-y-2 md:space-y-3 lg:space-y-4 mb-4 md:mb-6 lg:mb-8 min-h-[200px]">
+            <ul className="space-y-2 md:space-y-3 lg:space-y-4 mb-4 md:mb-6 lg:mb-8 min-h-[250px]">
               {freePlanFeatures.map((feature, index) => (
                 <li key={index} className="flex items-start">
                   {feature.included ? (
@@ -198,7 +206,7 @@ const PricingSection = () => {
               <p className="text-xs text-gray-500 mt-2 italic">Experimente 7 dias grátis!</p>
             </div>
             
-            <ul className="space-y-2 md:space-y-3 lg:space-y-4 mb-4 md:mb-6 lg:mb-8 min-h-[200px]">
+            <ul className="space-y-2 md:space-y-3 lg:space-y-4 mb-4 md:mb-6 lg:mb-8 min-h-[250px]">
               {proPlanFeatures.map((feature, index) => (
                 <li key={index} className="flex items-start">
                   <Check className="h-4 w-4 md:h-5 md:w-5 text-brand-green mr-2 md:mr-3 flex-shrink-0 mt-0.5" />
@@ -249,7 +257,7 @@ const PricingSection = () => {
               <p className="text-xs text-purple-600 mt-2 italic font-medium">Sem limites. Máximo poder!</p>
             </div>
             
-            <ul className="space-y-2 md:space-y-3 lg:space-y-4 mb-4 md:mb-6 lg:mb-8 min-h-[200px]">
+            <ul className="space-y-2 md:space-y-3 lg:space-y-4 mb-4 md:mb-6 lg:mb-8 min-h-[250px]">
               {ultraPlanFeatures.map((feature, index) => (
                 <li key={index} className="flex items-start">
                   <Check className="h-4 w-4 md:h-5 md:w-5 text-purple-600 mr-2 md:mr-3 flex-shrink-0 mt-0.5" />
