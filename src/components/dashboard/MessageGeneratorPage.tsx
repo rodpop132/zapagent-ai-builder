@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -80,13 +81,14 @@ const MessageGeneratorPage = () => {
       console.log('✅ Resposta da IA recebida:', data);
 
       if (data.resposta) {
-        // Incrementar contador de uso
+        setGeneratedMessage(data.resposta);
+        
+        // Incrementar contador de uso após sucesso
         const success = await incrementUsage();
         if (success) {
-          setGeneratedMessage(data.resposta);
           toast.success('Mensagem gerada com sucesso!');
         } else {
-          throw new Error('Erro ao atualizar contador de uso');
+          toast.warning('Mensagem gerada, mas houve um problema ao atualizar o contador.');
         }
       } else {
         throw new Error('Resposta inválida da API');
@@ -367,7 +369,6 @@ const MessageGeneratorPage = () => {
             </CardContent>
           </Card>
 
-          {/* Dicas - Mobile: Compacto */}
           <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 shadow-sm">
             <CardContent className="p-3 md:p-4">
               <div className="flex items-start space-x-2 md:space-x-3">
