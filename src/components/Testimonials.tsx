@@ -219,20 +219,20 @@ const Testimonials = () => {
           </div>
         </div>
 
-        <div className="text-center animate-fade-in">
-          <div className="inline-flex items-center bg-white/90 backdrop-blur-sm rounded-2xl px-10 py-6 shadow-2xl transition-all duration-500 hover:shadow-3xl hover:scale-105 hover:bg-white group border border-gray-100">
-            <div className="flex items-center mr-8">
+        <div className="text-center animate-fade-in px-4">
+          <div className="inline-flex flex-col md:flex-row items-center bg-white/90 backdrop-blur-sm rounded-2xl px-6 md:px-10 py-6 shadow-2xl transition-all duration-500 hover:shadow-3xl hover:scale-105 hover:bg-white group border border-gray-100 max-w-full">
+            <div className="flex items-center mb-4 md:mb-0 md:mr-8">
               <div className="flex">
                 {[...Array(5)].map((_, i) => (
                   <Star 
                     key={i} 
-                    className="h-7 w-7 text-yellow-400 fill-current transition-transform duration-300 hover:scale-125 mr-1" 
+                    className="h-6 w-6 md:h-7 md:w-7 text-yellow-400 fill-current transition-transform duration-300 hover:scale-125 mr-1" 
                   />
                 ))}
               </div>
-              <span className="ml-3 text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent transition-all duration-300">4.9/5.0</span>
+              <span className="ml-3 text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent transition-all duration-300">4.9/5.0</span>
             </div>
-            <div className="text-gray-600 transition-colors duration-300 group-hover:text-gray-800">
+            <div className="text-gray-600 transition-colors duration-300 group-hover:text-gray-800 text-center md:text-left text-sm md:text-base">
               Baseado em <span className="font-bold text-primary">2.847 avaliações</span>
             </div>
           </div>
