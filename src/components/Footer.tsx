@@ -28,7 +28,7 @@ const Footer = () => {
               {t('footer.description')}
             </p>
             <div className="flex space-x-4">
-              <a href="mailto:contato@zapagent.ai" className="text-gray-400 hover:text-brand-green transition-colors text-sm md:text-base">
+              <a href="mailto:contacto@zap-agent.com" className="text-gray-400 hover:text-brand-green transition-colors text-sm md:text-base">
                 📧 {t('footer.email')}
               </a>
             </div>
@@ -90,7 +90,7 @@ const Footer = () => {
                 <a href="#" className="hover:text-white transition-colors">{t('footer.careers')}</a>
               </li>
               <li>
-                <a href="mailto:contato@zapagent.ai" className="hover:text-white transition-colors">{t('footer.contact')}</a>
+                <a href="mailto:contacto@zap-agent.com" className="hover:text-white transition-colors">{t('footer.contact')}</a>
               </li>
             </ul>
           </div>

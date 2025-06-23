@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/integrations/supabase/client';
 
-const WHATSAPP_SUPPORT_LINK = "https://wa.link/d3ebbb";
+const WHATSAPP_SUPPORT_LINK = "https://wa.me/6285189536562";
 
 const SupportWidget = () => {
   const { t } = useTranslation();

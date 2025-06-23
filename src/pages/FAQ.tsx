@@ -220,7 +220,7 @@ const FAQPage = () => {
                   <Mail className="h-8 w-8 text-blue-600 mx-auto" />
                 </div>
                 <h4 className="font-semibold text-gray-800 mb-1">Email</h4>
-                <p className="text-sm text-gray-600 mb-2">suporte@zapagent.ai</p>
+                <p className="text-sm text-gray-600 mb-2">contacto@zap-agent.com</p>
                 <p className="text-xs text-gray-500">Resposta em 24h</p>
               </div>
               
@@ -229,7 +229,7 @@ const FAQPage = () => {
                   <MessageCircle className="h-8 w-8 text-green-600 mx-auto" />
                 </div>
                 <h4 className="font-semibold text-gray-800 mb-1">WhatsApp</h4>
-                <p className="text-sm text-gray-600 mb-2">(11) 99999-9999</p>
+                <p className="text-sm text-gray-600 mb-2">+62 851-8953-6562</p>
                 <p className="text-xs text-gray-500">Seg-Sex, 9h às 18h</p>
               </div>
               
