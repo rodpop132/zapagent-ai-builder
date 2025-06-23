@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Crown } from "lucide-react";
@@ -24,25 +25,23 @@ const Dashboard = () => {
     { name: "Marcos Oliveira", message: "Fazem instalação?", time: "25 min", status: "read" }
   ];
 
-  // Simular novas conversas chegando e estatísticas atualizando
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentConversationIndex((prev) => (prev + 1) % conversations.length);
       
-      // Simular crescimento das estatísticas
-      const shouldUpdate = Math.random() > 0.7; // 30% chance de atualizar
+      const shouldUpdate = Math.random() > 0.7;
       if (shouldUpdate) {
         setNewMessageCount(prev => prev + Math.floor(Math.random() * 3) + 1);
         
-        if (Math.random() > 0.8) { // 20% chance de novo cliente
+        if (Math.random() > 0.8) {
           setClientCount(prev => prev + 1);
         }
         
-        if (Math.random() > 0.9) { // 10% chance de taxa de resposta mudar
+        if (Math.random() > 0.9) {
           setResponseRate(prev => Math.min(100, prev + (Math.random() > 0.5 ? 1 : -1)));
         }
       }
-    }, 2000); // Troca a cada 2 segundos para mais dinamismo
+    }, 3000);
 
     return () => clearInterval(interval);
   }, [conversations.length]);
@@ -67,100 +66,119 @@ const Dashboard = () => {
     }
   };
 
+  const handleUpgradeClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowUpgradeModal(true);
+  };
+
   return (
-    <section id="dashboard-demo" className="py-6 md:py-20 px-1 md:px-4 bg-gradient-to-br from-gray-50 to-white relative overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute top-20 left-10 w-12 h-12 md:w-20 md:h-20 bg-brand-green/5 rounded-full animate-float"></div>
-      <div className="absolute bottom-20 right-10 w-10 h-10 md:w-16 md:h-16 bg-blue-500/5 rounded-full animate-bounce"></div>
-      <div className="absolute top-1/2 left-1/4 w-8 h-8 md:w-12 md:h-12 bg-purple-500/5 rounded-full animate-pulse"></div>
+    <section id="dashboard-demo" className="py-8 md:py-20 px-4 bg-gradient-to-br from-gray-50 to-white relative overflow-hidden">
+      <div className="absolute top-20 left-10 w-12 h-12 md:w-20 md:h-20 bg-brand-green/5 rounded-full animate-pulse"></div>
+      <div className="absolute bottom-20 right-10 w-10 h-10 md:w-16 md:h-16 bg-blue-500/5 rounded-full animate-pulse delay-100"></div>
       
       <div className="container mx-auto max-w-6xl relative">
-        <div className="text-center mb-8 md:mb-16 animate-in fade-in-50 duration-700">
-          <h2 className="text-2xl md:text-4xl font-bold text-brand-dark mb-2 md:mb-4 animate-in slide-in-from-top-6 duration-700">
+        <div className="text-center mb-8 md:mb-16">
+          <h2 className="text-2xl md:text-4xl font-bold text-brand-dark mb-4">
             {t('dashboard.title')}
           </h2>
-          <p className="text-sm md:text-xl text-brand-gray max-w-2xl mx-auto animate-in slide-in-from-bottom-4 duration-700 delay-200 px-2 md:px-4">
+          <p className="text-base md:text-xl text-brand-gray max-w-2xl mx-auto mb-6 px-4">
             {t('dashboard.subtitle')}
           </p>
-          {/* Upgrade Plan Button */}
-          <div className="mt-4 md:mt-8 flex justify-center animate-in slide-in-from-bottom-4 duration-700 delay-400">
+          
+          <div className="flex justify-center">
             <Button
-              onClick={() => setShowUpgradeModal(true)}
-              className="w-full max-w-xs bg-gradient-to-r from-brand-green to-green-600 hover:from-brand-green/90 hover:to-green-600/90 text-white px-5 py-3 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 md:px-8"
+              onClick={handleUpgradeClick}
+              className="w-full max-w-xs bg-gradient-to-r from-brand-green to-green-600 hover:from-brand-green/90 hover:to-green-600/90 text-white px-6 py-3 text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-300 touch-manipulation"
+              type="button"
             >
-              <Crown className="h-5 w-5 mr-2" />
-              {t('dashboard.upgradePlan')}
+              <Crown className="h-5 w-5 mr-2 flex-shrink-0" />
+              <span className="truncate">{t('dashboard.upgradePlan')}</span>
             </Button>
           </div>
         </div>
-        {/* Estatísticas */}
-        <div className="grid grid-cols-3 gap-2 md:grid-cols-3 md:gap-6 mb-4 md:mb-8">
-          <div className="bg-brand-green/10 rounded-md md:rounded-lg p-3 md:p-6 text-center hover:bg-brand-green/15 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-left-6 duration-500 delay-500 group">
-            <div className="text-lg md:text-3xl font-bold text-brand-green mb-1 md:mb-2 group-hover:scale-110 transition-transform duration-300 animate-glow">
-              {newMessageCount.toLocaleString()}
+
+        {/* Estatísticas Mobile Otimizadas */}
+        <div className="grid grid-cols-3 gap-3 md:gap-6 mb-6 md:mb-8">
+          <div className="bg-brand-green/10 rounded-lg p-3 md:p-6 text-center hover:bg-brand-green/15 transition-all duration-300">
+            <div className="text-lg md:text-3xl font-bold text-brand-green mb-1 md:mb-2">
+              {newMessageCount.toLocaleString('pt-BR')}
             </div>
-            <div className="text-[10px] md:text-base text-brand-gray">{t('dashboard.messagesSent')}</div>
+            <div className="text-xs md:text-base text-brand-gray leading-tight">
+              {t('dashboard.messagesSent')}
+            </div>
           </div>
-          <div className="bg-blue-50 rounded-md md:rounded-lg p-3 md:p-6 text-center hover:bg-blue-100 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-bottom-6 duration-500 delay-700 group">
-            <div className="text-lg md:text-3xl font-bold text-blue-600 mb-1 md:mb-2 group-hover:scale-110 transition-transform duration-300">
+          
+          <div className="bg-blue-50 rounded-lg p-3 md:p-6 text-center hover:bg-blue-100 transition-all duration-300">
+            <div className="text-lg md:text-3xl font-bold text-blue-600 mb-1 md:mb-2">
               {responseRate}%
             </div>
-            <div className="text-[10px] md:text-base text-brand-gray">{t('dashboard.responseRate')}</div>
+            <div className="text-xs md:text-base text-brand-gray leading-tight">
+              {t('dashboard.responseRate')}
+            </div>
           </div>
-          <div className="bg-purple-50 rounded-md md:rounded-lg p-3 md:p-6 text-center hover:bg-purple-100 transition-all duration-300 hover:scale-105 hover:shadow-lg animate-in slide-in-from-right-6 duration-500 delay-900 group relative overflow-hidden">
-            <div className="text-lg md:text-3xl font-bold text-purple-600 mb-1 md:mb-2 group-hover:scale-110 transition-transform duration-300">{clientCount}</div>
-            <div className="text-[10px] md:text-base text-brand-gray">{t('dashboard.clientsServed')}</div>
+          
+          <div className="bg-purple-50 rounded-lg p-3 md:p-6 text-center hover:bg-purple-100 transition-all duration-300 relative">
+            <div className="text-lg md:text-3xl font-bold text-purple-600 mb-1 md:mb-2">
+              {clientCount}
+            </div>
+            <div className="text-xs md:text-base text-brand-gray leading-tight">
+              {t('dashboard.clientsServed')}
+            </div>
             {clientCount % 10 === 0 && (
-              <div className="absolute top-1 right-1 bg-purple-500 text-white text-xs px-2 py-1 rounded-full animate-bounce whitespace-nowrap">
+              <div className="absolute -top-1 -right-1 bg-purple-500 text-white text-xs px-1.5 py-0.5 rounded-full animate-bounce">
                 +1
               </div>
             )}
           </div>
         </div>
-        {/* Lista de conversas recente */}
-        <div className="bg-gray-50 rounded-lg md:rounded-2xl p-2 md:p-6 hover:bg-gray-100 transition-colors duration-300 animate-in fade-in-50 duration-700 delay-1100 mb-2 md:mb-0">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2 md:mb-4">
-            <h3 className="font-bold text-brand-dark text-base md:text-xl animate-in slide-in-from-left-4 duration-500 delay-1200">
+
+        {/* Lista de Conversas Mobile Otimizada */}
+        <div className="bg-gray-50 rounded-xl p-4 md:p-6 hover:bg-gray-100 transition-colors duration-300">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+            <h3 className="font-bold text-brand-dark text-lg md:text-xl mb-2 md:mb-0">
               {t('dashboard.recentConversations')}
             </h3>
-            <div className="flex items-center space-x-2 mt-1 md:mt-0">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-xs text-brand-gray">{t('dashboard.live')}</span>
+            <div className="flex items-center space-x-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-sm text-brand-gray">{t('dashboard.live')}</span>
             </div>
           </div>
 
-          <div className="space-y-2 md:space-y-3 max-h-[350px] md:max-h-80 overflow-auto custom-scroll pr-1">
+          <div className="space-y-3 max-h-80 md:max-h-96 overflow-y-auto">
             {conversations.slice(0, 4).map((conversation, index) => {
               const isActive = index === currentConversationIndex % 4;
               const isNewMessage = index === 0 && currentConversationIndex % conversations.length === 0;
+              
               return (
                 <div 
-                  key={`${conversation.name}-${index}-${currentConversationIndex}`}
-                  className={`flex items-center justify-between bg-white p-2 md:p-3 rounded-lg transition-all duration-500 cursor-pointer group relative ${
+                  key={`${conversation.name}-${index}`}
+                  className={`flex items-center justify-between bg-white p-3 md:p-4 rounded-lg transition-all duration-300 touch-manipulation ${
                     isActive ? 'ring-2 ring-brand-green shadow-lg scale-[1.02]' : 'hover:shadow-md hover:scale-[1.01]'
                   } ${isNewMessage ? 'border-l-4 border-green-500' : ''}`}
                 >
-                  <div className="flex items-center space-x-2 md:space-x-3 min-w-0">
-                    <div className={`relative w-7 h-7 md:w-10 md:h-10 bg-brand-green rounded-full flex items-center justify-center group-hover:scale-110 transition-transform duration-300 ${
-                      isActive ? 'animate-bounce' : ''
+                  <div className="flex items-center space-x-3 min-w-0 flex-1">
+                    <div className={`relative w-10 h-10 md:w-12 md:h-12 bg-brand-green rounded-full flex items-center justify-center flex-shrink-0 ${
+                      isActive ? 'animate-pulse' : ''
                     }`}>
-                      <span className="text-white font-bold text-xs md:text-sm">
+                      <span className="text-white font-bold text-sm md:text-base">
                         {conversation.name.charAt(0)}
                       </span>
-                      <div className={`absolute -bottom-1 -right-1 w-2.5 h-2.5 ${getStatusColor(conversation.status)} rounded-full border-2 border-white`}></div>
+                      <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 ${getStatusColor(conversation.status)} rounded-full border-2 border-white`}></div>
                     </div>
+                    
                     <div className="flex-1 min-w-0">
-                      <p className={`font-semibold text-brand-dark text-xs md:text-base group-hover:text-brand-green transition-colors duration-300 truncate ${
+                      <p className={`font-semibold text-brand-dark text-sm md:text-base truncate ${
                         isActive ? 'text-brand-green' : ''
                       }`}>
                         {conversation.name}
                       </p>
-                      <div className="flex items-center space-x-1 md:space-x-2">
-                        <p className="text-brand-gray text-xs truncate max-w-[120px] md:max-w-full">
+                      <div className="flex items-center space-x-2">
+                        <p className="text-brand-gray text-xs md:text-sm truncate max-w-[140px] md:max-w-[200px]">
                           {conversation.message}
                         </p>
                         {conversation.status === 'typing' && (
-                          <div className="flex space-x-0.5 md:space-x-1">
+                          <div className="flex space-x-1">
                             <div className="w-1 h-1 bg-brand-gray rounded-full animate-bounce"></div>
                             <div className="w-1 h-1 bg-brand-gray rounded-full animate-bounce delay-75"></div>
                             <div className="w-1 h-1 bg-brand-gray rounded-full animate-bounce delay-150"></div>
@@ -169,15 +187,16 @@ const Dashboard = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end space-y-1 min-w-fit pl-2">
-                    <span className="text-[10px] md:text-xs text-brand-gray group-hover:text-brand-dark transition-colors duration-300 flex-shrink-0">
+                  
+                  <div className="flex flex-col items-end space-y-1 ml-3 flex-shrink-0">
+                    <span className="text-xs text-brand-gray">
                       {conversation.time}
                     </span>
-                    <span className={`text-[10px] md:text-xs px-1.5 py-0.5 md:px-2 md:py-1 rounded-full text-white ${getStatusColor(conversation.status)}`}>
+                    <span className={`text-xs px-2 py-1 rounded-full text-white ${getStatusColor(conversation.status)}`}>
                       {getStatusText(conversation.status)}
                     </span>
                   </div>
-                  {/* New message indicator */}
+                  
                   {isNewMessage && (
                     <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center animate-bounce">
                       !
@@ -187,29 +206,31 @@ const Dashboard = () => {
               );
             })}
           </div>
-          {/* Nova conversa chegando - mobile otimizado */}
-          <div className="mt-3 md:mt-4 p-2 md:p-3 bg-gradient-to-r from-brand-green/10 to-blue-500/10 rounded-lg border border-brand-green/20 animate-slide-in-bottom">
-            <div className="flex items-center space-x-2 md:space-x-3">
-              <div className="w-2 h-2 md:w-3 md:h-3 bg-brand-green rounded-full animate-pulse"></div>
+          
+          {/* Novas mensagens chegando */}
+          <div className="mt-4 p-3 bg-gradient-to-r from-brand-green/10 to-blue-500/10 rounded-lg border border-brand-green/20">
+            <div className="flex items-center space-x-3">
+              <div className="w-3 h-3 bg-brand-green rounded-full animate-pulse flex-shrink-0"></div>
               <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs md:text-sm font-medium text-brand-dark">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-brand-dark">
                     {Math.floor(Math.random() * 3) + 1} {t('dashboard.newMessages')}
                   </span>
-                  <div className="flex space-x-0.5 md:space-x-1">
-                    <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-brand-green rounded-full animate-bounce"></div>
-                    <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-brand-green rounded-full animate-bounce delay-100"></div>
-                    <div className="w-1.5 h-1.5 md:w-2 md:h-2 bg-brand-green rounded-full animate-bounce delay-200"></div>
+                  <div className="flex space-x-1">
+                    <div className="w-1.5 h-1.5 bg-brand-green rounded-full animate-bounce"></div>
+                    <div className="w-1.5 h-1.5 bg-brand-green rounded-full animate-bounce delay-100"></div>
+                    <div className="w-1.5 h-1.5 bg-brand-green rounded-full animate-bounce delay-200"></div>
                   </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-1.5 md:h-2 mt-1 md:mt-2">
-                  <div className="bg-brand-green h-1.5 md:h-2 rounded-full animate-pulse" style={{width: `${Math.random() * 100}%`}}></div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-brand-green h-2 rounded-full animate-pulse" style={{width: `${Math.random() * 100}%`}}></div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+      
       {/* Modal de Upgrade */}
       <PlanUpgradeModal
         isOpen={showUpgradeModal}
