@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Star, Quote, ChevronLeft, ChevronRight } from 'lucide-react';
 import TestimonialsLoading from './TestimonialsLoading';
@@ -152,19 +151,19 @@ const Testimonials = () => {
             </div>
           </div>
 
-          {/* Controles de navegação melhorados */}
+          {/* Controles de navegação otimizados para mobile */}
           <button
             onClick={goToPrevious}
-            className="absolute left-6 top-1/2 transform -translate-y-1/2 bg-white/95 backdrop-blur-sm hover:bg-white text-gray-800 p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 hover:shadow-xl hover:-translate-x-1 z-10 border border-gray-100"
+            className="absolute left-2 md:left-6 top-1/2 transform -translate-y-1/2 bg-white/95 backdrop-blur-sm hover:bg-white text-gray-800 p-2 md:p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 hover:shadow-xl hover:-translate-x-1 z-10 border border-gray-100"
           >
-            <ChevronLeft className="h-6 w-6" />
+            <ChevronLeft className="h-4 w-4 md:h-6 md:w-6" />
           </button>
           
           <button
             onClick={goToNext}
-            className="absolute right-6 top-1/2 transform -translate-y-1/2 bg-white/95 backdrop-blur-sm hover:bg-white text-gray-800 p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 hover:shadow-xl hover:translate-x-1 z-10 border border-gray-100"
+            className="absolute right-2 md:right-6 top-1/2 transform -translate-y-1/2 bg-white/95 backdrop-blur-sm hover:bg-white text-gray-800 p-2 md:p-4 rounded-full shadow-2xl transition-all duration-300 hover:scale-110 hover:shadow-xl hover:translate-x-1 z-10 border border-gray-100"
           >
-            <ChevronRight className="h-6 w-6" />
+            <ChevronRight className="h-4 w-4 md:h-6 md:w-6" />
           </button>
 
           {/* Indicadores de posição melhorados */}
