@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -44,7 +43,7 @@ const AgentCard = ({ agent, onUpdate, subscription }: AgentCardProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [whatsappStatus, setWhatsappStatus] = useState<'connected' | 'pending'>('pending');
+  const [whatsappStatus, setWhatsappStatus] = useState<'connected' | 'pending' | 'reconnecting'>('pending');
   const [agentStats, setAgentStats] = useState<any>(null);
   const { toast } = useToast();
   const { user } = useAuth();
