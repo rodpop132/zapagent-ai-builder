@@ -1,69 +1,146 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Server, AlertTriangle, CheckCircle } from 'lucide-react';
+import { RefreshCw, Server, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { ZapAgentService } from '@/services/zapAgentService';
 import { useToast } from '@/hooks/use-toast';
 
 const ApiStatusIndicator = () => {
   const [isOnline, setIsOnline] = useState<boolean | null>(null);
+  const [isReconnecting, setIsReconnecting] = useState(false);
   const [loading, setLoading] = useState(false);
   const [lastCheck, setLastCheck] = useState<Date | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const { toast } = useToast();
+  
+  const isMountedRef = useRef(true);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const checkApiStatus = async (showToast: boolean = false) => {
+  const checkApiStatus = async (showToast: boolean = false, isRetry: boolean = false) => {
+    if (!isMountedRef.current) return;
+    
     setLoading(true);
+    
     try {
       console.log('🔍 Verificando status da API ZapAgent...');
-      const status = await ZapAgentService.checkApiStatus();
+      
+      // Timeout de 30 segundos para dar tempo ao servidor responder
+      const status = await Promise.race([
+        ZapAgentService.checkApiStatus(),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Timeout na verificação da API')), 30000)
+        )
+      ]) as boolean;
+      
+      if (!isMountedRef.current) return;
+      
       setIsOnline(status);
       setLastCheck(new Date());
+      setIsReconnecting(false);
+      setRetryCount(0);
       
       if (showToast) {
         toast({
-          title: status ? "✅ API Online" : "❌ API Offline",
-          description: status ? "Serviço funcionando normalmente" : "Servidor pode estar inicializando",
+          title: status ? "✅ API Online" : "⚠️ API Offline",
+          description: status 
+            ? "Serviço funcionando normalmente" 
+            : "Servidor pode estar inicializando ou em manutenção",
           variant: status ? "default" : "destructive"
         });
       }
       
       console.log('🔍 Status da API ZapAgent:', status ? 'Online' : 'Offline');
+      
     } catch (error: any) {
       console.error('❌ Erro ao verificar API:', error);
-      setIsOnline(false);
-      setLastCheck(new Date());
       
-      if (showToast) {
-        toast({
-          title: "❌ Erro de Conexão",
-          description: "Não foi possível verificar o status da API",
-          variant: "destructive"
-        });
+      if (!isMountedRef.current) return;
+      
+      // Distinguir entre timeout e outros erros
+      if (error.message?.includes('Timeout')) {
+        setIsReconnecting(true);
+        setIsOnline(false);
+        
+        if (showToast) {
+          toast({
+            title: "⏰ Timeout na API",
+            description: "Servidor demorou para responder. Tentando novamente...",
+            variant: "destructive"
+          });
+        }
+        
+        // Retry automático em caso de timeout
+        if (!isRetry && retryCount < 3) {
+          setRetryCount(prev => prev + 1);
+          setTimeout(() => {
+            if (isMountedRef.current) {
+              checkApiStatus(false, true);
+            }
+          }, 10000); // Retry em 10 segundos
+        }
+      } else {
+        setIsOnline(false);
+        setIsReconnecting(false);
+        setLastCheck(new Date());
+        
+        if (showToast) {
+          toast({
+            title: "❌ Erro de Conexão",
+            description: "Não foi possível verificar o status da API",
+            variant: "destructive"
+          });
+        }
       }
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) setLoading(false);
     }
   };
 
   useEffect(() => {
+    isMountedRef.current = true;
     checkApiStatus();
     
-    // Verificar status a cada 2 minutos
-    const interval = setInterval(() => checkApiStatus(), 2 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, []);
+    // Polling adaptativo: mais frequente se offline/reconectando
+    const getInterval = () => {
+      if (isReconnecting || isOnline === false) return 30000; // 30 segundos
+      return 120000; // 2 minutos se online
+    };
+    
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    
+    intervalRef.current = setInterval(() => {
+      if (isMountedRef.current) {
+        checkApiStatus();
+      }
+    }, getInterval());
+    
+    return () => {
+      isMountedRef.current = false;
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isOnline, isReconnecting]);
 
   const handleManualCheck = () => {
+    setRetryCount(0);
     checkApiStatus(true);
   };
 
   const getStatusBadge = () => {
-    if (isOnline === null) {
+    if (loading) {
       return (
         <Badge variant="secondary" className="flex items-center space-x-1">
           <RefreshCw className="h-3 w-3 animate-spin" />
           <span>Verificando...</span>
+        </Badge>
+      );
+    }
+    
+    if (isReconnecting) {
+      return (
+        <Badge variant="secondary" className="bg-yellow-100 text-yellow-700 border-yellow-200 flex items-center space-x-1">
+          <Clock className="h-3 w-3 animate-pulse" />
+          <span>Reconectando...</span>
         </Badge>
       );
     }
@@ -85,6 +162,13 @@ const ApiStatusIndicator = () => {
     );
   };
 
+  const getStatusMessage = () => {
+    if (isReconnecting) return "Reconectando...";
+    if (isOnline === false) return "Servidor pode estar inicializando";
+    if (retryCount > 0) return `Tentativa ${retryCount}/3`;
+    return null;
+  };
+
   return (
     <div className="flex items-center space-x-2">
       <div className="flex items-center space-x-2">
@@ -104,13 +188,13 @@ const ApiStatusIndicator = () => {
       
       {lastCheck && (
         <span className="text-xs text-gray-500 hidden md:block">
-          Última verificação: {lastCheck.toLocaleTimeString()}
+          {lastCheck.toLocaleTimeString()}
         </span>
       )}
       
-      {isOnline === false && (
+      {getStatusMessage() && (
         <span className="text-xs text-orange-600 hidden sm:block">
-          Servidor pode estar inicializando
+          {getStatusMessage()}
         </span>
       )}
     </div>
