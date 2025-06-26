@@ -8,8 +8,10 @@ import { Sparkles, Copy, RefreshCw, MessageCircle, Lightbulb, Zap, Crown, Chevro
 import { toast } from 'sonner';
 import { useAIMessagesUsage } from '@/hooks/useAIMessagesUsage';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useTranslation } from 'react-i18next';
 
 const MessageGeneratorPage = () => {
+  const { t } = useTranslation();
   const [clientMessage, setClientMessage] = useState('');
   const [generatedMessage, setGeneratedMessage] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -21,36 +23,30 @@ const MessageGeneratorPage = () => {
   const isMobile = useIsMobile();
 
   const tones = [
-    { id: 'professional', label: 'Profissional', color: 'bg-blue-100 text-blue-700' },
-    { id: 'friendly', label: 'Amigável', color: 'bg-green-100 text-green-700' },
-    { id: 'formal', label: 'Formal', color: 'bg-purple-100 text-purple-700' },
-    { id: 'casual', label: 'Casual', color: 'bg-orange-100 text-orange-700' },
+    { id: 'professional', label: t('messageGenerator.tones.professional'), color: 'bg-blue-100 text-blue-700' },
+    { id: 'friendly', label: t('messageGenerator.tones.friendly'), color: 'bg-green-100 text-green-700' },
+    { id: 'formal', label: t('messageGenerator.tones.formal'), color: 'bg-purple-100 text-purple-700' },
+    { id: 'casual', label: t('messageGenerator.tones.casual'), color: 'bg-orange-100 text-orange-700' },
   ];
 
   const messageTypes = [
-    { id: 'response', label: 'Resposta', icon: MessageCircle },
-    { id: 'follow-up', label: 'Follow-up', icon: RefreshCw },
-    { id: 'sales', label: 'Vendas', icon: Zap },
-    { id: 'support', label: 'Suporte', icon: Lightbulb },
+    { id: 'response', label: t('messageGenerator.types.response'), icon: MessageCircle },
+    { id: 'follow-up', label: t('messageGenerator.types.followUp'), icon: RefreshCw },
+    { id: 'sales', label: t('messageGenerator.types.sales'), icon: Zap },
+    { id: 'support', label: t('messageGenerator.types.support'), icon: Lightbulb },
   ];
 
-  const exampleMessages = [
-    "Oi, gostaria de saber mais sobre seus produtos",
-    "Qual é o prazo de entrega para São Paulo?",
-    "Vocês fazem desconto para compra em quantidade?",
-    "Como funciona a garantia dos produtos?",
-    "Preciso cancelar meu pedido",
-  ];
+  const exampleMessages = t('messageGenerator.exampleMessages', { returnObjects: true }) as string[];
 
   const generateMessage = async () => {
     if (!clientMessage.trim()) {
-      toast.error('Por favor, insira a mensagem do cliente');
+      toast.error(t('support.fillAllFields'));
       return;
     }
 
     // Verificar limite antes de gerar
     if (!usage?.can_generate) {
-      toast.error(`Limite de ${usage?.messages_limit || 10} mensagens atingido. Faça upgrade do seu plano!`);
+      toast.error(t('messageGenerator.limitWarning', { limit: usage?.messages_limit || 10 }));
       return;
     }
 
@@ -88,7 +84,7 @@ const MessageGeneratorPage = () => {
         // Incrementar contador de uso após sucesso
         const success = await incrementUsage();
         if (success) {
-          toast.success('Mensagem gerada com sucesso!');
+          toast.success(t('support.successMessage'));
         } else {
           toast.warning('Mensagem gerada, mas houve um problema ao atualizar o contador.');
         }
@@ -98,7 +94,7 @@ const MessageGeneratorPage = () => {
 
     } catch (error) {
       console.error('❌ Erro ao gerar mensagem:', error);
-      toast.error('❌ Erro ao gerar resposta. Tente novamente.');
+      toast.error(t('support.errorMessage'));
       setGeneratedMessage('');
     } finally {
       setIsGenerating(false);
@@ -108,7 +104,7 @@ const MessageGeneratorPage = () => {
   const copyMessage = () => {
     if (generatedMessage) {
       navigator.clipboard.writeText(generatedMessage);
-      toast.success('Mensagem copiada para a área de transferência!');
+      toast.success(t('messageGenerator.copyMessage'));
     }
   };
 
@@ -118,7 +114,7 @@ const MessageGeneratorPage = () => {
   };
 
   const getUsageDisplay = () => {
-    if (usageLoading || !usage) return 'Carregando...';
+    if (usageLoading || !usage) return t('userDashboard.loading');
     if (usage.messages_limit >= 999999) return '∞';
     return `${usage.messages_generated}/${usage.messages_limit}`;
   };
@@ -136,16 +132,16 @@ const MessageGeneratorPage = () => {
       {/* Título - Mobile Otimizado */}
       <div className="text-center md:text-left px-2 md:px-0">
         <h1 className="text-lg md:text-3xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2 leading-tight">
-          Gerador de Mensagens com IA
+          {t('messageGenerator.title')}
         </h1>
         <p className="text-xs md:text-base text-gray-600 dark:text-gray-400 leading-relaxed">
-          Crie respostas profissionais e personalizadas para seus clientes
+          {t('messageGenerator.subtitle')}
         </p>
         
         {/* Contador de Uso */}
         <div className="mt-2 md:mt-4">
           <Badge variant="outline" className={`${getUsageColor()} text-xs`}>
-            Mensagens: {getUsageDisplay()}
+            {t('messageGenerator.messagesUsed')}: {getUsageDisplay()}
           </Badge>
         </div>
       </div>
@@ -158,10 +154,10 @@ const MessageGeneratorPage = () => {
               <AlertTriangle className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
               <div className="min-w-0">
                 <p className="text-sm font-medium text-red-800 dark:text-red-200 leading-tight">
-                  Limite atingido
+                  {t('messageGenerator.limitReached')}
                 </p>
                 <p className="text-xs text-red-600 dark:text-red-300 leading-relaxed">
-                  Você atingiu o limite de {usage.messages_limit} mensagens. Faça upgrade para continuar.
+                  {t('messageGenerator.limitWarning', { limit: usage.messages_limit })}
                 </p>
               </div>
             </div>
@@ -178,7 +174,7 @@ const MessageGeneratorPage = () => {
           {/* Tom da Mensagem */}
           <Card className="shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm md:text-lg">Tom da Mensagem</CardTitle>
+              <CardTitle className="text-sm md:text-lg">{t('messageGenerator.messageTone')}</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2 md:grid-cols-1 gap-1.5 md:gap-3">
               {tones.map((tone) => (
@@ -201,7 +197,7 @@ const MessageGeneratorPage = () => {
           {/* Tipo de Mensagem */}
           <Card className="shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm md:text-lg">Tipo de Mensagem</CardTitle>
+              <CardTitle className="text-sm md:text-lg">{t('messageGenerator.messageType')}</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2 md:grid-cols-1 gap-1.5 md:gap-3">
               {messageTypes.map((type) => (
@@ -226,7 +222,7 @@ const MessageGeneratorPage = () => {
           <Card className="shadow-sm">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm md:text-lg">Exemplos</CardTitle>
+                <CardTitle className="text-sm md:text-lg">{t('messageGenerator.examples')}</CardTitle>
                 {isMobile && (
                   <Button
                     variant="ghost"
@@ -262,11 +258,11 @@ const MessageGeneratorPage = () => {
           {/* Input da Mensagem do Cliente */}
           <Card className="shadow-sm">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm md:text-lg">Mensagem do Cliente</CardTitle>
+              <CardTitle className="text-sm md:text-lg">{t('messageGenerator.clientMessage')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <Textarea
-                placeholder="Cole aqui a mensagem que o cliente enviou..."
+                placeholder={t('messageGenerator.clientMessagePlaceholder')}
                 value={clientMessage}
                 onChange={(e) => setClientMessage(e.target.value.slice(0, 500))}
                 rows={isMobile ? 2 : 3}
@@ -275,7 +271,7 @@ const MessageGeneratorPage = () => {
               />
               <div className="flex flex-col space-y-2">
                 <p className="text-xs text-gray-500">
-                  {clientMessage.length}/500 caracteres
+                  {t('messageGenerator.charactersCount', { count: clientMessage.length })}
                 </p>
                 <Button
                   onClick={generateMessage}
@@ -285,12 +281,12 @@ const MessageGeneratorPage = () => {
                   {isGenerating ? (
                     <>
                       <RefreshCw className="h-3 w-3 md:h-4 md:w-4 mr-2 animate-spin" />
-                      Gerando...
+                      {t('messageGenerator.generating')}
                     </>
                   ) : (
                     <>
                       <Sparkles className="h-3 w-3 md:h-4 md:w-4 mr-2" />
-                      Gerar Resposta
+                      {t('messageGenerator.generateResponse')}
                     </>
                   )}
                 </Button>
@@ -302,7 +298,7 @@ const MessageGeneratorPage = () => {
           <Card className="shadow-sm">
             <CardHeader className="pb-2">
               <div className="flex flex-col space-y-2">
-                <CardTitle className="text-sm md:text-lg">Resposta Gerada pela IA</CardTitle>
+                <CardTitle className="text-sm md:text-lg">{t('messageGenerator.generatedResponse')}</CardTitle>
                 {generatedMessage && (
                   <div className="flex flex-wrap items-center gap-1">
                     <Badge className={`${tones.find(t => t.id === selectedTone)?.color} text-xs`}>
@@ -330,7 +326,7 @@ const MessageGeneratorPage = () => {
                       className="w-full text-xs md:text-sm transition-all duration-200 hover:scale-105"
                     >
                       <Copy className="h-3 w-3 md:h-4 md:w-4 mr-2" />
-                      Copiar Mensagem
+                      {t('messageGenerator.copyMessage')}
                     </Button>
                     <Button
                       onClick={generateMessage}
@@ -339,15 +335,15 @@ const MessageGeneratorPage = () => {
                       className="w-full text-xs md:text-sm transition-all duration-200 hover:scale-105"
                     >
                       <RefreshCw className="h-3 w-3 md:h-4 md:w-4 mr-2" />
-                      Gerar Novamente
+                      {t('messageGenerator.generateAgain')}
                     </Button>
                   </div>
                 </div>
               ) : (
                 <div className="text-center py-6 text-gray-500 dark:text-gray-400">
                   <Sparkles className="h-6 w-6 md:h-12 md:w-12 mx-auto mb-2 md:mb-4 opacity-50" />
-                  <p className="text-xs md:text-base">Sua mensagem profissional aparecerá aqui</p>
-                  <p className="text-xs mt-1">Insira a mensagem do cliente e clique em "Gerar Resposta"</p>
+                  <p className="text-xs md:text-base">{t('messageGenerator.responseAppearHere')}</p>
+                  <p className="text-xs mt-1">{t('messageGenerator.insertClientMessage')}</p>
                 </div>
               )}
             </CardContent>
@@ -362,10 +358,10 @@ const MessageGeneratorPage = () => {
                   <Crown className="h-4 w-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
                   <div className="min-w-0">
                     <h4 className="font-semibold text-yellow-900 dark:text-yellow-100 mb-1 text-xs md:text-base">
-                      🔓 Atualize para o plano Pro
+                      {t('messageGenerator.upgradeProTitle')}
                     </h4>
                     <p className="text-xs text-yellow-800 dark:text-yellow-200 leading-relaxed">
-                      Gere até 10.000 mensagens/mês com IA e tenha acesso a recursos avançados
+                      {t('messageGenerator.upgradeProDescription')}
                     </p>
                   </div>
                 </div>
@@ -378,13 +374,12 @@ const MessageGeneratorPage = () => {
                   <Lightbulb className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
                   <div className="min-w-0">
                     <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-1 text-xs md:text-base">
-                      Dicas para melhores resultados:
+                      {t('messageGenerator.tipsTitle')}
                     </h4>
                     <ul className="text-xs text-blue-800 dark:text-blue-200 space-y-0.5 leading-relaxed">
-                      <li>• Forneça o máximo de contexto da mensagem do cliente</li>
-                      <li>• Escolha o tom adequado para seu tipo de negócio</li>
-                      <li>• Sempre revise a mensagem antes de enviar</li>
-                      <li>• Personalize com informações específicas quando necessário</li>
+                      {(t('messageGenerator.tipsList', { returnObjects: true }) as string[]).map((tip, index) => (
+                        <li key={index}>{tip}</li>
+                      ))}
                     </ul>
                   </div>
                 </div>

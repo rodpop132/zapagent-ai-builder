@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { ZapAgentService } from '@/services/zapAgentService';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from 'react-i18next';
 
 interface SystemStatus {
   api_online: boolean;
@@ -29,6 +30,7 @@ interface SystemStatus {
 }
 
 const SystemStatusPanel = () => {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<SystemStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -63,7 +65,7 @@ const SystemStatusPanel = () => {
       
     } catch (error) {
       console.error('❌ Erro ao carregar status do sistema:', error);
-      setError('Erro ao carregar status do sistema');
+      setError(t('systemStatus.unknownError'));
       
       if (showFeedback) {
         toast({
@@ -91,13 +93,13 @@ const SystemStatusPanel = () => {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Activity className="h-5 w-5" />
-            <span>Status do Sistema</span>
+            <span>{t('systemStatus.title')}</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
             <RefreshCw className="h-6 w-6 animate-spin text-brand-green" />
-            <span className="ml-2 text-gray-600">Carregando status...</span>
+            <span className="ml-2 text-gray-600">{t('systemStatus.loadingStatus')}</span>
           </div>
         </CardContent>
       </Card>
@@ -110,19 +112,19 @@ const SystemStatusPanel = () => {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <AlertTriangle className="h-5 w-5 text-red-500" />
-            <span>Status do Sistema</span>
+            <span>{t('systemStatus.title')}</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-4">
-            <p className="text-red-600 mb-4">{error || 'Erro desconhecido'}</p>
+            <p className="text-red-600 mb-4">{error || t('systemStatus.unknownError')}</p>
             <Button 
               onClick={() => loadSystemStatus(true)}
               variant="outline"
               size="sm"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
-              Tentar Novamente
+              {t('systemStatus.tryAgain')}
             </Button>
           </div>
         </CardContent>
@@ -131,9 +133,9 @@ const SystemStatusPanel = () => {
   }
 
   const getUptimeBadge = (uptime: number) => {
-    if (uptime >= 99.5) return <Badge className="bg-green-100 text-green-700">Excelente</Badge>;
-    if (uptime >= 98.0) return <Badge className="bg-yellow-100 text-yellow-700">Bom</Badge>;
-    return <Badge variant="destructive">Atenção</Badge>;
+    if (uptime >= 99.5) return <Badge className="bg-green-100 text-green-700">{t('systemStatus.excellent')}</Badge>;
+    if (uptime >= 98.0) return <Badge className="bg-yellow-100 text-yellow-700">{t('systemStatus.good')}</Badge>;
+    return <Badge variant="destructive">{t('systemStatus.attention')}</Badge>;
   };
 
   return (
@@ -142,15 +144,15 @@ const SystemStatusPanel = () => {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center space-x-2">
             <Activity className="h-5 w-5 text-brand-green" />
-            <span>Status do Sistema</span>
+            <span>{t('systemStatus.title')}</span>
           </CardTitle>
           
           <div className="flex items-center space-x-2">
             <Badge variant={status.api_online ? "default" : "destructive"}>
               {status.api_online ? (
-                <><CheckCircle className="h-3 w-3 mr-1" />Online</>
+                <><CheckCircle className="h-3 w-3 mr-1" />{t('systemStatus.online')}</>
               ) : (
-                <><AlertTriangle className="h-3 w-3 mr-1" />Offline</>
+                <><AlertTriangle className="h-3 w-3 mr-1" />{t('systemStatus.offline')}</>
               )}
             </Badge>
             
@@ -172,25 +174,25 @@ const SystemStatusPanel = () => {
           <div className="bg-blue-50 p-3 rounded-lg text-center">
             <Server className="h-5 w-5 text-blue-600 mx-auto mb-1" />
             <div className="text-lg font-bold text-blue-700">{status.bot_instances}</div>
-            <div className="text-xs text-blue-600">Instâncias Bot</div>
+            <div className="text-xs text-blue-600">{t('systemStatus.botInstances')}</div>
           </div>
           
           <div className="bg-green-50 p-3 rounded-lg text-center">
             <Wifi className="h-5 w-5 text-green-600 mx-auto mb-1" />
             <div className="text-lg font-bold text-green-700">{status.connected_agents}</div>
-            <div className="text-xs text-green-600">Agentes Online</div>
+            <div className="text-xs text-green-600">{t('systemStatus.onlineAgents')}</div>
           </div>
           
           <div className="bg-yellow-50 p-3 rounded-lg text-center">
             <Clock className="h-5 w-5 text-yellow-600 mx-auto mb-1" />
             <div className="text-lg font-bold text-yellow-700">{status.reconnecting_agents}</div>
-            <div className="text-xs text-yellow-600">Reconectando</div>
+            <div className="text-xs text-yellow-600">{t('systemStatus.reconnecting')}</div>
           </div>
           
           <div className="bg-purple-50 p-3 rounded-lg text-center">
             <TrendingUp className="h-5 w-5 text-purple-600 mx-auto mb-1" />
             <div className="text-lg font-bold text-purple-700">{status.total_messages_today.toLocaleString()}</div>
-            <div className="text-xs text-purple-600">Msgs Hoje</div>
+            <div className="text-xs text-purple-600">{t('systemStatus.msgsToday')}</div>
           </div>
         </div>
 
@@ -199,13 +201,13 @@ const SystemStatusPanel = () => {
           <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
             <div className="flex items-center space-x-2">
               <Activity className="h-4 w-4 text-gray-600" />
-              <span className="text-sm font-medium">Tempo de Resposta Médio</span>
+              <span className="text-sm font-medium">{t('systemStatus.avgResponseTime')}</span>
             </div>
             <div className="text-right">
               <div className="text-sm font-bold">{status.avg_response_time.toFixed(1)}s</div>
               <div className="text-xs text-gray-500">
-                {status.avg_response_time <= 1 ? 'Excelente' : 
-                 status.avg_response_time <= 2 ? 'Bom' : 'Lento'}
+                {status.avg_response_time <= 1 ? t('systemStatus.excellent') : 
+                 status.avg_response_time <= 2 ? t('systemStatus.good') : t('systemStatus.slow')}
               </div>
             </div>
           </div>
@@ -213,7 +215,7 @@ const SystemStatusPanel = () => {
           <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
             <div className="flex items-center space-x-2">
               <CheckCircle className="h-4 w-4 text-gray-600" />
-              <span className="text-sm font-medium">Disponibilidade</span>
+              <span className="text-sm font-medium">{t('systemStatus.availability')}</span>
             </div>
             <div className="text-right">
               <div className="text-sm font-bold">{status.uptime_percentage.toFixed(1)}%</div>
@@ -227,7 +229,7 @@ const SystemStatusPanel = () => {
         {/* Informações adicionais */}
         <div className="pt-2 border-t">
           <div className="flex items-center justify-between text-xs text-gray-500">
-            <span>Última atualização:</span>
+            <span>{t('systemStatus.lastUpdate')}:</span>
             <span>{new Date(status.last_update).toLocaleTimeString()}</span>
           </div>
         </div>
@@ -238,11 +240,11 @@ const SystemStatusPanel = () => {
             <div className="flex items-center space-x-2">
               <Clock className="h-4 w-4 text-yellow-600" />
               <span className="text-sm text-yellow-800">
-                {status.reconnecting_agents} agente(s) reconectando automaticamente
+                {status.reconnecting_agents} {t('systemStatus.reconnectingNote')}
               </span>
             </div>
             <p className="text-xs text-yellow-600 mt-1">
-              O sistema está se auto-recuperando. Não é necessária intervenção manual.
+              {t('systemStatus.autoRecoveryNote')}
             </p>
           </div>
         )}

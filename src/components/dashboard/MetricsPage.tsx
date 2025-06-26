@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { ZapAgentService } from '@/services/zapAgentService';
+import { useTranslation } from 'react-i18next';
 
 interface Agent {
   id: string;
@@ -52,6 +53,7 @@ interface AgentStats {
 
 const MetricsPage = ({ agents, globalUsage, subscription }: MetricsPageProps) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [aiMessagesUsage, setAiMessagesUsage] = useState<number>(0);
   const [aiMessagesLimit, setAiMessagesLimit] = useState<number>(10);
   const [dailyData, setDailyData] = useState<DailyData[]>([]);
@@ -207,51 +209,51 @@ const MetricsPage = ({ agents, globalUsage, subscription }: MetricsPageProps) =>
 
   // Dados da pizza baseados em dados reais
   const pieData = [
-    { name: 'Respondidas', value: responseRate, color: '#10B981' },
-    { name: 'Aguardando', value: 100 - responseRate, color: '#F59E0B' },
+    { name: t('metricsPage.answered'), value: responseRate, color: '#10B981' },
+    { name: t('metricsPage.waiting'), value: 100 - responseRate, color: '#F59E0B' },
   ];
 
   const stats = [
     {
-      title: 'Total de Mensagens',
+      title: t('metricsPage.totalMessages'),
       value: conversationStats.total,
       icon: MessageCircle,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
-      change: conversationStats.today > 0 ? `+${conversationStats.today} hoje` : '0 hoje'
+      change: conversationStats.today > 0 ? `+${conversationStats.today} ${t('metricsPage.today')}` : `0 ${t('metricsPage.today')}`
     },
     {
-      title: 'Mensagens IA Geradas',
+      title: t('metricsPage.aiMessagesGenerated'),
       value: aiMessagesUsage,
       icon: Sparkles,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
       change: `${aiMessagesLimit >= 999999 ? '∞' : `${aiMessagesUsage}/${aiMessagesLimit}`}`,
-      subtitle: `Limite: ${aiMessagesLimit >= 999999 ? '∞' : aiMessagesLimit}`
+      subtitle: `${t('metricsPage.limit')}: ${aiMessagesLimit >= 999999 ? '∞' : aiMessagesLimit}`
     },
     {
-      title: 'Agentes Ativos',
+      title: t('metricsPage.activeAgents'),
       value: globalUsage?.activeAgents || 0,
       icon: Bot,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
-      change: `${globalUsage?.agentsCount || 0} total`
+      change: `${globalUsage?.agentsCount || 0} ${t('metricsPage.total')}`
     },
     {
-      title: 'Taxa de Resposta',
+      title: t('metricsPage.responseRate'),
       value: `${responseRate}%`,
       icon: TrendingUp,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
-      change: conversationStats.total > 0 ? 'Baseado em dados reais' : 'Sem dados'
+      change: conversationStats.total > 0 ? t('metricsPage.basedOnRealData') : t('metricsPage.noData')
     },
     {
-      title: 'Conversões',
+      title: t('metricsPage.conversions'),
       value: Math.floor(conversationStats.total * 0.15), // Estimativa conservadora
       icon: Activity,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
-      change: 'Estimativa 15%'
+      change: t('metricsPage.estimate')
     },
   ];
 
@@ -261,10 +263,10 @@ const MetricsPage = ({ agents, globalUsage, subscription }: MetricsPageProps) =>
       <div className="flex flex-col md:flex-row md:justify-between md:items-center space-y-4 md:space-y-0">
         <div className="text-center md:text-left">
           <h1 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1 md:mb-2">
-            Métricas de Performance
+            {t('metricsPage.title')}
           </h1>
           <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
-            Dados reais do desempenho dos seus agentes
+            {t('metricsPage.subtitle')}
           </p>
         </div>
         
@@ -280,7 +282,7 @@ const MetricsPage = ({ agents, globalUsage, subscription }: MetricsPageProps) =>
             onClick={toggleAutoRefresh}
             className="text-xs px-2 py-1"
           >
-            {autoRefreshEnabled ? 'Pausar' : 'Ativar'}
+            {autoRefreshEnabled ? t('metricsPage.pause') : t('metricsPage.activate')}
           </Button>
           <Button
             variant="outline"
@@ -322,7 +324,7 @@ const MetricsPage = ({ agents, globalUsage, subscription }: MetricsPageProps) =>
         {/* Gráfico de Mensagens Diárias */}
         <Card className="shadow-sm">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base md:text-lg">Mensagens por Dia (Últimos 7 dias)</CardTitle>
+            <CardTitle className="text-base md:text-lg">{t('metricsPage.messagesPerDay')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
@@ -348,14 +350,14 @@ const MetricsPage = ({ agents, globalUsage, subscription }: MetricsPageProps) =>
                   dataKey="messages" 
                   stroke="#10B981" 
                   strokeWidth={2}
-                  name="Mensagens Enviadas"
+                  name={t('metricsPage.messagesSent')}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="responses" 
                   stroke="#3B82F6" 
                   strokeWidth={2}
-                  name="Respostas Recebidas"
+                  name={t('metricsPage.responsesReceived')}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -365,7 +367,7 @@ const MetricsPage = ({ agents, globalUsage, subscription }: MetricsPageProps) =>
         {/* Gráfico de Pizza - Taxa de Resposta */}
         <Card className="shadow-sm">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base md:text-lg">Taxa de Resposta Real</CardTitle>
+            <CardTitle className="text-base md:text-lg">{t('metricsPage.realResponseRate')}</CardTitle>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={250}>
@@ -404,7 +406,7 @@ const MetricsPage = ({ agents, globalUsage, subscription }: MetricsPageProps) =>
       {/* Gráfico de Barras - Performance por Agente - Mobile: Full width */}
       <Card className="shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base md:text-lg">Performance Real por Agente</CardTitle>
+          <CardTitle className="text-base md:text-lg">{t('metricsPage.realPerformanceByAgent')}</CardTitle>
         </CardHeader>
         <CardContent>
           {agentStats.length > 0 ? (
@@ -430,13 +432,13 @@ const MetricsPage = ({ agents, globalUsage, subscription }: MetricsPageProps) =>
                     padding: '8px'
                   }}
                 />
-                <Bar dataKey="total_messages" fill="#10B981" name="Mensagens Processadas" />
+                <Bar dataKey="total_messages" fill="#10B981" name={t('metricsPage.messagesProcessed')} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              <p>Nenhum dado de performance disponível ainda.</p>
-              <p className="text-sm mt-2">Os dados aparecerão quando seus agentes começarem a processar mensagens.</p>
+              <p>{t('metricsPage.noPerformanceData')}</p>
+              <p className="text-sm mt-2">{t('metricsPage.performanceDataNote')}</p>
             </div>
           )}
         </CardContent>
@@ -445,17 +447,17 @@ const MetricsPage = ({ agents, globalUsage, subscription }: MetricsPageProps) =>
       {/* Tabela de Resumo - Mobile: Scroll horizontal */}
       <Card className="shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base md:text-lg">Resumo dos Agentes</CardTitle>
+          <CardTitle className="text-base md:text-lg">{t('metricsPage.agentsSummary')}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-xs md:text-sm">
               <thead>
                 <tr className="border-b bg-gray-50 dark:bg-gray-800">
-                  <th className="text-left py-2 md:py-3 px-2 md:px-4 font-medium text-gray-900 dark:text-white min-w-[120px]">Agente</th>
-                  <th className="text-left py-2 md:py-3 px-2 md:px-4 font-medium text-gray-900 dark:text-white min-w-[80px]">Status</th>
-                  <th className="text-left py-2 md:py-3 px-2 md:px-4 font-medium text-gray-900 dark:text-white min-w-[80px]">Mensagens</th>
-                  <th className="text-left py-2 md:py-3 px-2 md:px-4 font-medium text-gray-900 dark:text-white min-w-[100px]">Criado em</th>
+                  <th className="text-left py-2 md:py-3 px-2 md:px-4 font-medium text-gray-900 dark:text-white min-w-[120px]">{t('metricsPage.agent')}</th>
+                  <th className="text-left py-2 md:py-3 px-2 md:px-4 font-medium text-gray-900 dark:text-white min-w-[80px]">{t('metricsPage.status')}</th>
+                  <th className="text-left py-2 md:py-3 px-2 md:px-4 font-medium text-gray-900 dark:text-white min-w-[80px]">{t('metricsPage.messages')}</th>
+                  <th className="text-left py-2 md:py-3 px-2 md:px-4 font-medium text-gray-900 dark:text-white min-w-[100px]">{t('metricsPage.createdOn')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -472,7 +474,7 @@ const MetricsPage = ({ agents, globalUsage, subscription }: MetricsPageProps) =>
                         <div className="flex items-center space-x-1">
                           <span className={`inline-block w-2 h-2 rounded-full ${agent.is_active ? 'bg-green-500' : 'bg-gray-400'}`}></span>
                           <span className="text-xs md:text-sm">
-                            {agent.is_active ? 'Ativo' : 'Inativo'}
+                            {agent.is_active ? t('metricsPage.online') : t('metricsPage.offline')}
                           </span>
                         </div>
                       </td>

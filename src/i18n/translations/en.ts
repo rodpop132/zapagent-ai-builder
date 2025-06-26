@@ -1,3 +1,4 @@
+
 export const en = {
   translation: {
     hero: {
@@ -238,7 +239,7 @@ export const en = {
       planNames: {
         free: "Free",
         pro: "Pro",
-        ultra: "Ultra",  
+        ultra: "Ultra",
         unlimited: "Unlimited"
       },
       // Dashboard specific translations
@@ -257,6 +258,114 @@ export const en = {
       systemStatus: "System Status",
       metrics: "Metrics",
       messageGenerator: "Message Generator"
+    },
+    // Message Generator translations
+    messageGenerator: {
+      title: "AI Message Generator",
+      subtitle: "Create professional and personalized responses for your customers",
+      messagesUsed: "Messages",
+      limitReached: "Limit reached",
+      limitWarning: "You have reached the limit of {{limit}} messages. Upgrade to continue.",
+      messageType: "Message Type",
+      messageTone: "Message Tone",
+      examples: "Examples",
+      clientMessage: "Client Message",
+      clientMessagePlaceholder: "Paste here the message the client sent...",
+      generatedResponse: "AI Generated Response",
+      generateResponse: "Generate Response",
+      generating: "Generating...",
+      copyMessage: "Copy Message",
+      generateAgain: "Generate Again",
+      responseAppearHere: "Your professional message will appear here",
+      insertClientMessage: "Insert client message and click 'Generate Response'",
+      upgradeProTitle: "🔓 Upgrade to Pro plan",
+      upgradeProDescription: "Generate up to 10,000 messages/month with AI and access advanced features",
+      tipsTitle: "Tips for better results:",
+      tipsList: [
+        "• Provide as much context from the client's message as possible",
+        "• Choose the appropriate tone for your business type",
+        "• Always review the message before sending",
+        "• Personalize with specific information when needed"
+      ],
+      tones: {
+        professional: "Professional",
+        friendly: "Friendly",
+        formal: "Formal",
+        casual: "Casual"
+      },
+      types: {
+        response: "Response",
+        followUp: "Follow-up",
+        sales: "Sales",
+        support: "Support"
+      },
+      exampleMessages: [
+        "Hi, I'd like to know more about your products",
+        "What's the delivery time to New York?",
+        "Do you offer discounts for bulk purchases?",
+        "How does the product warranty work?",
+        "I need to cancel my order"
+      ],
+      charactersCount: "{{count}}/500 characters"
+    },
+    // Metrics translations
+    metricsPage: {
+      title: "Performance Metrics",
+      subtitle: "Real data on your agents' performance",
+      autoRefreshActive: "Auto-refresh active",
+      autoRefreshInactive: "Auto-refresh inactive",
+      pause: "Pause",
+      activate: "Activate",
+      totalMessages: "Total Messages",
+      aiMessagesGenerated: "AI Messages Generated",
+      activeAgents: "Active Agents",
+      responseRate: "Response Rate",
+      conversions: "Conversions",
+      today: "today",
+      total: "total",
+      unlimited: "Unlimited",
+      limit: "Limit",
+      basedOnRealData: "Based on real data",
+      noData: "No data",
+      estimate: "Estimate 15%",
+      messagesPerDay: "Messages per Day (Last 7 days)",
+      realResponseRate: "Real Response Rate",
+      realPerformanceByAgent: "Real Performance by Agent",
+      agentsSummary: "Agents Summary",
+      agent: "Agent",
+      status: "Status",
+      messages: "Messages",
+      createdOn: "Created on",
+      online: "Online",
+      offline: "Offline",
+      noPerformanceData: "No performance data available yet.",
+      performanceDataNote: "Data will appear when your agents start processing messages.",
+      messagesProcessed: "Messages Processed",
+      messagesSent: "Messages Sent",
+      responsesReceived: "Responses Received",
+      answered: "Answered",
+      waiting: "Waiting"
+    },
+    systemStatus: {
+      title: "System Status",
+      loadingStatus: "Loading status...",
+      botInstances: "Bot Instances",
+      onlineAgents: "Online Agents",
+      reconnecting: "Reconnecting",
+      msgsToday: "Msgs Today",
+      avgResponseTime: "Average Response Time",
+      availability: "Availability",
+      lastUpdate: "Last update",
+      excellent: "Excellent",
+      good: "Good",
+      attention: "Attention",
+      slow: "Slow",
+      reconnectingNote: "agent(s) reconnecting automatically",
+      autoRecoveryNote: "The system is self-recovering. No manual intervention needed.",
+      online: "Online",
+      offline: "Offline",
+      tryAgain: "Try Again",
+      unknownError: "Unknown error"
     },
     faq: {
       title: "Frequently Asked Questions",
