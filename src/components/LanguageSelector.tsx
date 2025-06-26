@@ -17,17 +17,17 @@ interface Language {
 }
 
 const languages: Language[] = [
-  { code: 'pt', name: 'Português', flag: '🇧🇷' },
   { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'pt', name: 'Português', flag: '🇧🇷' },
   { code: 'en', name: 'English', flag: '🇺🇸' }
 ];
 
 const LanguageSelector = () => {
   const { i18n } = useTranslation();
   const [currentLanguage, setCurrentLanguage] = useState(() => {
-    // Sempre inicializar com português brasileiro como padrão
+    // Sempre inicializar com espanhol como padrão
     const savedLanguage = localStorage.getItem('selectedLanguage');
-    const languageCode = savedLanguage || 'pt';
+    const languageCode = savedLanguage || 'es';
     
     // Garantir que o i18n está sincronizado
     if (i18n.language !== languageCode) {

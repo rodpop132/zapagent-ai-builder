@@ -240,7 +240,23 @@ export const en = {
         pro: "Pro",
         ultra: "Ultra",  
         unlimited: "Unlimited"
-      }
+      },
+      // Dashboard specific translations
+      menu: "Menu",
+      close: "Close",
+      mainPanel: "Main panel",
+      performanceAnalysis: "Performance analysis",
+      aiForProfessionalMessages: "AI for professional messages",
+      autoRefreshActive: "Auto-refresh active",
+      autoRefreshInactive: "Auto-refresh inactive",
+      lastUpdate: "Last update",
+      pauseAutoRefresh: "Pause Auto-refresh",
+      activateAutoRefresh: "Activate Auto-refresh",
+      update: "Update",
+      manageVirtualAssistants: "Manage your virtual assistants",
+      systemStatus: "System Status",
+      metrics: "Metrics",
+      messageGenerator: "Message Generator"
     },
     faq: {
       title: "Frequently Asked Questions",

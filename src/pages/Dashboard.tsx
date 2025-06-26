@@ -74,11 +74,11 @@ const Dashboard = () => {
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
   const { toast } = useToast();
 
-  // Menu items
+  // Menu items with translations
   const menuItems = [
     { id: 'dashboard', name: 'Dashboard', icon: Home },
-    { id: 'metrics', name: 'Métricas', icon: LineChart },
-    { id: 'message-generator', name: 'Gerador de Mensagens', icon: Sparkles },
+    { id: 'metrics', name: t('userDashboard.metrics'), icon: LineChart },
+    { id: 'message-generator', name: t('userDashboard.messageGenerator'), icon: Sparkles },
   ];
 
   // Calculate planType and agentLimit once
@@ -551,10 +551,10 @@ const Dashboard = () => {
         <div className="flex items-center space-x-3">
           <div className={`w-3 h-3 rounded-full ${autoRefreshEnabled ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
           <span className="text-sm text-gray-600 dark:text-gray-400">
-            {autoRefreshEnabled ? 'Auto-refresh ativo' : 'Auto-refresh desativado'}
+            {autoRefreshEnabled ? t('userDashboard.autoRefreshActive') : t('userDashboard.autoRefreshInactive')}
           </span>
           <span className="text-xs text-gray-500">
-            Última atualização: {lastUpdate.toLocaleTimeString('pt-BR')}
+            {t('userDashboard.lastUpdate')}: {lastUpdate.toLocaleTimeString()}
           </span>
         </div>
         <div className="flex items-center space-x-2">
@@ -564,7 +564,7 @@ const Dashboard = () => {
             onClick={toggleAutoRefresh}
             className="text-xs"
           >
-            {autoRefreshEnabled ? 'Pausar' : 'Ativar'} Auto-refresh
+            {autoRefreshEnabled ? t('userDashboard.pauseAutoRefresh') : t('userDashboard.activateAutoRefresh')}
           </Button>
           <Button
             variant="outline"
@@ -573,7 +573,7 @@ const Dashboard = () => {
             className="text-xs"
           >
             <RefreshCw className="h-3 w-3 mr-1" />
-            Atualizar
+            {t('userDashboard.update')}
           </Button>
         </div>
       </div>
@@ -583,7 +583,7 @@ const Dashboard = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
           <div>
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">{t('userDashboard.myAgents')}</h2>
-            <p className="text-gray-600 dark:text-gray-400">Gerencie seus assistentes virtuais</p>
+            <p className="text-gray-600 dark:text-gray-400">{t('userDashboard.manageVirtualAssistants')}</p>
           </div>
           <Button 
             onClick={handleCreateAgent}
@@ -741,7 +741,7 @@ const Dashboard = () => {
                     )}
                   </div>
                   <span className="hidden sm:inline text-sm transition-all duration-300">
-                    {sidebarOpen ? 'Fechar' : 'Menu'}
+                    {sidebarOpen ? t('userDashboard.close') : t('userDashboard.menu')}
                   </span>
                 </Button>
                 
@@ -750,9 +750,9 @@ const Dashboard = () => {
                     {menuItems.find(item => item.id === currentPage)?.name || 'Dashboard'}
                   </h1>
                   <p className="text-xs md:text-sm text-gray-500 dark:text-gray-400 hidden sm:block transition-colors duration-300">
-                    {currentPage === 'dashboard' && 'Painel principal'}
-                    {currentPage === 'metrics' && 'Análise de desempenho'}
-                    {currentPage === 'message-generator' && 'IA para mensagens profissionais'}
+                    {currentPage === 'dashboard' && t('userDashboard.mainPanel')}
+                    {currentPage === 'metrics' && t('userDashboard.performanceAnalysis')}
+                    {currentPage === 'message-generator' && t('userDashboard.aiForProfessionalMessages')}
                   </p>
                 </div>
               </div>
@@ -849,7 +849,6 @@ const Dashboard = () => {
           currentPlan={subscription?.plan_type || 'free'}
         />
 
-        {/* Support Notifications */}
         <SupportNotifications />
       </div>
     </div>
