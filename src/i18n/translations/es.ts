@@ -1,3 +1,4 @@
+
 export const es = {
   translation: {
     hero: {
@@ -42,27 +43,42 @@ export const es = {
     },
     testimonials: {
       title: "Resultados Reales de Nuestros Clientes",
-      subtitle: "Ve cómo ZapAgent está transformando negocios a través de WhatsApp con resultados comprobados y ventas automáticas",
-      verified: "Verificado",
-      satisfaction: "Tasa de Satisfacción",
-      availability: "Disponibilidad",
-      companiesServed: "Empresas Atendidas",
-      basedOn: "Basado en",
-      reviewsCount: "2.847 evaluaciones",
+      subtitle: "Historias reales de empresas que transformaron su atención al cliente",
+      verified: "Cliente Verificado",
+      stats: {
+        satisfaction: "Satisfacción del Cliente",
+        response: "Tiempo de Respuesta",
+        sales: "Aumento en Ventas"
+      },
       customer1: {
-        name: "Carlos Mendes",
+        name: "Carlos Menéndez",
         business: "Tienda de Electrónicos",
-        content: "Aumentamos nuestras ventas en 40% después de implementar ZapAgent. ¡La atención 24/7 marcó toda la diferencia!"
+        content: "Aumentamos nuestras ventas en 40% después de implementar ZapAgent. ¡La atención 24/7 marcó toda la diferencia!",
+        results: {
+          satisfaction: "98%",
+          response: "< 30s",
+          sales: "+40%"
+        }
       },
       customer2: {
-        name: "Ana Paula",
-        business: "Consultoría Legal",
-        content: "Nuestros clientes aman la rapidez de las respuestas. El agente logra responder el 80% de las preguntas automáticamente."
+        name: "Ana Paula García",
+        business: "Consultoría Jurídica",
+        content: "Nuestros clientes adoran la rapidez de las respuestas. El agente logra responder el 80% de las preguntas automáticamente.",
+        results: {
+          satisfaction: "95%",
+          response: "< 15s",
+          sales: "+25%"
+        }
       },
       customer3: {
         name: "Roberto Silva",
         business: "E-commerce de Moda",
-        content: "Redujo drásticamente nuestra carga de trabajo en atención. Ahora nos enfocamos solo en los casos más complejos."
+        content: "Redujo drásticamente nuestra carga de trabajo en atención. Ahora nos enfocamos solo en los casos más complejos.",
+        results: {
+          satisfaction: "97%",
+          response: "< 20s",
+          sales: "+35%"
+        }
       }
     },
     pricing: {
@@ -72,76 +88,68 @@ export const es = {
       annually: "Anual",
       save: "Ahorra 20%",
       freeTrial: "+ 7 días gratis",
-      promotion: "PROMOCIÓN",
       mostPopular: "Más Popular",
-      freeTrialNote: "* Solo en primera suscripción",
-      guarantee: "Todas las suscripciones incluyen actualizaciones automáticas y nuevas funciones",
-      comingSoon: "Próximamente: Planes Enterprise personalizados para grandes empresas",
+      freeTrialNote: "* Solo en la primera suscripción",
+      guarantee: "Garantía de 30 días - Satisfacción garantida o te devolvemos tu dinero",
       paymentError: "Error al procesar el pago. Inténtalo de nuevo.",
       free: {
         title: "Gratuito",
-        price: "€ 0",
         period: "/mes",
-        description: "Para probar nuestras funciones básicas",
+        description: "Perfecto para probar nuestra plataforma",
         limited: "Limitado",
         features: [
-          "Solo 30 mensajes por mes",
-          "Solo 1 agente de IA",
-          "Soporte básico por email",
-          "Funciones limitadas",
-          "Sin análisis de conversaciones",
-          "Sin seguimiento de mensajes",
-          "Sin métricas en tiempo real",
-          "Sin actualización automática"
+          "1 agente de IA (limitado)",
+          "30 mensajes/mes (limitado)",
+          "Simulador de conversaciones (limitado)",
+          "Soporte por email (limitado)",
+          "Sin integración WhatsApp",
+          "Sin análisis avanzados",
+          "Sin personalizaciones",
+          "Sin soporte prioritario"
         ],
-        cta: "Comenzar Gratis"
+        cta: "Empezar Gratis"
       },
       pro: {
         title: "Pro",
-        price: "€ 12",
-        originalPrice: "€ 24",
         period: "/mes",
         discount: "-50%",
         description: "Ideal para pequeñas y medianas empresas",
-        popular: "MÁS POPULAR",
-        promotion: "PROMOCIÓN",
-        freeTrialNote: "¡Prueba 7 días gratis!",
+        popular: "Más Popular",
+        freeTrialNote: "* Solo en la primera suscripción",
         features: [
-          "1.000 mensajes por mes",
-          "Hasta 3 agentes de IA",
+          "5 agentes de IA",
+          "10.000 mensajes/mes",
+          "Entrenamiento personalizado",
+          "Integración WhatsApp",
+          "Análisis avanzados",
           "Soporte prioritario",
-          "Análisis detallado de conversaciones",
-          "Seguimiento completo de mensajes",
-          "Métricas en tiempo real",
-          "Auto-actualización cada 30 segundos",
-          "Integración WhatsApp Business",
-          "Informes de rendimiento"
+          "Personalizaciones avanzadas",
+          "Dashboard en tiempo real",
+          "Plantillas predefinidas"
         ],
-        cta: "Elegir Profesional"
+        cta: "Suscribirse al Plan Pro"
       },
       ultra: {
-        title: "Ultra Premium",
-        price: "€ 28",
-        originalPrice: "€ 56",
+        title: "Ultra",
         period: "/mes",
         discount: "-50%",
-        description: "Para empresas que quieren dominar",
-        promotion: "EMPRESARIAL",
-        unlimited: "¡Sin límites. Máximo poder!",
+        description: "Para empresas que necesitan escala",
+        promotion: "PROMOCIÓN",
+        unlimited: "Todo ilimitado para máximo rendimiento",
         features: [
-          "Mensajes ILIMITADOS",
-          "Agentes de IA ILIMITADOS",
-          "Soporte VIP 24/7",
-          "IA con memoria avanzada",
-          "Seguimiento avanzado en tiempo real",
-          "Panel ejecutivo completo",
-          "Actualización automática instantánea",
-          "Análisis predictivo de conversaciones",
+          "Agentes ilimitados",
+          "Mensajes ilimitados",
+          "Entrenamiento avanzado",
+          "Analytics completos",
+          "Integraciones completas",
+          "Soporte 24/7",
           "API personalizada",
-          "Marca blanca disponible",
-          "Gerente de cuenta dedicado"
+          "Soporte para Telegram",
+          "Integraciones CRM",
+          "Reportes personalizados",
+          "Manager dedicado"
         ],
-        cta: "Elegir Ultra Premium"
+        cta: "Suscribirse al Plan Ultra"
       }
     },
     benefits: {
@@ -157,7 +165,7 @@ export const es = {
       },
       whatsappIntegration: {
         title: "Integración WhatsApp",
-        description: "Conecta directamente con WhatsApp Business API oficial"
+        description: "Conecta directamente con la API oficial de WhatsApp Business"
       },
       analytics: {
         title: "Análisis Detallados",
@@ -172,7 +180,7 @@ export const es = {
         description: "Prueba nuestra plataforma sin compromiso y ve los resultados"
       },
       cta: {
-        title: "¿Listo para comenzar?",
+        title: "¿Listo para empezar?",
         subtitle: "Crea tu primer agente gratuitamente y transforma tu atención",
         guarantee: "Garantía de satisfacción"
       },
@@ -194,23 +202,23 @@ export const es = {
       },
       feature5: {
         title: "Soporte Especializado",
-        description: "Nuestro equipo está siempre listo para ayudarte"
+        description: "Nuestro equipo siempre está listo para ayudarte"
       },
       feature6: {
         title: "Seguridad Garantizada",
-        description: "Tus datos y los de tus clientes están siempre protegidos"
+        description: "Tus datos y los de tus clientes siempre están protegidos"
       }
     },
     dashboard: {
       title: "Panel de Control en Tiempo Real",
       subtitle: "Sigue el rendimiento de tus agentes de IA en tiempo real",
-      upgradePlan: "Mejorar Plan",
+      upgradePlan: "Actualizar Plan",
       messagesSent: "Mensajes Enviados",
       responseRate: "Tasa de Respuesta",
       clientsServed: "Clientes Atendidos",
       recentConversations: "Conversaciones Recientes",
       live: "En Vivo",
-      newMessages: "nuevos mensajes",
+      newMessages: "mensajes nuevos",
       status: {
         online: "En línea",
         typing: "Escribiendo",
@@ -251,7 +259,7 @@ export const es = {
       myAgents: "Mis Agentes",
       createAgent: "Crear Agente",
       createFirstAgent: "Crear Primer Agente",
-      noAgentsYet: "Aún no hay agentes",
+      noAgentsYet: "No hay agentes aún",
       noAgentsDescription: "Crea tu primer agente de IA para comenzar a automatizar tu atención al cliente en WhatsApp.",
       limitReached: "Límite alcanzado",
       limitWarning: "Estás cerca del límite de mensajes de tu plan.",
@@ -262,155 +270,31 @@ export const es = {
         pro: "Pro",
         ultra: "Ultra",
         unlimited: "Ilimitado"
-      },
-      // Dashboard specific translations
-      menu: "Menú",
-      close: "Cerrar",
-      mainPanel: "Panel principal",
-      performanceAnalysis: "Análisis de rendimiento",
-      aiForProfessionalMessages: "IA para mensajes profesionales",
-      autoRefreshActive: "Auto-actualización activa",
-      autoRefreshInactive: "Auto-actualización inactiva",
-      lastUpdate: "Última actualización",
-      pauseAutoRefresh: "Pausar Auto-actualización",
-      activateAutoRefresh: "Activar Auto-actualización",
-      update: "Actualizar",
-      manageVirtualAssistants: "Gestiona tus asistentes virtuales",
-      systemStatus: "Estado del Sistema",
-      metrics: "Métricas",
-      messageGenerator: "Generador de Mensajes"
-    },
-    // Message Generator translations
-    messageGenerator: {
-      title: "Generador de Mensajes con IA",
-      subtitle: "Crea respuestas profesionales y personalizadas para tus clientes",
-      messagesUsed: "Mensajes",
-      limitReached: "Límite alcanzado",
-      limitWarning: "Has alcanzado el límite de {{limit}} mensajes. Actualiza para continuar.",
-      messageType: "Tipo de Mensaje",
-      messageTone: "Tono de Mensaje",
-      examples: "Ejemplos",
-      clientMessage: "Mensaje del Cliente",
-      clientMessagePlaceholder: "Pega aquí el mensaje que envió el cliente...",
-      generatedResponse: "Respuesta Generada por IA",
-      generateResponse: "Generar Respuesta",
-      generating: "Generando...",
-      copyMessage: "Copiar Mensaje",
-      generateAgain: "Generar Nuevamente",
-      responseAppearHere: "Tu mensaje profesional aparecerá aquí",
-      insertClientMessage: "Inserta el mensaje del cliente y haz clic en 'Generar Respuesta'",
-      upgradeProTitle: "🔓 Actualizar al plan Pro",
-      upgradeProDescription: "Genera hasta 10.000 mensajes/mes con IA y accede a funciones avanzadas",
-      tipsTitle: "Consejos para mejores resultados:",
-      tipsList: [
-        "• Proporciona el máximo contexto del mensaje del cliente",
-        "• Elige el tono adecuado para tu tipo de negocio",
-        "• Siempre revisa el mensaje antes de enviarlo",
-        "• Personaliza con información específica cuando sea necesario"
-      ],
-      tones: {
-        professional: "Profesional",
-        friendly: "Amigable",
-        formal: "Formal",
-        casual: "Casual"
-      },
-      types: {
-        response: "Respuesta",
-        followUp: "Seguimiento",
-        sales: "Ventas",
-        support: "Soporte"
-      },
-      exampleMessages: [
-        "Hola, me gustaría saber más sobre sus productos",
-        "¿Cuál es el tiempo de entrega a Madrid?",
-        "¿Hacen descuentos por compra en cantidad?",
-        "¿Cómo funciona la garantía de los productos?",
-        "Necesito cancelar mi pedido"
-      ],
-      charactersCount: "{{count}}/500 caracteres"
-    },
-    // Metrics translations
-    metricsPage: {
-      title: "Métricas de Rendimiento",
-      subtitle: "Datos reales del desempeño de tus agentes",
-      autoRefreshActive: "Auto-actualización activa",
-      autoRefreshInactive: "Auto-actualización inactiva",
-      pause: "Pausar",
-      activate: "Activar",
-      totalMessages: "Total de Mensajes",
-      aiMessagesGenerated: "Mensajes IA Generados",
-      activeAgents: "Agentes Activos",
-      responseRate: "Tasa de Respuesta",
-      conversions: "Conversiones",
-      today: "hoy",
-      total: "total",
-      unlimited: "Ilimitado",
-      limit: "Límite",
-      basedOnRealData: "Basado en datos reales",
-      noData: "Sin datos",
-      estimate: "Estimación 15%",
-      messagesPerDay: "Mensajes por Día (Últimos 7 días)",
-      realResponseRate: "Tasa de Respuesta Real",
-      realPerformanceByAgent: "Rendimiento Real por Agente",
-      agentsSummary: "Resumen de Agentes",
-      agent: "Agente",
-      status: "Estado",
-      messages: "Mensajes",
-      createdOn: "Creado en",
-      online: "En línea",
-      offline: "Desconectado",
-      noPerformanceData: "Aún no hay datos de rendimiento disponibles.",
-      performanceDataNote: "Los datos aparecerán cuando tus agentes comiencen a procesar mensajes.",
-      messagesProcessed: "Mensajes Procesados",
-      messagesSent: "Mensajes Enviados",
-      responsesReceived: "Respuestas Recibidas",
-      answered: "Respondidas",
-      waiting: "Esperando"
-    },
-    systemStatus: {
-      title: "Estado del Sistema",
-      loadingStatus: "Cargando estado...",
-      botInstances: "Instancias Bot",
-      onlineAgents: "Agentes En Línea",
-      reconnecting: "Reconectando",
-      msgsToday: "Mens Hoy",
-      avgResponseTime: "Tiempo de Respuesta Promedio",
-      availability: "Disponibilidad",
-      lastUpdate: "Última actualización",
-      excellent: "Excelente",
-      good: "Bueno",
-      attention: "Atención",
-      slow: "Lento",
-      reconnectingNote: "agente(s) reconectando automáticamente",
-      autoRecoveryNote: "El sistema se está auto-recuperando. No se necesita intervención manual.",
-      online: "En línea",
-      offline: "Desconectado",
-      tryAgain: "Intentar de Nuevo",
-      unknownError: "Error desconocido"
+      }
     },
     faq: {
       title: "Preguntas Frecuentes",
-      subtitle: "Aclara tus dudas sobre nuestra plataforma",
+      subtitle: "Resuelve tus dudas sobre nuestra plataforma",
       questions: {
         q1: {
-          question: "¿Cómo funciona el período de prueba gratuita?",
+          question: "¿Cómo funciona el período de prueba gratuito?",
           answer: "Tienes 7 días gratis para probar todas las características del plan elegido. No cobramos nada durante este período y puedes cancelar en cualquier momento."
         },
         q2: {
-          question: "¿Necesito conocimiento técnico para usarlo?",
+          question: "¿Necesito conocimiento técnico para usar la plataforma?",
           answer: "¡No! Nuestra plataforma fue desarrollada para ser intuitiva. Cualquier persona puede crear y configurar un agente de IA en pocos minutos."
         },
         q3: {
           question: "¿Cómo funciona la integración con WhatsApp?",
-          answer: "Conectamos directamente con la API oficial de WhatsApp Business. El proceso es guiado y toma solo unos clics para configurar."
+          answer: "Conectamos directamente con la API oficial de WhatsApp Business. El proceso es guiado y toma solo unos clics configurar."
         },
         q4: {
           question: "¿Puedo cancelar mi suscripción en cualquier momento?",
           answer: "Sí, puedes cancelar tu suscripción en cualquier momento a través del panel administrativo. No hay tarifas de cancelación."
         },
         q5: {
-          question: "¿Hay límite de mensajes?",
-          answer: "Cada plan tiene su límite mensual de mensajes. Si necesitas más, puedes actualizar tu plan o comprar mensajes adicionales."
+          question: "¿Existe límite de mensajes?",
+          answer: "Cada plan tiene su límite mensual de mensajes. Si necesitas más, puedes actualizar el plan o comprar mensajes adicionales."
         },
         q6: {
           question: "¿Cómo se calcula el límite de mensajes?",
@@ -418,7 +302,7 @@ export const es = {
         },
         q7: {
           question: "¿Puedo entrenar el agente con mi propia información?",
-          answer: "¡Sí! Puedes añadir información sobre tus productos, servicios, políticas y cualquier contenido relevante para tu negocio."
+          answer: "¡Sí! Puedes agregar información sobre tus productos, servicios, políticas y cualquier contenido relevante a tu negocio."
         },
         q8: {
           question: "¿Qué tipo de soporte ofrecen?",
@@ -455,7 +339,7 @@ export const es = {
       sendButton: "Enviar Mensaje",
       sending: "Enviando...",
       fillAllFields: "Por favor, completa todos los campos.",
-      successMessage: "¡Mensaje enviado con éxito! Nos pondremos en contacto pronto.",
+      successMessage: "¡Mensaje enviado con éxito! Te contactaremos pronto.",
       errorMessage: "Error al enviar mensaje. Inténtalo de nuevo."
     },
     auth: {
@@ -464,10 +348,10 @@ export const es = {
       signupTitle: "Crear cuenta",
       loginSubtitle: "Accede al panel de tus agentes de IA",
       signupSubtitle: "Comienza a crear agentes de IA gratis",
-      loginButton: "Iniciar Sesión",
+      loginButton: "Entrar",
       signupButton: "Registrarse",
       loginDescription: "Ingresa tus credenciales para acceder",
-      signupDescription: "Completa los datos para comenzar",
+      signupDescription: "Completa los datos para empezar",
       fullName: "Nombre completo",
       fullNamePlaceholder: "Tu nombre completo",
       email: "Email",
@@ -492,14 +376,14 @@ export const es = {
       story: "Nuestra Historia",
       storyText1: "ZapAgent AI nació de la necesidad real de pequeñas y medianas empresas que enfrentaban dificultades para ofrecer atención al cliente de calidad las 24 horas del día. Observamos que muchas empresas perdían clientes simplemente por no poder responder rápidamente a los mensajes de WhatsApp.",
       storyText2: "En 2024, nuestro equipo de desarrolladores y especialistas en IA se unió con el objetivo de crear una solución simple, efectiva y accesible. Queríamos que cualquier persona, independientemente del conocimiento técnico, pudiera crear y gestionar su propio agente de IA.",
-      storyText3: "Hoy, ayudamos a cientos de empresas a automatizar su atención al cliente, aumentar ventas y mejorar la satisfacción de los clientes. Nuestro compromiso es seguir innovando para hacer que la inteligencia artificial sea cada vez más accesible y útil para todos.",
+      storyText3: "Hoy, ayudamos a cientos de empresas a automatizar su atención al cliente, aumentar ventas y mejorar la satisfacción de los clientes. Nuestro compromiso es seguir innovando para hacer la inteligencia artificial cada vez más accesible y útil para todos.",
       stats: {
         agents: "Agentes Creados",
         messages: "Mensajes Procesados",
         satisfaction: "Satisfacción",
         support: "Soporte"
       },
-      ctaTitle: "¿Listo para revolucionar tu atención al cliente?",
+      ctaTitle: "¿Listo para revolucionar tu atención?",
       ctaButton: "Crear mi agente gratis",
       backButton: "Volver"
     }
