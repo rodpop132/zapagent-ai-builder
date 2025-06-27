@@ -24,17 +24,19 @@ const languages: Language[] = [
 
 const LanguageSelector = () => {
   const { i18n } = useTranslation();
+  
+  // Sempre inicializar com espanhol
   const [currentLanguage, setCurrentLanguage] = useState(() => {
-    // Sempre inicializar com espanhol como padrão
-    const savedLanguage = localStorage.getItem('selectedLanguage');
-    const languageCode = savedLanguage || 'es';
+    // Forçar espanhol como padrão sempre
+    const defaultLanguage = languages.find(lang => lang.code === 'es') || languages[0];
     
-    // Garantir que o i18n está sincronizado
-    if (i18n.language !== languageCode) {
-      i18n.changeLanguage(languageCode);
+    // Garantir que o i18n está em espanhol
+    if (i18n.language !== 'es') {
+      i18n.changeLanguage('es');
+      localStorage.setItem('selectedLanguage', 'es');
     }
     
-    return languages.find(lang => lang.code === languageCode) || languages[0];
+    return defaultLanguage;
   });
 
   const handleLanguageChange = (language: Language) => {

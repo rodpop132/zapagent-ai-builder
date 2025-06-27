@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -26,7 +25,7 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
     displayName: user?.user_metadata?.full_name || '',
     emailNotifications: true,
     pushNotifications: false,
-    language: i18n.language || 'pt',
+    language: 'es', // Sempre inicializar com espanhol
     theme: localStorage.getItem('theme') || 'light',
     autoSave: true,
     showOnlineStatus: true
@@ -42,13 +41,19 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
         displayName: user.user_metadata?.full_name || '',
         emailNotifications: savedSettings.emailNotifications ?? true,
         pushNotifications: savedSettings.pushNotifications ?? false,
-        language: localStorage.getItem('selectedLanguage') || i18n.language || 'pt',
+        language: 'es', // Sempre forçar espanhol como padrão
         theme: localStorage.getItem('theme') || 'light',
         autoSave: savedSettings.autoSave ?? true,
         showOnlineStatus: savedSettings.showOnlineStatus ?? true
       });
+      
+      // Garantir que o idioma está em espanhol
+      if (i18n.language !== 'es') {
+        i18n.changeLanguage('es');
+        localStorage.setItem('selectedLanguage', 'es');
+      }
     }
-  }, [isOpen, user, i18n.language]);
+  }, [isOpen, user, i18n]);
 
   const applyTheme = (theme: string) => {
     const root = document.documentElement;
@@ -198,9 +203,9 @@ const SettingsModal = ({ isOpen, onClose }: SettingsModalProps) => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="es">🇪🇸 Español</SelectItem>
                   <SelectItem value="pt">🇧🇷 Português</SelectItem>
                   <SelectItem value="en">🇺🇸 English</SelectItem>
-                  <SelectItem value="es">🇪🇸 Español</SelectItem>
                 </SelectContent>
               </Select>
             </div>
