@@ -1,4 +1,3 @@
-
 export const es = {
   translation: {
     hero: {
@@ -42,8 +41,14 @@ export const es = {
       }
     },
     testimonials: {
-      title: "Lo que dicen nuestros clientes",
-      subtitle: "Historias reales de empresas que transformaron su atención al cliente",
+      title: "Resultados Reales de Nuestros Clientes",
+      subtitle: "Ve cómo ZapAgent está transformando negocios a través de WhatsApp con resultados comprobados y ventas automáticas",
+      verified: "Verificado",
+      satisfaction: "Tasa de Satisfacción",
+      availability: "Disponibilidad",
+      companiesServed: "Empresas Atendidas",
+      basedOn: "Basado en",
+      reviewsCount: "2.847 evaluaciones",
       customer1: {
         name: "Carlos Mendes",
         business: "Tienda de Electrónicos",

@@ -1,5 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { Star, Quote, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import TestimonialsLoading from './TestimonialsLoading';
 
 const testimonials = [
@@ -24,6 +26,7 @@ const testimonials = [
 ];
 
 const Testimonials = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
@@ -84,10 +87,10 @@ const Testimonials = () => {
             <div className="h-1 w-12 bg-gradient-to-l from-transparent to-primary ml-4"></div>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 transition-all duration-700 hover:text-primary">
-            Resultados Reais dos Nossos Clientes
+            {t('testimonials.title')}
           </h2>
           <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed transition-all duration-500 hover:text-gray-800">
-            Veja como o ZapAgent está transformando negócios através do WhatsApp com resultados comprovados e vendas automáticas
+            {t('testimonials.subtitle')}
           </p>
         </div>
 
@@ -146,7 +149,7 @@ const Testimonials = () => {
               {/* Badge flutuante melhorado */}
               <div className="absolute top-6 right-6 bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-full text-xs font-bold shadow-xl animate-bounce flex items-center">
                 <div className="w-2 h-2 bg-white rounded-full mr-2 animate-pulse"></div>
-                ✓ Verificado
+                ✓ {t('testimonials.verified')}
               </div>
             </div>
           </div>
@@ -207,15 +210,15 @@ const Testimonials = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
           <div className="text-center animate-fade-in bg-white/60 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border border-gray-100">
             <div className="text-4xl font-bold bg-gradient-to-r from-green-600 to-green-500 bg-clip-text text-transparent mb-3">98%</div>
-            <p className="text-gray-600 font-medium">Taxa de Satisfação</p>
+            <p className="text-gray-600 font-medium">{t('testimonials.satisfaction')}</p>
           </div>
           <div className="text-center animate-fade-in bg-white/60 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border border-gray-100" style={{ animationDelay: '0.2s' }}>
             <div className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent mb-3">24/7</div>
-            <p className="text-gray-600 font-medium">Disponibilidade</p>
+            <p className="text-gray-600 font-medium">{t('testimonials.availability')}</p>
           </div>
           <div className="text-center animate-fade-in bg-white/60 backdrop-blur-sm rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-2 border border-gray-100" style={{ animationDelay: '0.4s' }}>
             <div className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-500 bg-clip-text text-transparent mb-3">+10k</div>
-            <p className="text-gray-600 font-medium">Empresas Atendidas</p>
+            <p className="text-gray-600 font-medium">{t('testimonials.companiesServed')}</p>
           </div>
         </div>
 
@@ -233,7 +236,7 @@ const Testimonials = () => {
               <span className="ml-3 text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent transition-all duration-300">4.9/5.0</span>
             </div>
             <div className="text-gray-600 transition-colors duration-300 group-hover:text-gray-800 text-center md:text-left text-sm md:text-base">
-              Baseado em <span className="font-bold text-primary">2.847 avaliações</span>
+              {t('testimonials.basedOn')} <span className="font-bold text-primary">{t('testimonials.reviewsCount')}</span>
             </div>
           </div>
         </div>
