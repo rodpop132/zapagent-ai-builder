@@ -1,7 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Crown, Zap, Star, CheckCircle, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 interface SocialProofNotification {
   id: string;
@@ -13,56 +15,80 @@ interface SocialProofNotification {
 }
 
 const SocialProofNotifications = () => {
+  const { t, i18n } = useTranslation();
   const [currentNotification, setCurrentNotification] = useState<SocialProofNotification | null>(null);
   const [isVisible, setIsVisible] = useState(false);
-  const [notificationIndex, setNotificationIndex] = useState(0);
 
-  const names = [
-    'Ana Silva', 'Carlos Santos', 'Maria Oliveira', 'João Pereira', 'Fernanda Costa',
-    'Ricardo Lima', 'Juliana Souza', 'Pedro Almeida', 'Camila Rodrigues', 'Bruno Martins',
-    'Larissa Ferreira', 'Thiago Barbosa', 'Gabriela Rocha', 'Mateus Carvalho', 'Beatriz Dias',
-    'Leonardo Gomes', 'Mariana Ribeiro', 'Rafael Monteiro', 'Isabela Nascimento', 'André Vieira',
-    'Carolina Moreira', 'Daniel Castro', 'Vitória Araújo', 'Gustavo Cardoso', 'Renata Fernandes',
-    'Felipe Correia', 'Amanda Teixeira', 'Rodrigo Pinto', 'Patrícia Freitas', 'Lucas Melo',
-    'Natália Ramos', 'Marcelo Silva', 'Priscila Campos', 'Vinícius Torres', 'Tatiana Lopes',
-    'Fábio Cavalcanti', 'Mônica Azevedo', 'Sérgio Mendes', 'Cristina Nogueira', 'Henrique Pacheco',
-    'Vanessa Machado', 'Antônio Rezende', 'Cláudia Cunha', 'Eduardo Brito', 'Simone Coelho',
-    'Alexandre Duarte', 'Aline Vasconcellos', 'Robson Farias', 'Luciana Morais', 'Diego Caldeira',
-    'Adriana Nunes', 'Wellington Miranda', 'Denise Xavier', 'Márcio Tavares', 'Eliane Batista',
-    'César Cordeiro', 'Soraia Porto', 'Everton Siqueira', 'Rosana Medeiros', 'Nelson Figueiredo',
-    'Sabrina Moura', 'Guilherme Vaz', 'Luciane Guerra', 'Renan Barreto', 'Kátia Sampaio',
-    'Francisco Leal', 'Viviane Gonçalves', 'Otávio Brandão', 'Sandra Aguiar', 'Milton Ribas',
-    'Carla Pessoa', 'Edson Amaral', 'Márcia Leite', 'Jaime Castelo', 'Sônia Valle',
-    'Leandro Paiva', 'Teresa Evangelista', 'Flávio Borges', 'Regina Guimarães', 'Cláudio Reis',
-    'Solange Franco', 'Júlio Bastos', 'Elza Matos', 'Paulo Kramer', 'Vera Godoy',
-    'Ronaldo Maia', 'Ângela Sales', 'Mário Caldas', 'Lúcia Antunes', 'Alberto Dantas',
-    'Silvia Vargas', 'Wanderson Cruz', 'Elizete Fonseca', 'Raul Esteves', 'Neuza Mesquita',
-    'Emerson Veloso', 'Grace Montanha', 'Edmar Silveira', 'Sueli Domingues', 'Ademir Lago',
-    'Cristiane Sena', 'Valmir Pedrosa', 'Dalva Magalhães', 'Sebastião Goulart', 'Márcia Prado',
-    'Valter Ventura', 'Edna Quadros', 'Ivan Linhares', 'Célia Espírito Santo', 'Benício Alcântara'
-  ];
+  const getNames = () => {
+    switch (i18n.language) {
+      case 'es':
+        return [
+          'Carlos Mendez', 'Ana García', 'Miguel Rodríguez', 'Laura Fernández', 'Pablo Jiménez',
+          'Carmen Silva', 'Diego Martínez', 'Elena Ruiz', 'Javier López', 'Sofía Díaz',
+          'Ricardo Vargas', 'Patricia Morales', 'Andrés Castro', 'Lucía Herrera', 'Fernando Pérez',
+          'Valeria Gómez', 'Alejandro Torres', 'Isabella Ramírez', 'Sebastián Flores', 'Camila Restrepo',
+          'Mateo Vega', 'Valentina Romero', 'Samuel Guerrero', 'Natalia Aguilar', 'Nicolás Mendoza',
+          'Gabriela Ortiz', 'Emilio Sánchez', 'Mariana Delgado', 'Óscar Molina', 'Daniela Cortés',
+          'Rodrigo Peña', 'Andrea Ramos', 'Arturo Campos', 'Paola Ríos', 'Iván Salinas',
+          'Mónica Vázquez', 'Gustavo Pacheco', 'Cristina Espinoza', 'Rubén Navarro', 'Alejandra Cabrera',
+          'Esteban Rojas', 'Julieta Herrera', 'Maximiliano Cruz', 'Constanza Medina', 'Ignacio Bravo',
+          'Beatriz Paredes', 'Tomás Figueroa', 'Verónica Acosta', 'Joaquín Sandoval', 'Fernanda Ibarra'
+        ];
+      case 'pt':
+        return [
+          'Ana Silva', 'Carlos Santos', 'Maria Oliveira', 'João Pereira', 'Fernanda Costa',
+          'Ricardo Lima', 'Juliana Souza', 'Pedro Almeida', 'Camila Rodrigues', 'Bruno Martins',
+          'Larissa Ferreira', 'Thiago Barbosa', 'Gabriela Rocha', 'Mateus Carvalho', 'Beatriz Dias'
+        ];
+      case 'en':
+      default:
+        return [
+          'John Smith', 'Sarah Johnson', 'Michael Brown', 'Emily Davis', 'David Wilson',
+          'Jessica Garcia', 'Daniel Rodriguez', 'Ashley Martinez', 'Christopher Anderson', 'Amanda Taylor'
+        ];
+    }
+  };
 
-  const locations = [
-    'São Paulo, SP', 'Rio de Janeiro, RJ', 'Belo Horizonte, MG', 'Salvador, BA', 'Fortaleza, CE',
-    'Brasília, DF', 'Curitiba, PR', 'Recife, PE', 'Porto Alegre, RS', 'Manaus, AM',
-    'Belém, PA', 'Goiânia, GO', 'Guarulhos, SP', 'Campinas, SP', 'São Luís, MA',
-    'São Gonçalo, RJ', 'Maceió, AL', 'Duque de Caxias, RJ', 'Natal, RN', 'Teresina, PI',
-    'Campo Grande, MS', 'Nova Iguaçu, RJ', 'São Bernardo do Campo, SP', 'João Pessoa, PB',
-    'Santo André, SP', 'Osasco, SP', 'Jaboatão dos Guararapes, PE', 'São José dos Campos, SP',
-    'Ribeirão Preto, SP', 'Uberlândia, MG', 'Sorocaba, SP', 'Contagem, MG', 'Aracaju, SE',
-    'Feira de Santana, BA', 'Cuiabá, MT', 'Joinville, SC', 'Juiz de Fora, MG', 'Londrina, PR',
-    'Aparecida de Goiânia, GO', 'Ananindeua, PA', 'Porto Velho, RO', 'Serra, ES',
-    'Niterói, RJ', 'Caxias do Sul, RS', 'Macapá, AP', 'Mogi das Cruzes, SP', 'Vila Velha, ES',
-    'Florianópolis, SC', 'Santos, SP', 'Diadema, SP'
-  ];
+  const getLocations = () => {
+    switch (i18n.language) {
+      case 'es':
+        return [
+          'Madrid, España', 'Barcelona, España', 'Valencia, España', 'Sevilla, España', 'Zaragoza, España',
+          'Málaga, España', 'Murcia, España', 'Palma, España', 'Las Palmas, España', 'Bilbao, España',
+          'Alicante, España', 'Córdoba, España', 'Valladolid, España', 'Vigo, España', 'Gijón, España',
+          'Hospitalet, España', 'Vitoria, España', 'Granada, España', 'Elche, España', 'Oviedo, España',
+          'Badalona, España', 'Cartagena, España', 'Terrassa, España', 'Jerez, España', 'Sabadell, España',
+          'Móstoles, España', 'Santa Cruz, España', 'Pamplona, España', 'Almería, España', 'Alcalá, España',
+          'Fuenlabrada, España', 'Donostia, España', 'Leganés, España', 'Castellón, España', 'Burgos, España',
+          'Santander, España', 'Getafe, España', 'Albacete, España', 'Alcorcón, España', 'Logroño, España',
+          'Badajoz, España', 'Salamanca, España', 'Huelva, España', 'Marbella, España', 'Lleida, España',
+          'Tarragona, España', 'León, España', 'Cádiz, España', 'Dos Hermanas, España', 'Parla, España'
+        ];
+      case 'pt':
+        return [
+          'São Paulo, SP', 'Rio de Janeiro, RJ', 'Belo Horizonte, MG', 'Salvador, BA', 'Fortaleza, CE',
+          'Brasília, DF', 'Curitiba, PR', 'Recife, PE', 'Porto Alegre, RS', 'Manaus, AM'
+        ];
+      case 'en':
+      default:
+        return [
+          'New York, USA', 'Los Angeles, USA', 'Chicago, USA', 'Houston, USA', 'Phoenix, USA',
+          'Philadelphia, USA', 'San Antonio, USA', 'San Diego, USA', 'Dallas, USA', 'San Jose, USA'
+        ];
+    }
+  };
 
-  const plans = [
-    { name: 'Grátis', color: 'bg-gray-100 text-gray-700', icon: <Star className="h-4 w-4" /> },
-    { name: 'Pro', color: 'bg-blue-100 text-blue-700', icon: <Crown className="h-4 w-4" /> },
-    { name: 'Ultra', color: 'bg-purple-100 text-purple-700', icon: <Zap className="h-4 w-4" /> }
+  const getPlans = () => [
+    { name: t('pricing.free.title'), color: 'bg-gray-100 text-gray-700', icon: <Star className="h-4 w-4" /> },
+    { name: t('pricing.pro.title'), color: 'bg-blue-100 text-blue-700', icon: <Crown className="h-4 w-4" /> },
+    { name: t('pricing.ultra.title'), color: 'bg-purple-100 text-purple-700', icon: <Zap className="h-4 w-4" /> }
   ];
 
   const generateNotification = (): SocialProofNotification => {
+    const names = getNames();
+    const locations = getLocations();
+    const plans = getPlans();
+    
     const randomName = names[Math.floor(Math.random() * names.length)];
     const randomLocation = locations[Math.floor(Math.random() * locations.length)];
     const randomPlan = plans[Math.floor(Math.random() * plans.length)];
@@ -75,6 +101,30 @@ const SocialProofNotifications = () => {
       planColor: randomPlan.color,
       planIcon: randomPlan.icon
     };
+  };
+
+  const getSignupText = () => {
+    switch (i18n.language) {
+      case 'es':
+        return 'acaba de suscribirse al plan';
+      case 'pt':
+        return 'acabou de assinar o plano';
+      case 'en':
+      default:
+        return 'just subscribed to the';
+    }
+  };
+
+  const getActiveNowText = () => {
+    switch (i18n.language) {
+      case 'es':
+        return 'Activo ahora';
+      case 'pt':
+        return 'Ativo agora';
+      case 'en':
+      default:
+        return 'Active now';
+    }
   };
 
   useEffect(() => {
@@ -106,7 +156,7 @@ const SocialProofNotifications = () => {
       clearTimeout(initialTimer);
       clearInterval(intervalTimer);
     };
-  }, []);
+  }, [i18n.language]);
 
   const handleClose = () => {
     setIsVisible(false);
@@ -194,7 +244,7 @@ const SocialProofNotifications = () => {
                 </div>
                 
                 <p className="text-xs text-gray-700 mb-1 font-medium">
-                  acabou de assinar o plano <span className="font-bold text-green-600">{currentNotification.plan}</span>
+                  {getSignupText()} <span className="font-bold text-green-600">{currentNotification.plan}</span>
                 </p>
                 
                 <p className="text-xs text-gray-500 flex items-center space-x-1 mb-2">
@@ -204,7 +254,7 @@ const SocialProofNotifications = () => {
                 
                 <div className="flex items-center space-x-1 mt-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-sm"></div>
-                  <span className="text-xs text-green-600 font-bold">Ativo agora</span>
+                  <span className="text-xs text-green-600 font-bold">{getActiveNowText()}</span>
                   <div className="flex space-x-0.5 ml-2">
                     <div className="w-1 h-1 bg-green-400 rounded-full animate-bounce"></div>
                     <div className="w-1 h-1 bg-green-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
