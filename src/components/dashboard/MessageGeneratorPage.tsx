@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,7 +35,32 @@ const MessageGeneratorPage = () => {
     { id: 'support', label: t('messageGenerator.types.support'), icon: Lightbulb },
   ];
 
-  const exampleMessages = t('messageGenerator.exampleMessages', { returnObjects: true }) as string[];
+  // Corrigir o problema com exampleMessages - garantir que seja sempre um array
+  const getExampleMessages = () => {
+    try {
+      const messages = t('messageGenerator.exampleMessages', { returnObjects: true });
+      if (Array.isArray(messages)) {
+        return messages;
+      }
+      // Se não for array, retornar exemplos padrão
+      return [
+        "Olá, gostaria de saber mais sobre seus produtos",
+        "Qual é o prazo de entrega?",
+        "Vocês aceitam cartão de crédito?",
+        "Preciso de ajuda com meu pedido"
+      ];
+    } catch (error) {
+      console.error('Erro ao carregar exemplos:', error);
+      return [
+        "Olá, gostaria de saber mais sobre seus produtos",
+        "Qual é o prazo de entrega?",
+        "Vocês aceitam cartão de crédito?",
+        "Preciso de ajuda com meu pedido"
+      ];
+    }
+  };
+
+  const exampleMessages = getExampleMessages();
 
   const generateMessage = async () => {
     if (!clientMessage.trim()) {
