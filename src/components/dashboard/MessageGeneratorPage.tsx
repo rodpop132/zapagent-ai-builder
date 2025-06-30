@@ -83,7 +83,7 @@ const MessageGeneratorPage = () => {
         tipo: selectedType
       });
 
-      const response = await fetch('https://ia-resposters.onrender.com/gerar-resposta-profissional', {
+      const response = await fetch('https://ia-resposters-vvp1.onrender.com/gerar-resposta-profissional', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
