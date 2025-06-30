@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'https://zapagent-bot-9jkk.onrender.com';
+const API_URL = 'https://zapagent-bot-uu27.onrender.com';
 
 export interface CreateAgentPayload {
   user_id: string;
