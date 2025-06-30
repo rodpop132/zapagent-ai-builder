@@ -1,4 +1,5 @@
 
+
 export const es = {
   translation: {
     hero: {
@@ -271,7 +272,18 @@ export const es = {
         ultra: "Ultra",
         unlimited: "Ilimitado"
       },
-      // Añadiendo traducciones que faltaban para el dashboard del usuario
+      menu: "Menú",
+      close: "Cerrar",
+      mainPanel: "Panel Principal",
+      performanceAnalysis: "Análisis de Rendimiento",
+      aiForProfessionalMessages: "IA para Mensajes Profesionales",
+      manageVirtualAssistants: "Gestiona tus asistentes virtuales",
+      autoRefreshActive: "Actualización automática activa",
+      autoRefreshInactive: "Actualización automática inactiva",
+      lastUpdate: "Última actualización",
+      pauseAutoRefresh: "Pausar actualización automática",
+      activateAutoRefresh: "Activar actualización automática",
+      update: "Actualizar",
       overview: "Resumen",
       messageGenerator: "Generador de Mensajes",
       metrics: "Métricas",
@@ -487,3 +499,4 @@ export const es = {
     }
   }
 };
+
