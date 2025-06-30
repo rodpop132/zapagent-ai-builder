@@ -270,7 +270,23 @@ export const es = {
         pro: "Pro",
         ultra: "Ultra",
         unlimited: "Ilimitado"
-      }
+      },
+      // Añadiendo traducciones que faltaban para el dashboard del usuario
+      overview: "Resumen",
+      messageGenerator: "Generador de Mensajes",
+      metrics: "Métricas",
+      settings: "Configuraciones",
+      support: "Soporte",
+      totalAgents: "Total de Agentes",
+      totalMessages: "Total de Mensajes",
+      currentPlan: "Plan Actual",
+      upgradeNow: "Actualizar Ahora",
+      viewAll: "Ver Todo",
+      recentActivity: "Actividad Reciente",
+      quickActions: "Acciones Rápidas",
+      generateMessage: "Generar Mensaje",
+      viewMetrics: "Ver Métricas",
+      manageAgents: "Gestionar Agentes"
     },
     messageGenerator: {
       title: "Generador de Mensajes IA",
