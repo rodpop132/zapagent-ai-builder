@@ -1,5 +1,3 @@
-
-
 export const es = {
   translation: {
     hero: {
@@ -42,10 +40,58 @@ export const es = {
         description: "Integra fácilmente con WhatsApp y comienza a atender clientes automáticamente 24/7"
       }
     },
+    services: {
+      title: "Empresas que Confían en ZapAgent",
+      subtitle: "Negocios reales que transformaron su atención al cliente con nuestros agentes de IA",
+      businesses: {
+        bardero: {
+          name: "Bardero",
+          type: "Restaurante",
+          rating: "4.8",
+          description: "Automatizó reservas y consultas de menú"
+        },
+        viana: {
+          name: "Viana Barcelona",
+          type: "Restaurante de Fusión",
+          rating: "4.8",
+          description: "Mejoró la experiencia del cliente con IA"
+        },
+        lamiventa: {
+          name: "La Mi Venta",
+          type: "Restaurante Español",
+          rating: "4.6",
+          description: "Optimizó pedidos y atención al cliente"
+        },
+        hellomonday: {
+          name: "Hello Monday",
+          type: "Agencia de Marketing",
+          rating: "5.0",
+          description: "Automatizó consultas de servicios"
+        },
+        optimoclick: {
+          name: "Optimoclick",
+          type: "Agencia Digital",
+          rating: "5.0",
+          description: "Mejoró la captación de leads"
+        }
+      },
+      trustedBy: "Confiado por más de",
+      companies: "empresas",
+      sectors: "Sectores que utilizan ZapAgent",
+      restaurant: "Restaurantes",
+      marketing: "Marketing",
+      retail: "Comercio",
+      services: "Servicios"
+    },
     testimonials: {
       title: "Resultados Reales de Nuestros Clientes",
       subtitle: "Historias reales de empresas que transformaron su atención al cliente",
       verified: "Cliente Verificado",
+      satisfaction: "Satisfacción del Cliente",
+      availability: "Disponibilidad",
+      companiesServed: "Empresas Atendidas",
+      basedOn: "Basado en",
+      reviewsCount: "más de 500 reseñas",
       stats: {
         satisfaction: "Satisfacción del Cliente",
         response: "Tiempo de Respuesta",
@@ -499,4 +545,3 @@ export const es = {
     }
   }
 };
-
